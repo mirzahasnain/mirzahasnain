@@ -1,30 +1,16 @@
 //@version=6
-// =============================================================================
- // SMC / ICT Professional Indicator
- // Break of Structure • Auto Fibonacci • Premium/Discount • FVG • RR Box
- // Non-repainting • Modular • Latest Fib only • One setup per BOS
- // =============================================================================
-indicator(
-     title            = "SMC ICT Pro",
-     shorttitle       = "SMC ICT",
-     overlay          = true,
-     max_boxes_count  = 200,
-     max_lines_count  = 200,
-     max_labels_count = 200,
-     max_bars_back    = 5000)
+// SMC / ICT Professional Indicator
+// BOS, Auto Fib, Premium/Discount, FVG, Entry/SL/TP, RR Box
+// Non-repainting | Latest Fib only | One setup per BOS
+indicator(title = "SMC ICT Pro", shorttitle = "SMC ICT", overlay = true, max_boxes_count = 500, max_lines_count = 500, max_labels_count = 500)
 
 // =============================================================================
- // 1. INPUTS
- // =============================================================================
-
-// --- Structure ---
+// INPUTS
+// =============================================================================
 grpStruct   = "Structure"
-swingLength = input.int(10, "Swing Length", minval = 2, maxval = 100, group = grpStruct,
-     tooltip = "Lookback used when locating impulse swing points after a BOS.")
-pivotLength = input.int(5, "Pivot Length", minval = 2, maxval = 50, group = grpStruct,
-     tooltip = "Bars left/right required to confirm a pivot high/low (non-repainting).")
+swingLength = input.int(10, "Swing Length", minval = 2, maxval = 100, group = grpStruct)
+pivotLength = input.int(5, "Pivot Length", minval = 2, maxval = 50, group = grpStruct)
 
-// --- Display ---
 grpDisplay     = "Display"
 showFib        = input.bool(true, "Show Fibonacci", group = grpDisplay)
 showFVG        = input.bool(true, "Show FVG", group = grpDisplay)
@@ -34,24 +20,18 @@ showTradeBox   = input.bool(true, "Show Risk / Reward Box", group = grpDisplay)
 showEntryLines = input.bool(true, "Show Entry / SL / TP", group = grpDisplay)
 extendFibBars  = input.int(40, "Fib / Zone Extend (bars)", minval = 5, maxval = 500, group = grpDisplay)
 
-// --- Filters ---
 grpFilters  = "Filters"
 atrLength   = input.int(14, "ATR Length", minval = 1, group = grpFilters)
-minBodyPct  = input.float(10.0, "Minimum Body %", minval = 0.0, maxval = 100.0, step = 0.5, group = grpFilters,
-     tooltip = "Candle body must be at least this % of its range. Filters dojis / weak candles.")
-minFvgSize  = input.float(0.0, "Minimum FVG Size", minval = 0.0, step = 0.0001, group = grpFilters,
-     tooltip = "Absolute minimum FVG gap size (price units).")
-atrFvgMult  = input.float(0.1, "ATR FVG Size Mult", minval = 0.0, step = 0.05, group = grpFilters,
-     tooltip = "FVG gap must be >= ATR * this multiplier.")
+minBodyPct  = input.float(10.0, "Minimum Body %", minval = 0.0, maxval = 100.0, step = 0.5, group = grpFilters)
+minFvgSize  = input.float(0.0, "Minimum FVG Size", minval = 0.0, step = 0.0001, group = grpFilters)
+atrFvgMult  = input.float(0.1, "ATR FVG Size Mult", minval = 0.0, step = 0.05, group = grpFilters)
 ignoreDoji  = input.bool(true, "Ignore Doji Candles", group = grpFilters)
 dojiBodyPct = input.float(5.0, "Doji Body % Threshold", minval = 0.0, maxval = 50.0, step = 0.5, group = grpFilters)
 
-// --- Trade ---
 grpTrade      = "Trade Settings"
 riskReward    = input.float(3.0, "Risk Reward", minval = 0.5, step = 0.1, group = grpTrade)
 boxExtendBars = input.int(25, "Trade Box Width (bars)", minval = 5, maxval = 200, group = grpTrade)
 
-// --- Colors ---
 grpColors      = "Colors"
 bosBullColor   = input.color(color.new(#26A69A, 0), "BOS Bullish", group = grpColors)
 bosBearColor   = input.color(color.new(#EF5350, 0), "BOS Bearish", group = grpColors)
@@ -66,423 +46,336 @@ tpColor        = input.color(color.new(#26A69A, 0), "Take Profit Line", group = 
 riskBoxColor   = input.color(color.new(#EF5350, 80), "Risk Box", group = grpColors)
 rewardBoxColor = input.color(color.new(#26A69A, 80), "Reward Box", group = grpColors)
 
-// --- Alerts ---
 grpAlerts = "Alerts"
 alertsOn  = input.bool(true, "Alerts ON/OFF", group = grpAlerts)
 
 // =============================================================================
- // 2. HELPER FUNCTIONS (pure / array ops — no global writes)
- // =============================================================================
-
+// HELPERS
+// =============================================================================
 f_range(float h, float l) =>
     math.max(h - l, syminfo.mintick)
 
-f_body(float o, float c) =>
-    math.abs(c - o)
-
 f_bodyPct(float o, float c, float h, float l) =>
-    f_body(o, c) / f_range(h, l) * 100.0
+    math.abs(c - o) / f_range(h, l) * 100.0
 
-f_isDoji(float o, float c, float h, float l) =>
-    f_bodyPct(o, c, h, l) <= dojiBodyPct
+f_isWeak(float o, float c, float h, float l) =>
+    (ignoreDoji and f_bodyPct(o, c, h, l) <= dojiBodyPct) or f_bodyPct(o, c, h, l) < minBodyPct
 
-f_isWeakCandle(float o, float c, float h, float l) =>
-    (ignoreDoji and f_isDoji(o, c, h, l)) or f_bodyPct(o, c, h, l) < minBodyPct
-
-// Linear Fib: level 0 → p0, level 1 → p1
-f_fibLevel(float p0, float p1, float lvl) =>
+f_fib(float p0, float p1, float lvl) =>
     p0 + (p1 - p0) * lvl
 
-// Delete all lines in an array (arrays are by-reference)
 f_clearLines(array<line> arr) =>
-    int sz = array.size(arr)
-    if sz > 0
-        for i = 0 to sz - 1
+    int n = array.size(arr)
+    if n > 0
+        for i = 0 to n - 1
             line.delete(array.get(arr, i))
         array.clear(arr)
 
 f_clearBoxes(array<box> arr) =>
-    int sz = array.size(arr)
-    if sz > 0
-        for i = 0 to sz - 1
+    int n = array.size(arr)
+    if n > 0
+        for i = 0 to n - 1
             box.delete(array.get(arr, i))
         array.clear(arr)
 
 f_clearLabels(array<label> arr) =>
-    int sz = array.size(arr)
-    if sz > 0
-        for i = 0 to sz - 1
+    int n = array.size(arr)
+    if n > 0
+        for i = 0 to n - 1
             label.delete(array.get(arr, i))
         array.clear(arr)
 
-f_deleteLine(line ln) =>
-    if not na(ln)
-        line.delete(ln)
-
-f_deleteBox(box bx) =>
-    if not na(bx)
-        box.delete(bx)
-
-f_deleteLabel(label lb) =>
-    if not na(lb)
-        label.delete(lb)
-
-// ICT FVG size / candle quality checks
 // =============================================================================
- // 3. ATR & WEAK-CANDLE FILTER
- // =============================================================================
+// SERIES / FILTERS
+// =============================================================================
+atrValue  = ta.atr(atrLength)
+isWeakNow = f_isWeak(open, close, high, low)
 
-atrValue = ta.atr(atrLength)
-isWeakNow = f_isWeakCandle(open, close, high, low)
-
-f_gapSizeOk(float gapSize) =>
+f_gapOk(float gapSize) =>
     gapSize > 0 and gapSize >= minFvgSize and gapSize >= atrValue * atrFvgMult
 
 f_bullFvgOk() =>
-    float gapSize = low - high[2]
-    f_gapSizeOk(gapSize) and not f_isWeakCandle(open[2], close[2], high[2], low[2]) and not f_isWeakCandle(open, close, high, low)
+    f_gapOk(low - high[2]) and not f_isWeak(open[2], close[2], high[2], low[2]) and not f_isWeak(open, close, high, low)
 
 f_bearFvgOk() =>
-    float gapSize = low[2] - high
-    f_gapSizeOk(gapSize) and not f_isWeakCandle(open[2], close[2], high[2], low[2]) and not f_isWeakCandle(open, close, high, low)
+    f_gapOk(low[2] - high) and not f_isWeak(open[2], close[2], high[2], low[2]) and not f_isWeak(open, close, high, low)
 
 // =============================================================================
- // 4. CONFIRMED PIVOT SWINGS (non-repainting)
- // =============================================================================
- // ta.pivothigh / pivotlow confirm `pivotLength` bars after the extreme.
-
+// CONFIRMED PIVOTS (non-repainting)
+// =============================================================================
 ph = ta.pivothigh(high, pivotLength, pivotLength)
 pl = ta.pivotlow(low, pivotLength, pivotLength)
 
-var float lastSwingHigh    = na
-var int   lastSwingHighBar = na
-var float lastSwingLow     = na
-var int   lastSwingLowBar  = na
-var float prevSwingHigh    = na
-var int   prevSwingHighBar = na
-var float prevSwingLow     = na
-var int   prevSwingLowBar  = na
+var float lastSH = na
+var int   lastSHBar = na
+var float lastSL = na
+var int   lastSLBar = na
+var float prevSH = na
+var int   prevSHBar = na
+var float prevSL = na
+var int   prevSLBar = na
 
 if not na(ph)
-    prevSwingHigh    := lastSwingHigh
-    prevSwingHighBar := lastSwingHighBar
-    lastSwingHigh    := ph
-    lastSwingHighBar := bar_index - pivotLength
+    prevSH := lastSH
+    prevSHBar := lastSHBar
+    lastSH := ph
+    lastSHBar := bar_index - pivotLength
 
 if not na(pl)
-    prevSwingLow    := lastSwingLow
-    prevSwingLowBar := lastSwingLowBar
-    lastSwingLow    := pl
-    lastSwingLowBar := bar_index - pivotLength
+    prevSL := lastSL
+    prevSLBar := lastSLBar
+    lastSL := pl
+    lastSLBar := bar_index - pivotLength
 
 // =============================================================================
- // 5. BREAK OF STRUCTURE
- // =============================================================================
- // Bullish BOS = close above previous confirmed swing high
- // Bearish BOS = close below previous confirmed swing low
- // Weak / doji candles ignored.
-
-var float brokenSwingLevel = na
-var int   brokenSwingDir   = 0
+// BREAK OF STRUCTURE
+// =============================================================================
+var float brokenLvl = na
+var int   brokenDir = 0
 
 bullBOS = false
 bearBOS = false
 
 if barstate.isconfirmed and not isWeakNow
-    if not na(lastSwingHigh) and close > lastSwingHigh
-        if brokenSwingDir != 1 or brokenSwingLevel != lastSwingHigh
-            bullBOS := true
-    if not na(lastSwingLow) and close < lastSwingLow
-        if brokenSwingDir != -1 or brokenSwingLevel != lastSwingLow
-            bearBOS := true
+    if not na(lastSH) and close > lastSH and (brokenDir != 1 or brokenLvl != lastSH)
+        bullBOS := true
+    if not na(lastSL) and close < lastSL and (brokenDir != -1 or brokenLvl != lastSL)
+        bearBOS := true
 
 // =============================================================================
- // 6. SETUP STATE
- // =============================================================================
- // 0 idle → 1 wait first pullback → 2 search FVG → 4 in trade → 5 done
+// SETUP STATE
+// =============================================================================
+var int   setupState = 0
+var int   setupDir = 0
+var float fib0 = na
+var float fib1 = na
+var int   fibStartBar = na
+var float lvl05 = na
+var float lvl15 = na
+var bool  firstPullback = false
+var bool  usedFvg = false
+var bool  usedTrade = false
+var float fvgTop = na
+var float fvgBot = na
+var float entryPrice = na
+var float stopPrice = na
+var float tpPrice = na
+var int   entryBar = na
+var bool  tradeActive = false
+var float bosLevel = na
 
-var int   setupState      = 0
-var int   setupDir        = 0
-var float fib0            = na
-var float fib1            = na
-var int   fibStartBar     = na
-var float lvl05           = na
-var float lvl15           = na
-var bool  firstPullback   = false
-var bool  usedFvg         = false
-var bool  usedTrade       = false
-var float fvgTop          = na
-var float fvgBot          = na
-var float entryPrice      = na
-var float stopPrice       = na
-var float tpPrice         = na
-var int   entryBar        = na
-var bool  tradeActive     = false
-var int   bosBar          = na
-var float bosLevel        = na
+var array<line> fibLines = array.new<line>()
+var array<label> fibLabels = array.new<label>()
+var array<box> zoneBoxes = array.new<box>()
+var array<box> fvgBoxes = array.new<box>()
+var array<label> bosLabels = array.new<label>()
+var array<line> bosLines = array.new<line>()
 
-// Drawing stores — latest Fib / zones only; trade drawings replaced each setup
-var array<line>  fibLines   = array.new_line()
-var array<label> fibLabels  = array.new_label()
-var array<box>   zoneBoxes  = array.new_box()
-var array<box>   fvgBoxes   = array.new_box()
-var array<label> bosLabels  = array.new_label()
-var array<line>  bosLines   = array.new_line()
-var line         entryLine  = na
-var line         slLine     = na
-var line         tpLine     = na
-var box          riskBoxObj = na
-var box          rewardBox  = na
-var label        tradeLabel = na
-var label        entryLbl   = na
-var label        slLbl      = na
-var label        tpLbl      = na
+var line entryLine = na
+var line slLine = na
+var line tpLine = na
+var box riskBoxObj = na
+var box rewardBoxObj = na
+var label tradeLabel = na
+var label entryLbl = na
+var label slLbl = na
+var label tpLbl = na
 
-// One-bar alert pulses
-alertBullBOS   = false
-alertBearBOS   = false
-alertBullFVG   = false
-alertBearFVG   = false
-alertBuyReady  = false
+alertBullBOS = false
+alertBearBOS = false
+alertBullFVG = false
+alertBearFVG = false
+alertBuyReady = false
 alertSellReady = false
-alertTP        = false
-alertSL        = false
+alertTP = false
+alertSL = false
 
-// Fib level constants
-var array<float> FIB_LEVELS = array.from(0.0, 0.236, 0.382, 0.5, 0.618, 0.705, 0.786, 1.0, 1.5)
+// Fib levels used every BOS
+fibLevels = array.from(0.0, 0.236, 0.382, 0.5, 0.618, 0.705, 0.786, 1.0, 1.5)
 
 // =============================================================================
- // 7. DRAW HELPERS (called from global scope only)
- // =============================================================================
+// CLEAR / DRAW (local scope only uses object delete; globals reassigned outside)
+// =============================================================================
+f_wipeTradeDrawings() =>
+    if not na(entryLine)
+        line.delete(entryLine)
+    if not na(slLine)
+        line.delete(slLine)
+    if not na(tpLine)
+        line.delete(tpLine)
+    if not na(riskBoxObj)
+        box.delete(riskBoxObj)
+    if not na(rewardBoxObj)
+        box.delete(rewardBoxObj)
+    if not na(tradeLabel)
+        label.delete(tradeLabel)
+    if not na(entryLbl)
+        label.delete(entryLbl)
+    if not na(slLbl)
+        label.delete(slLbl)
+    if not na(tpLbl)
+        label.delete(tpLbl)
 
-// Clear Fib + zones + FVG + trade drawings (old objects deleted — no duplicates)
-clear_setup_drawings() =>
+f_wipeAllSetupDrawings() =>
     f_clearLines(fibLines)
     f_clearLabels(fibLabels)
     f_clearBoxes(zoneBoxes)
     f_clearBoxes(fvgBoxes)
-    f_deleteLine(entryLine)
-    f_deleteLine(slLine)
-    f_deleteLine(tpLine)
-    f_deleteBox(riskBoxObj)
-    f_deleteBox(rewardBox)
-    f_deleteLabel(tradeLabel)
-    f_deleteLabel(entryLbl)
-    f_deleteLabel(slLbl)
-    f_deleteLabel(tpLbl)
+    f_wipeTradeDrawings()
 
-// Draw Fibonacci + Premium/Discount for the active BOS
-draw_fib(float p0, float p1, int startBar) =>
+f_drawFib(float p0, float p1, int startBar) =>
     f_clearLines(fibLines)
     f_clearLabels(fibLabels)
     f_clearBoxes(zoneBoxes)
     int right = startBar + extendFibBars
     if showFib
-        for i = 0 to array.size(FIB_LEVELS) - 1
-            float lvl = array.get(FIB_LEVELS, i)
-            float px  = f_fibLevel(p0, p1, lvl)
-            color lc  = lvl == 0.5 ? color.new(#FFD54F, 0) : lvl == 1.5 ? slColor : fibColor
-            int   w   = (lvl == 0.0 or lvl == 0.5 or lvl == 1.0 or lvl == 1.5) ? 2 : 1
-            string sty = (lvl == 0.5 or lvl == 1.5) ? line.style_solid : line.style_dashed
-            array.push(fibLines, line.new(startBar, px, right, px, color = lc, style = sty, width = w))
-            array.push(fibLabels, label.new(right, px, str.tostring(lvl, "#.###"),
-                 style = label.style_label_left, color = color.new(color.black, 100), textcolor = lc, size = size.small))
+        for i = 0 to array.size(fibLevels) - 1
+            float lvl = array.get(fibLevels, i)
+            float px = f_fib(p0, p1, lvl)
+            color lc = lvl == 0.5 ? color.new(#FFD54F, 0) : lvl == 1.5 ? slColor : fibColor
+            int w = (lvl == 0.0 or lvl == 0.5 or lvl == 1.0 or lvl == 1.5) ? 2 : 1
+            array.push(fibLines, line.new(startBar, px, right, px, color = lc, style = (lvl == 0.5 or lvl == 1.5) ? line.style_solid : line.style_dashed, width = w))
+            array.push(fibLabels, label.new(right, px, str.tostring(lvl, "#.###"), style = label.style_label_left, color = color.new(color.black, 100), textcolor = lc, size = size.small))
     if showPremDisc
-        float mid = f_fibLevel(p0, p1, 0.5)
+        float mid = f_fib(p0, p1, 0.5)
         float top = math.max(p0, p1)
         float bot = math.min(p0, p1)
         array.push(zoneBoxes, box.new(startBar, top, right, mid, bgcolor = premiumColor, border_color = color.new(premiumColor, 50), border_width = 1))
         array.push(zoneBoxes, box.new(startBar, mid, right, bot, bgcolor = discountColor, border_color = color.new(discountColor, 50), border_width = 1))
-        array.push(fibLabels, label.new(startBar, (top + mid) / 2.0, "Premium",
-             style = label.style_label_right, color = color.new(color.black, 100), textcolor = color.new(#EF5350, 20), size = size.small))
-        array.push(fibLabels, label.new(startBar, (mid + bot) / 2.0, "Discount",
-             style = label.style_label_right, color = color.new(color.black, 100), textcolor = color.new(#26A69A, 20), size = size.small))
+        array.push(fibLabels, label.new(startBar, (top + mid) / 2.0, "Premium", style = label.style_label_right, color = color.new(color.black, 100), textcolor = color.new(#EF5350, 20), size = size.small))
+        array.push(fibLabels, label.new(startBar, (mid + bot) / 2.0, "Discount", style = label.style_label_right, color = color.new(color.black, 100), textcolor = color.new(#26A69A, 20), size = size.small))
 
-draw_bos_marker(bool isBull, float level) =>
+f_drawBos(bool isBull, float level) =>
     if showBOS
         color c = isBull ? bosBullColor : bosBearColor
-        array.push(bosLabels, label.new(bar_index, level, isBull ? "BOS ▲" : "BOS ▼",
-             style = isBull ? label.style_label_down : label.style_label_up,
-             color = c, textcolor = color.white, size = size.small))
+        array.push(bosLabels, label.new(bar_index, level, isBull ? "BOS" : "BOS", style = isBull ? label.style_label_down : label.style_label_up, color = c, textcolor = color.white, size = size.small))
         if array.size(bosLabels) > 20
             label.delete(array.shift(bosLabels))
         array.push(bosLines, line.new(bar_index - 1, level, bar_index + 3, level, color = c, style = line.style_dotted, width = 2))
         if array.size(bosLines) > 20
             line.delete(array.shift(bosLines))
 
-// Build RR box like TradingView Long/Short Position tool
-draw_trade_box(float entry, float stop, float tp, int dir, int eBar) =>
-    f_deleteLine(entryLine)
-    f_deleteLine(slLine)
-    f_deleteLine(tpLine)
-    f_deleteBox(riskBoxObj)
-    f_deleteBox(rewardBox)
-    f_deleteLabel(tradeLabel)
-    f_deleteLabel(entryLbl)
-    f_deleteLabel(slLbl)
-    f_deleteLabel(tpLbl)
-    int right = eBar + boxExtendBars
-    float riskAmt   = math.abs(entry - stop)
-    float rewardAmt = math.abs(tp - entry)
-    float riskPct   = entry != 0.0 ? riskAmt / entry * 100.0 : 0.0
-    float rewardPct = entry != 0.0 ? rewardAmt / entry * 100.0 : 0.0
-    float rrActual  = riskAmt != 0.0 ? rewardAmt / riskAmt : 0.0
-    line  newEntry  = na
-    line  newSL     = na
-    line  newTP     = na
-    box   newRisk   = na
-    box   newRew    = na
-    label newTrade  = na
-    label newELbl   = na
-    label newSLbl   = na
-    label newTLbl   = na
-    if showEntryLines
-        newEntry := line.new(eBar, entry, right, entry, color = entryColor, width = 2)
-        newSL    := line.new(eBar, stop, right, stop, color = slColor, width = 2)
-        newTP    := line.new(eBar, tp, right, tp, color = tpColor, width = 2)
-        newELbl  := label.new(right, entry, "Entry " + str.tostring(entry, format.mintick), style = label.style_label_left, color = entryColor, textcolor = color.white, size = size.small)
-        newSLbl  := label.new(right, stop, "SL " + str.tostring(stop, format.mintick), style = label.style_label_left, color = slColor, textcolor = color.white, size = size.small)
-        newTLbl  := label.new(right, tp, "TP " + str.tostring(tp, format.mintick), style = label.style_label_left, color = tpColor, textcolor = color.white, size = size.small)
-    if showTradeBox
-        newRisk  := box.new(eBar, math.max(entry, stop), right, math.min(entry, stop), bgcolor = riskBoxColor, border_color = color.new(slColor, 40), border_width = 1)
-        newRew   := box.new(eBar, math.max(entry, tp), right, math.min(entry, tp), bgcolor = rewardBoxColor, border_color = color.new(tpColor, 40), border_width = 1)
-        string side = dir == 1 ? "LONG" : "SHORT"
-        string info = side + "\nEntry: " + str.tostring(entry, format.mintick) + "\nSL: " + str.tostring(stop, format.mintick) + "\nTP: " + str.tostring(tp, format.mintick) + "\nRisk: " + str.tostring(riskPct, "#.##") + "%\nReward: " + str.tostring(rewardPct, "#.##") + "%\nRR = 1:" + str.tostring(rrActual, "#.##")
-        newTrade := label.new(eBar + int(boxExtendBars * 0.35), (entry + tp) / 2.0, info,
-             style = label.style_label_center, color = color.new(color.black, 30), textcolor = color.white, size = size.normal)
-    [newEntry, newSL, newTP, newRisk, newRew, newTrade, newELbl, newSLbl, newTLbl]
-
-// Locate impulse swings after BOS for Fib anchors
-find_bull_swings() =>
-    float sh  = lastSwingHigh
-    int   shB = lastSwingHighBar
-    float sl  = lastSwingLow
-    int   slB = lastSwingLowBar
-    if not na(sh) and not na(sl)
-        if slB >= shB
-            if not na(prevSwingLow) and prevSwingLowBar < shB
-                sl  := prevSwingLow
-                slB := prevSwingLowBar
-            else
-                float tmpLow = low
-                int   tmpBar = bar_index
-                int   maxI   = math.min(swingLength * 8, bar_index)
-                if maxI >= pivotLength
-                    for i = pivotLength to maxI
-                        int b = bar_index - i
-                        if b < shB and low[i] <= tmpLow
-                            tmpLow := low[i]
-                            tmpBar := b
-                sl  := tmpLow
-                slB := tmpBar
+f_findBullSwings() =>
+    float sh = lastSH
+    int shB = lastSHBar
+    float sl = lastSL
+    int slB = lastSLBar
+    if not na(sh) and not na(sl) and slB >= shB
+        if not na(prevSL) and prevSLBar < shB
+            sl := prevSL
+            slB := prevSLBar
+        else
+            float tmpLow = low
+            int tmpBar = bar_index
+            int maxI = math.min(swingLength * 8, bar_index)
+            if maxI >= pivotLength
+                for i = pivotLength to maxI
+                    int b = bar_index - i
+                    if b < shB and low[i] <= tmpLow
+                        tmpLow := low[i]
+                        tmpBar := b
+            sl := tmpLow
+            slB := tmpBar
     [sh, shB, sl, slB]
 
-find_bear_swings() =>
-    float sh  = lastSwingHigh
-    int   shB = lastSwingHighBar
-    float sl  = lastSwingLow
-    int   slB = lastSwingLowBar
-    if not na(sh) and not na(sl)
-        if shB >= slB
-            if not na(prevSwingHigh) and prevSwingHighBar < slB
-                sh  := prevSwingHigh
-                shB := prevSwingHighBar
-            else
-                float tmpHigh = high
-                int   tmpBar  = bar_index
-                int   maxI    = math.min(swingLength * 8, bar_index)
-                if maxI >= pivotLength
-                    for i = pivotLength to maxI
-                        int b = bar_index - i
-                        if b < slB and high[i] >= tmpHigh
-                            tmpHigh := high[i]
-                            tmpBar  := b
-                sh  := tmpHigh
-                shB := tmpBar
+f_findBearSwings() =>
+    float sh = lastSH
+    int shB = lastSHBar
+    float sl = lastSL
+    int slB = lastSLBar
+    if not na(sh) and not na(sl) and shB >= slB
+        if not na(prevSH) and prevSHBar < slB
+            sh := prevSH
+            shB := prevSHBar
+        else
+            float tmpHigh = high
+            int tmpBar = bar_index
+            int maxI = math.min(swingLength * 8, bar_index)
+            if maxI >= pivotLength
+                for i = pivotLength to maxI
+                    int b = bar_index - i
+                    if b < slB and high[i] >= tmpHigh
+                        tmpHigh := high[i]
+                        tmpBar := b
+            sh := tmpHigh
+            shB := tmpBar
     [sh, shB, sl, slB]
 
 // =============================================================================
- // 8. PROCESS NEW BOS — reset Fib, one setup per BOS
- // =============================================================================
-
+// NEW BOS
+// =============================================================================
 if barstate.isconfirmed and (bullBOS or bearBOS)
-    // Delete previous Fib / zones / trade drawings
-    clear_setup_drawings()
-    entryLine  := na
-    slLine     := na
-    tpLine     := na
+    f_wipeAllSetupDrawings()
+    entryLine := na
+    slLine := na
+    tpLine := na
     riskBoxObj := na
-    rewardBox  := na
+    rewardBoxObj := na
     tradeLabel := na
-    entryLbl   := na
-    slLbl      := na
-    tpLbl      := na
+    entryLbl := na
+    slLbl := na
+    tpLbl := na
 
     if bullBOS
-        [sh, shB, sl, slB] = find_bull_swings()
+        [sh, shB, sl, slB] = f_findBullSwings()
         if not na(sh) and not na(sl) and sh != sl
-            brokenSwingDir   := 1
-            brokenSwingLevel := lastSwingHigh
-            bosBar           := bar_index
-            bosLevel         := lastSwingHigh
-            setupDir         := 1
-            // Bullish Fib: 0 = swing high, 1 = swing low, 1.5 beyond low (SL)
-            fib0             := sh
-            fib1             := sl
-            fibStartBar      := math.min(nz(shB, bar_index), nz(slB, bar_index))
-            lvl05            := f_fibLevel(fib0, fib1, 0.5)
-            lvl15            := f_fibLevel(fib0, fib1, 1.5)
-            setupState       := 1
-            firstPullback    := false
-            usedFvg          := false
-            usedTrade        := false
-            tradeActive      := false
-            fvgTop           := na
-            fvgBot           := na
-            entryPrice       := na
-            stopPrice        := na
-            tpPrice          := na
-            entryBar         := na
-            draw_fib(fib0, fib1, fibStartBar)
-            draw_bos_marker(true, bosLevel)
-            alertBullBOS     := true
+            brokenDir := 1
+            brokenLvl := lastSH
+            bosLevel := lastSH
+            setupDir := 1
+            fib0 := sh
+            fib1 := sl
+            fibStartBar := math.min(nz(shB, bar_index), nz(slB, bar_index))
+            lvl05 := f_fib(fib0, fib1, 0.5)
+            lvl15 := f_fib(fib0, fib1, 1.5)
+            setupState := 1
+            firstPullback := false
+            usedFvg := false
+            usedTrade := false
+            tradeActive := false
+            fvgTop := na
+            fvgBot := na
+            entryPrice := na
+            stopPrice := na
+            tpPrice := na
+            entryBar := na
+            f_drawFib(fib0, fib1, fibStartBar)
+            f_drawBos(true, bosLevel)
+            alertBullBOS := true
 
     if bearBOS and not bullBOS
-        [sh, shB, sl, slB] = find_bear_swings()
+        [sh, shB, sl, slB] = f_findBearSwings()
         if not na(sh) and not na(sl) and sh != sl
-            brokenSwingDir   := -1
-            brokenSwingLevel := lastSwingLow
-            bosBar           := bar_index
-            bosLevel         := lastSwingLow
-            setupDir         := -1
-            // Bearish Fib: 0 = swing low, 1 = swing high, 1.5 beyond high (SL)
-            fib0             := sl
-            fib1             := sh
-            fibStartBar      := math.min(nz(shB, bar_index), nz(slB, bar_index))
-            lvl05            := f_fibLevel(fib0, fib1, 0.5)
-            lvl15            := f_fibLevel(fib0, fib1, 1.5)
-            setupState       := 1
-            firstPullback    := false
-            usedFvg          := false
-            usedTrade        := false
-            tradeActive      := false
-            fvgTop           := na
-            fvgBot           := na
-            entryPrice       := na
-            stopPrice        := na
-            tpPrice          := na
-            entryBar         := na
-            draw_fib(fib0, fib1, fibStartBar)
-            draw_bos_marker(false, bosLevel)
-            alertBearBOS     := true
+            brokenDir := -1
+            brokenLvl := lastSL
+            bosLevel := lastSL
+            setupDir := -1
+            fib0 := sl
+            fib1 := sh
+            fibStartBar := math.min(nz(shB, bar_index), nz(slB, bar_index))
+            lvl05 := f_fib(fib0, fib1, 0.5)
+            lvl15 := f_fib(fib0, fib1, 1.5)
+            setupState := 1
+            firstPullback := false
+            usedFvg := false
+            usedTrade := false
+            tradeActive := false
+            fvgTop := na
+            fvgBot := na
+            entryPrice := na
+            stopPrice := na
+            tpPrice := na
+            entryBar := na
+            f_drawFib(fib0, fib1, fibStartBar)
+            f_drawBos(false, bosLevel)
+            alertBearBOS := true
 
 // =============================================================================
- // 9. SETUP LIFECYCLE (confirmed bars only)
- // =============================================================================
-
+// SETUP LIFECYCLE
+// =============================================================================
 if barstate.isconfirmed and setupState > 0 and not na(fib0) and not na(fib1) and not na(lvl05)
-    // Extend latest Fib / zones with price
     int rightEdge = math.max(bar_index + 2, nz(fibStartBar, bar_index) + extendFibBars)
+
     if showFib
         int nLines = array.size(fibLines)
         if nLines > 0
@@ -492,126 +385,130 @@ if barstate.isconfirmed and setupState > 0 and not na(fib0) and not na(fib1) and
         if nLabs > 0
             for i = 0 to nLabs - 1
                 label lb = array.get(fibLabels, i)
-                // Keep level labels on the right edge; leave Premium/Discount at start
                 if label.get_x(lb) > nz(fibStartBar, bar_index)
                     label.set_x(lb, rightEdge)
+
     if showPremDisc
         int nZones = array.size(zoneBoxes)
         if nZones > 0
             for i = 0 to nZones - 1
                 box.set_right(array.get(zoneBoxes, i), rightEdge)
 
-    // Cancel setup if structure breaks before entry
+    // Cancel if structure broken before entry
     if setupState >= 1 and setupState <= 2 and not tradeActive
         bool structBroken = setupDir == 1 ? close < fib1 : close > fib1
         if structBroken
-            clear_setup_drawings()
-            entryLine  := na
-            slLine     := na
-            tpLine     := na
+            f_wipeAllSetupDrawings()
+            entryLine := na
+            slLine := na
+            tpLine := na
             riskBoxObj := na
-            rewardBox  := na
+            rewardBoxObj := na
             tradeLabel := na
-            entryLbl   := na
-            slLbl      := na
-            tpLbl      := na
+            entryLbl := na
+            slLbl := na
+            tpLbl := na
             setupState := 0
             tradeActive := false
 
-    // --- State 1: FIRST pullback only into Discount/50% (bull) or Premium/50% (bear) ---
+    // First pullback only
     if setupState == 1 and not firstPullback
         bool touched50 = low <= lvl05 and high >= lvl05
-        if setupDir == 1
-            if low < lvl05 or touched50
-                firstPullback := true
-                setupState    := 2
-        else if setupDir == -1
-            if high > lvl05 or touched50
-                firstPullback := true
-                setupState    := 2
+        if setupDir == 1 and (low < lvl05 or touched50)
+            firstPullback := true
+            setupState := 2
+        if setupDir == -1 and (high > lvl05 or touched50)
+            firstPullback := true
+            setupState := 2
 
-    // --- State 2: one unmitigated FVG in zone → entry at 50% midpoint ---
+    // One FVG per BOS -> entry / SL / TP / RR box
     if setupState == 2 and firstPullback and not usedFvg and not usedTrade
         if setupDir == 1 and f_bullFvgOk()
             float gapTop = low
             float gapBot = high[2]
             float midGap = (gapTop + gapBot) / 2.0
-            // Must be in Discount or at Equilibrium (50%)
             bool zoneOk = midGap < lvl05 or math.abs(midGap - lvl05) <= atrValue * 0.25
-            // Unmitigated at birth (gap still open)
-            bool unmit = low > gapBot
-            if zoneOk and unmit
-                fvgTop     := gapTop
-                fvgBot     := gapBot
-                usedFvg    := true
-                usedTrade  := true
+            if zoneOk and low > gapBot
+                fvgTop := gapTop
+                fvgBot := gapBot
+                usedFvg := true
+                usedTrade := true
                 entryPrice := midGap
-                stopPrice  := lvl15
-                float risk = math.abs(entryPrice - stopPrice)
-                tpPrice    := entryPrice + risk * riskReward
-                entryBar   := bar_index
+                stopPrice := lvl15
+                tpPrice := entryPrice + math.abs(entryPrice - stopPrice) * riskReward
+                entryBar := bar_index
                 if showFVG
-                    array.push(fvgBoxes, box.new(bar_index - 2, gapTop, bar_index + extendFibBars, gapBot,
-                         bgcolor = fvgBullColor, border_color = color.new(#26A69A, 40), border_width = 1,
-                         text = "FVG", text_color = color.new(#26A69A, 0), text_size = size.tiny))
-                [ne, ns, nt, nr, nw, ntr, nel, nsl, ntl] = draw_trade_box(entryPrice, stopPrice, tpPrice, 1, entryBar)
-                entryLine  := ne
-                slLine     := ns
-                tpLine     := nt
-                riskBoxObj := nr
-                rewardBox  := nw
-                tradeLabel := ntr
-                entryLbl   := nel
-                slLbl      := nsl
-                tpLbl      := ntl
+                    array.push(fvgBoxes, box.new(bar_index - 2, gapTop, bar_index + extendFibBars, gapBot, bgcolor = fvgBullColor, border_color = color.new(#26A69A, 40), border_width = 1, text = "FVG", text_color = color.new(#26A69A, 0), text_size = size.tiny))
+                f_wipeTradeDrawings()
+                int right = entryBar + boxExtendBars
+                float riskAmt = math.abs(entryPrice - stopPrice)
+                float rewardAmt = math.abs(tpPrice - entryPrice)
+                float riskPct = entryPrice != 0.0 ? riskAmt / entryPrice * 100.0 : 0.0
+                float rewardPct = entryPrice != 0.0 ? rewardAmt / entryPrice * 100.0 : 0.0
+                float rrActual = riskAmt != 0.0 ? rewardAmt / riskAmt : 0.0
+                if showEntryLines
+                    entryLine := line.new(entryBar, entryPrice, right, entryPrice, color = entryColor, width = 2)
+                    slLine := line.new(entryBar, stopPrice, right, stopPrice, color = slColor, width = 2)
+                    tpLine := line.new(entryBar, tpPrice, right, tpPrice, color = tpColor, width = 2)
+                    entryLbl := label.new(right, entryPrice, "Entry " + str.tostring(entryPrice, format.mintick), style = label.style_label_left, color = entryColor, textcolor = color.white, size = size.small)
+                    slLbl := label.new(right, stopPrice, "SL " + str.tostring(stopPrice, format.mintick), style = label.style_label_left, color = slColor, textcolor = color.white, size = size.small)
+                    tpLbl := label.new(right, tpPrice, "TP " + str.tostring(tpPrice, format.mintick), style = label.style_label_left, color = tpColor, textcolor = color.white, size = size.small)
+                if showTradeBox
+                    riskBoxObj := box.new(entryBar, math.max(entryPrice, stopPrice), right, math.min(entryPrice, stopPrice), bgcolor = riskBoxColor, border_color = color.new(slColor, 40), border_width = 1)
+                    rewardBoxObj := box.new(entryBar, math.max(entryPrice, tpPrice), right, math.min(entryPrice, tpPrice), bgcolor = rewardBoxColor, border_color = color.new(tpColor, 40), border_width = 1)
+                    tradeLabel := label.new(entryBar + int(boxExtendBars * 0.35), (entryPrice + tpPrice) / 2.0, "LONG\nEntry: " + str.tostring(entryPrice, format.mintick) + "\nSL: " + str.tostring(stopPrice, format.mintick) + "\nTP: " + str.tostring(tpPrice, format.mintick) + "\nRisk: " + str.tostring(riskPct, "#.##") + "%\nReward: " + str.tostring(rewardPct, "#.##") + "%\nRR = 1:" + str.tostring(rrActual, "#.##"), style = label.style_label_center, color = color.new(color.black, 30), textcolor = color.white, size = size.normal)
                 tradeActive := true
-                setupState  := 4
-                alertBullFVG  := true
+                setupState := 4
+                alertBullFVG := true
                 alertBuyReady := true
 
-        else if setupDir == -1 and f_bearFvgOk()
+        if setupDir == -1 and f_bearFvgOk()
             float gapBot = high
             float gapTop = low[2]
             float midGap = (gapTop + gapBot) / 2.0
             bool zoneOk = midGap > lvl05 or math.abs(midGap - lvl05) <= atrValue * 0.25
-            bool unmit  = high < gapTop
-            if zoneOk and unmit
-                fvgTop     := gapTop
-                fvgBot     := gapBot
-                usedFvg    := true
-                usedTrade  := true
+            if zoneOk and high < gapTop
+                fvgTop := gapTop
+                fvgBot := gapBot
+                usedFvg := true
+                usedTrade := true
                 entryPrice := midGap
-                stopPrice  := lvl15
-                float risk = math.abs(entryPrice - stopPrice)
-                tpPrice    := entryPrice - risk * riskReward
-                entryBar   := bar_index
+                stopPrice := lvl15
+                tpPrice := entryPrice - math.abs(entryPrice - stopPrice) * riskReward
+                entryBar := bar_index
                 if showFVG
-                    array.push(fvgBoxes, box.new(bar_index - 2, gapTop, bar_index + extendFibBars, gapBot,
-                         bgcolor = fvgBearColor, border_color = color.new(#EF5350, 40), border_width = 1,
-                         text = "FVG", text_color = color.new(#EF5350, 0), text_size = size.tiny))
-                [ne, ns, nt, nr, nw, ntr, nel, nsl, ntl] = draw_trade_box(entryPrice, stopPrice, tpPrice, -1, entryBar)
-                entryLine  := ne
-                slLine     := ns
-                tpLine     := nt
-                riskBoxObj := nr
-                rewardBox  := nw
-                tradeLabel := ntr
-                entryLbl   := nel
-                slLbl      := nsl
-                tpLbl      := ntl
+                    array.push(fvgBoxes, box.new(bar_index - 2, gapTop, bar_index + extendFibBars, gapBot, bgcolor = fvgBearColor, border_color = color.new(#EF5350, 40), border_width = 1, text = "FVG", text_color = color.new(#EF5350, 0), text_size = size.tiny))
+                f_wipeTradeDrawings()
+                int right = entryBar + boxExtendBars
+                float riskAmt = math.abs(entryPrice - stopPrice)
+                float rewardAmt = math.abs(tpPrice - entryPrice)
+                float riskPct = entryPrice != 0.0 ? riskAmt / entryPrice * 100.0 : 0.0
+                float rewardPct = entryPrice != 0.0 ? rewardAmt / entryPrice * 100.0 : 0.0
+                float rrActual = riskAmt != 0.0 ? rewardAmt / riskAmt : 0.0
+                if showEntryLines
+                    entryLine := line.new(entryBar, entryPrice, right, entryPrice, color = entryColor, width = 2)
+                    slLine := line.new(entryBar, stopPrice, right, stopPrice, color = slColor, width = 2)
+                    tpLine := line.new(entryBar, tpPrice, right, tpPrice, color = tpColor, width = 2)
+                    entryLbl := label.new(right, entryPrice, "Entry " + str.tostring(entryPrice, format.mintick), style = label.style_label_left, color = entryColor, textcolor = color.white, size = size.small)
+                    slLbl := label.new(right, stopPrice, "SL " + str.tostring(stopPrice, format.mintick), style = label.style_label_left, color = slColor, textcolor = color.white, size = size.small)
+                    tpLbl := label.new(right, tpPrice, "TP " + str.tostring(tpPrice, format.mintick), style = label.style_label_left, color = tpColor, textcolor = color.white, size = size.small)
+                if showTradeBox
+                    riskBoxObj := box.new(entryBar, math.max(entryPrice, stopPrice), right, math.min(entryPrice, stopPrice), bgcolor = riskBoxColor, border_color = color.new(slColor, 40), border_width = 1)
+                    rewardBoxObj := box.new(entryBar, math.max(entryPrice, tpPrice), right, math.min(entryPrice, tpPrice), bgcolor = rewardBoxColor, border_color = color.new(tpColor, 40), border_width = 1)
+                    tradeLabel := label.new(entryBar + int(boxExtendBars * 0.35), (entryPrice + tpPrice) / 2.0, "SHORT\nEntry: " + str.tostring(entryPrice, format.mintick) + "\nSL: " + str.tostring(stopPrice, format.mintick) + "\nTP: " + str.tostring(tpPrice, format.mintick) + "\nRisk: " + str.tostring(riskPct, "#.##") + "%\nReward: " + str.tostring(rewardPct, "#.##") + "%\nRR = 1:" + str.tostring(rrActual, "#.##"), style = label.style_label_center, color = color.new(color.black, 30), textcolor = color.white, size = size.normal)
                 tradeActive := true
-                setupState  := 4
-                alertBearFVG   := true
+                setupState := 4
+                alertBearFVG := true
                 alertSellReady := true
 
-        // Ignore every other pullback: if price runs away without an FVG, end search
+        // Ignore later pullbacks if price runs away without FVG
         if not usedFvg
             if setupDir == 1 and close > lvl05 and high >= fib0
                 setupState := 5
             if setupDir == -1 and close < lvl05 and low <= fib0
                 setupState := 5
 
-    // --- State 4: manage trade — TP / SL alerts, extend box ---
+    // Manage open setup
     if setupState == 4 and tradeActive and not na(entryPrice) and not na(stopPrice) and not na(tpPrice)
         int tRight = math.max(nz(entryBar, bar_index) + boxExtendBars, bar_index + 1)
         if not na(entryLine)
@@ -622,8 +519,8 @@ if barstate.isconfirmed and setupState > 0 and not na(fib0) and not na(fib1) and
             line.set_x2(tpLine, tRight)
         if not na(riskBoxObj)
             box.set_right(riskBoxObj, tRight)
-        if not na(rewardBox)
-            box.set_right(rewardBox, tRight)
+        if not na(rewardBoxObj)
+            box.set_right(rewardBoxObj, tRight)
         if not na(entryLbl)
             label.set_x(entryLbl, tRight)
         if not na(slLbl)
@@ -631,7 +528,6 @@ if barstate.isconfirmed and setupState > 0 and not na(fib0) and not na(fib1) and
         if not na(tpLbl)
             label.set_x(tpLbl, tRight)
 
-        // Grey-out FVG once mitigated
         if showFVG and array.size(fvgBoxes) > 0 and not na(fvgTop) and not na(fvgBot)
             if setupDir == 1 and low <= fvgBot
                 box.set_bgcolor(array.get(fvgBoxes, array.size(fvgBoxes) - 1), color.new(color.gray, 90))
@@ -644,43 +540,36 @@ if barstate.isconfirmed and setupState > 0 and not na(fib0) and not na(fib1) and
                 tradeActive := false
                 setupState := 5
                 if not na(tradeLabel)
-                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\n✓ TP HIT")
+                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\nTP HIT")
             else if low <= stopPrice
                 alertSL := true
                 tradeActive := false
                 setupState := 5
                 if not na(tradeLabel)
-                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\n✗ SL HIT")
-        else if setupDir == -1
+                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\nSL HIT")
+        if setupDir == -1
             if low <= tpPrice
                 alertTP := true
                 tradeActive := false
                 setupState := 5
                 if not na(tradeLabel)
-                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\n✓ TP HIT")
+                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\nTP HIT")
             else if high >= stopPrice
                 alertSL := true
                 tradeActive := false
                 setupState := 5
                 if not na(tradeLabel)
-                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\n✗ SL HIT")
+                    label.set_text(tradeLabel, label.get_text(tradeLabel) + "\nSL HIT")
 
 // =============================================================================
- // 10. STATUS HUD
- // =============================================================================
-
+// HUD
+// =============================================================================
 var table hud = table.new(position.top_right, 2, 6, bgcolor = color.new(#131722, 20), border_color = color.new(#787B86, 50), border_width = 1)
 
 if barstate.islast
-    string stTxt = switch setupState
-        0 => "Idle"
-        1 => "Wait Pullback"
-        2 => "Search FVG"
-        4 => "In Trade"
-        5 => "Complete"
-        => "—"
-    string dirTxt = setupDir == 1 ? "Bullish" : setupDir == -1 ? "Bearish" : "—"
-    string zoneTxt = na(lvl05) ? "—" : close < lvl05 ? "Discount" : close > lvl05 ? "Premium" : "EQ"
+    string stTxt = setupState == 0 ? "Idle" : setupState == 1 ? "Wait Pullback" : setupState == 2 ? "Search FVG" : setupState == 4 ? "In Trade" : setupState == 5 ? "Complete" : "-"
+    string dirTxt = setupDir == 1 ? "Bullish" : setupDir == -1 ? "Bearish" : "-"
+    string zoneTxt = na(lvl05) ? "-" : close < lvl05 ? "Discount" : close > lvl05 ? "Premium" : "EQ"
     table.cell(hud, 0, 0, "SMC ICT Pro", text_color = color.white, text_size = size.small)
     table.cell(hud, 1, 0, "", text_color = color.white)
     table.cell(hud, 0, 1, "Bias", text_color = color.gray, text_size = size.tiny)
@@ -695,17 +584,26 @@ if barstate.islast
     table.cell(hud, 1, 5, str.tostring(atrValue, format.mintick), text_color = color.white, text_size = size.small)
 
 // =============================================================================
- // 11. ALERTS
- // =============================================================================
+// VISUAL OUTPUTS (required by TradingView CE10246)
+// =============================================================================
+plotshape(showBOS and bullBOS, title = "Bullish BOS", style = shape.triangleup, location = location.belowbar, color = bosBullColor, size = size.tiny)
+plotshape(showBOS and bearBOS, title = "Bearish BOS", style = shape.triangledown, location = location.abovebar, color = bosBearColor, size = size.tiny)
+plot(lvl05, "EQ 0.5", color = color.new(#FFD54F, 0), linewidth = 1, style = plot.style_linebr)
+plot(entryPrice, "Entry", color = entryColor, linewidth = 1, style = plot.style_linebr)
+plot(stopPrice, "Stop", color = slColor, linewidth = 1, style = plot.style_linebr)
+plot(tpPrice, "TP", color = tpColor, linewidth = 1, style = plot.style_linebr)
 
-alertcondition(alertsOn and alertBullBOS,   title = "Bullish BOS",      message = "SMC ICT: Bullish Break of Structure")
-alertcondition(alertsOn and alertBearBOS,   title = "Bearish BOS",      message = "SMC ICT: Bearish Break of Structure")
-alertcondition(alertsOn and alertBullFVG,   title = "Bullish FVG",      message = "SMC ICT: Bullish Fair Value Gap detected")
-alertcondition(alertsOn and alertBearFVG,   title = "Bearish FVG",      message = "SMC ICT: Bearish Fair Value Gap detected")
-alertcondition(alertsOn and alertBuyReady,  title = "Buy Entry Ready",  message = "SMC ICT: Buy entry ready at FVG midpoint")
+// =============================================================================
+// ALERTS
+// =============================================================================
+alertcondition(alertsOn and alertBullBOS, title = "Bullish BOS", message = "SMC ICT: Bullish Break of Structure")
+alertcondition(alertsOn and alertBearBOS, title = "Bearish BOS", message = "SMC ICT: Bearish Break of Structure")
+alertcondition(alertsOn and alertBullFVG, title = "Bullish FVG", message = "SMC ICT: Bullish Fair Value Gap detected")
+alertcondition(alertsOn and alertBearFVG, title = "Bearish FVG", message = "SMC ICT: Bearish Fair Value Gap detected")
+alertcondition(alertsOn and alertBuyReady, title = "Buy Entry Ready", message = "SMC ICT: Buy entry ready at FVG midpoint")
 alertcondition(alertsOn and alertSellReady, title = "Sell Entry Ready", message = "SMC ICT: Sell entry ready at FVG midpoint")
-alertcondition(alertsOn and alertTP,        title = "Take Profit Hit",  message = "SMC ICT: Take Profit hit")
-alertcondition(alertsOn and alertSL,        title = "Stop Loss Hit",    message = "SMC ICT: Stop Loss hit")
+alertcondition(alertsOn and alertTP, title = "Take Profit Hit", message = "SMC ICT: Take Profit hit")
+alertcondition(alertsOn and alertSL, title = "Stop Loss Hit", message = "SMC ICT: Stop Loss hit")
 
 if alertsOn and barstate.isconfirmed
     if alertBullBOS
@@ -724,13 +622,3 @@ if alertsOn and barstate.isconfirmed
         alert("SMC ICT | TAKE PROFIT HIT @ " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
     if alertSL
         alert("SMC ICT | STOP LOSS HIT @ " + str.tostring(close, format.mintick), alert.freq_once_per_bar_close)
-
-// =============================================================================
- // 12. DATA WINDOW PLOTS
- // =============================================================================
-
-plot(lvl05, "EQ 0.5", color = color.new(#FFD54F, 100), editable = false, display = display.data_window)
-plot(lvl15, "Fib 1.5", color = color.new(#EF5350, 100), editable = false, display = display.data_window)
-plot(entryPrice, "Entry", color = color.new(#2196F3, 100), editable = false, display = display.data_window)
-plot(stopPrice, "Stop", color = color.new(#EF5350, 100), editable = false, display = display.data_window)
-plot(tpPrice, "TP", color = color.new(#26A69A, 100), editable = false, display = display.data_window)

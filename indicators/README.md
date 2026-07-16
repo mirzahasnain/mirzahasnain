@@ -6,10 +6,16 @@ Professional Smart Money Concepts (SMC / ICT) indicator for TradingView, written
 
 ## Install
 
-1. Open [TradingView](https://www.tradingview.com/) → Pine Editor
-2. Paste the contents of `indicators/SMC_ICT_Pro.pine`
-3. Click **Add to chart**
-4. (Optional) Create alerts from the Alerts panel using the built-in conditions
+1. Open the **raw Pine file** (not this README):  
+   [`SMC_ICT_Pro.pine`](./SMC_ICT_Pro.pine)  
+   On GitHub: open the file → click **Raw** → select all → copy
+2. TradingView → **Pine Editor** → delete any old text → paste
+3. Confirm the editor shows `//@version=6` on line 1 and is **~600+ lines** ending with `alertcondition` / `alert(` calls
+4. Click **Save** → **Add to chart**
+
+Do **not** paste this README (Markdown). That causes `Script could not be translated from: null`.
+
+If you see **CE10246**, the paste was incomplete — copy the full `.pine` file again from Raw view.
 
 ## What it does
 
