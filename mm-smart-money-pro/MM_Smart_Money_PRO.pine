@@ -4,8 +4,8 @@
 // Institutional-grade Smart Money Concepts engine (original implementation).
 //
 // Build status:
-//   [x] Module 1 — Structure Engine (fractal-based)  ← active
-//   [ ] Module 2 — Liquidity Engine
+//   [x] Module 1 — Structure Engine (fractal-based)
+//   [x] Module 2 — Liquidity Engine                 ← active
 //   [ ] Module 3 — Order Blocks
 //   [ ] Module 4 — Fair Value Gap
 //   [ ] Module 5 — Market Maker Models
@@ -16,7 +16,8 @@
 // Architecture:
 //   CORE     — shared constants, types, draw pool, math helpers
 //   MODULE 1 — fractal Structure Engine (Internal + External)
-//   HOOKS    — MarketContext bridge for Liquidity / OB / FVG / MM
+//   MODULE 2 — Liquidity Engine (EQH/EQL, BSL/SSL, sweeps, score)
+//   HOOKS    — MarketContext bridge for OB / FVG / MM
 //
 // Non-repaint contract:
 //   • All commits require barstate.isconfirmed
@@ -28,12 +29,12 @@
 
 //@version=6
 indicator(
-     title            = "MM Smart Money PRO — Structure Engine",
-     shorttitle       = "MM SM PRO M1",
+     title            = "MM Smart Money PRO",
+     shorttitle       = "MM SM PRO",
      overlay          = true,
      max_lines_count  = 500,
      max_labels_count = 500,
-     max_boxes_count  = 200,
+     max_boxes_count  = 500,
      max_bars_back    = 5000)
 
 // ============================================================================
@@ -79,6 +80,30 @@ int  lineWExt       = input.int(2, "External Line Width", minval = 1, maxval = 4
 int  maxSwingStore  = input.int(30, "Max Swings Stored / Layer", minval = 8, maxval = 80, group = GRP_VIS)
 int  maxActiveLines = input.int(80, "Max Active Structure Lines", minval = 20, maxval = 400, group = GRP_VIS)
 int  maxActiveLabels= input.int(80, "Max Active Structure Labels", minval = 20, maxval = 400, group = GRP_VIS)
+
+// ---- Module 2: Liquidity Engine ----
+string GRP_LIQ = "Liquidity Engine"
+bool showEqHigh     = input.bool(true,  "Show Equal High", group = GRP_LIQ)
+bool showEqLow      = input.bool(true,  "Show Equal Low", group = GRP_LIQ)
+bool showLiqPools   = input.bool(true,  "Show Liquidity Pools", group = GRP_LIQ)
+bool showSweeps     = input.bool(true,  "Show Sweeps", group = GRP_LIQ)
+bool showLiqLabels  = input.bool(true,  "Show Labels", group = GRP_LIQ)
+bool showLiqBoxes   = input.bool(false, "Show Boxes", group = GRP_LIQ)
+string liqSource    = input.string("External", "Swing Source", options = ["External", "Internal", "Both"], group = GRP_LIQ,
+     tooltip = "Which Structure Engine swing arrays feed equal high/low detection.")
+string tolMethod    = input.string("ATR Based", "Tolerance Method", options = ["ATR Based", "Tick Based", "Percentage Based"], group = GRP_LIQ)
+float atrMultTol    = input.float(0.15, "ATR Multiplier", minval = 0.01, maxval = 5.0, step = 0.01, group = GRP_LIQ)
+int  tickTol        = input.int(10, "Tick Tolerance", minval = 1, maxval = 500, group = GRP_LIQ)
+float pctTol        = input.float(0.05, "Percent Tolerance", minval = 0.001, maxval = 5.0, step = 0.001, group = GRP_LIQ,
+     tooltip = "Percent of price (e.g. 0.05 = 0.05%).")
+float minWickPct    = input.float(30.0, "Minimum Wick %", minval = 1.0, maxval = 95.0, step = 1.0, group = GRP_LIQ,
+     tooltip = "Sweep wick must be at least this % of the candle range.")
+int  maxLiqStore    = input.int(25, "Maximum Stored Liquidity", minval = 5, maxval = 100, group = GRP_LIQ)
+color bslCol        = input.color(color.new(#f23645, 0), "Buy Side Liquidity", group = GRP_LIQ)
+color sslCol        = input.color(color.new(#089981, 0), "Sell Side Liquidity", group = GRP_LIQ)
+color sweepBullCol  = input.color(color.new(#2962ff, 0), "Bullish Sweep", group = GRP_LIQ)
+color sweepBearCol  = input.color(color.new(#ff6d00, 0), "Bearish Sweep", group = GRP_LIQ)
+int  liqLineWidth   = input.int(1, "Liquidity Line Width", minval = 1, maxval = 4, group = GRP_LIQ)
 
 // ============================================================================
 // CORE — CONSTANTS (shared by all future modules)
@@ -166,8 +191,55 @@ type StructureState
 type DrawPool
     int liveLines
     int liveLabels
+    int liveBoxes
     int lineBudget
     int labelBudget
+    int boxBudget
+
+// ============================================================================
+// MODULE 2 — LIQUIDITY TYPES
+// ============================================================================
+
+// One liquidity pool / zone (BSL from equal highs, SSL from equal lows)
+type LiquidityZone
+    float price                 // representative pool price (mean of members)
+    float top                   // zone ceiling
+    float bottom                // zone floor
+    int   kind                  // KIND_HIGH = BSL, KIND_LOW = SSL
+    int   birthBar              // first member bar
+    int   lastTouchBar
+    int   touches               // equal-level member count
+    bool  swept
+    int   sweepBar
+    float strength              // 0–100 visual strength
+    float score                 // composite liquidity score 0–100
+    bool  isStrong              // true while not swept
+    bool  drawn
+    bool  eqAlerted             // one-shot new EQH/EQL alert guard
+    bool  sweepAlerted
+    array<int>   memberBars
+    array<float> memberPrices
+    line  liqLine
+    box   liqBox
+    label liqLabel
+
+// Liquidity engine state (owned by Module 2, mirrored into MarketContext)
+type LiquidityEngine
+    array<LiquidityZone> zones
+    array<int> seenHighBars     // swing bars already considered for EQH
+    array<int> seenLowBars      // swing bars already considered for EQL
+    float nearestBSL
+    float nearestSSL
+    float nearestLiq
+    float bestScore
+    int   activeBSL
+    int   activeSSL
+    int   lastSweepDir          // TREND_BULL = SSL swept, TREND_BEAR = BSL swept
+    int   lastSweepBar
+    bool  newEqHigh
+    bool  newEqLow
+    bool  bullSweep             // per-bar alert wire
+    bool  bearSweep             // per-bar alert wire
 
 // Bridge object for Modules 2–5 (Liquidity, OB, FVG, MM Models)
 // Populated every confirmed bar; future modules read from here only.
@@ -179,6 +251,7 @@ type MarketContext
     float atr
     int   bias                  // external trend as institutional bias
     int   confirmedBar          // bar_index of last commit (na if none)
+    LiquidityEngine liquidity   // Module 2 mirror
 
 // ============================================================================
 // CORE — FACTORIES
@@ -194,11 +267,21 @@ newStructureState(int layerId) =>
          na, EVT_NONE, TREND_FLAT,
          0, na)
 
-newDrawPool(int lineBudget, int labelBudget) =>
-    DrawPool.new(0, 0, lineBudget, labelBudget)
+newDrawPool(int lineBudget, int labelBudget, int boxBudget) =>
+    DrawPool.new(0, 0, 0, lineBudget, labelBudget, boxBudget)
 
 newEmptyEvent() =>
     StructureEvent.new(EVT_NONE, TREND_FLAT, 0, na, na, na)
+
+newLiquidityEngine() =>
+    LiquidityEngine.new(
+         array.new<LiquidityZone>(),
+         array.new<int>(),
+         array.new<int>(),
+         na, na, na, na,
+         0, 0,
+         TREND_FLAT, na,
+         false, false, false, false)
 
 // ============================================================================
 // CORE — DRAW POOL (object management)
@@ -210,7 +293,7 @@ newEmptyEvent() =>
 //   • Swing drawings are deleted only when their SwingPoint is trimmed.
 //   • Never call line/label methods after delete — refs are nulled immediately.
 // ============================================================================
-var DrawPool pool = newDrawPool(maxActiveLines, maxActiveLabels)
+var DrawPool pool = newDrawPool(maxActiveLines, maxActiveLabels, 200)
 var array<label> eventStamps = array.new<label>()
 
 f_deleteLine(line ln) =>
@@ -222,6 +305,11 @@ f_deleteLabel(label lb) =>
     if not na(lb)
         label.delete(lb)
         pool.liveLabels := math.max(0, pool.liveLabels - 1)
+
+f_deleteBox(box bx) =>
+    if not na(bx)
+        box.delete(bx)
+        pool.liveBoxes := math.max(0, pool.liveBoxes - 1)
 
 f_disposeSwingDraw(SwingPoint s) =>
     f_deleteLine(s.levelLine)
@@ -603,16 +691,355 @@ f_detectBreaks(StructureState st, bool showLayer, bool showEvents) =>
 
     ev
 
+
+// ============================================================================
+// MODULE 2 — LIQUIDITY ENGINE
+// ----------------------------------------------------------------------------
+// Consumes Structure Engine swing arrays (Internal / External / Both).
+// Equal Highs → Buy Side Liquidity (BSL)
+// Equal Lows  → Sell Side Liquidity (SSL)
+// Sweeps confirm only on closed candles with wick-through + close-back + wick %.
+// ============================================================================
+
+// ---- Calculations ----
+f_liqTolerance(float refPrice, float atrVal) =>
+    float tol = atrVal * atrMultTol
+    if tolMethod == "Tick Based"
+        tol := syminfo.mintick * tickTol
+    else if tolMethod == "Percentage Based"
+        tol := math.abs(refPrice) * pctTol / 100.0
+    math.max(tol, syminfo.mintick)
+
+f_liqWickPct(bool isHighSweep) =>
+    float rng = high - low
+    float pct = 0.0
+    if rng > 0
+        float wick = isHighSweep ? (high - math.max(open, close)) : (math.min(open, close) - low)
+        pct := wick / rng * 100.0
+    pct
+
+f_liqCalcScore(LiquidityZone z) =>
+    int age = math.max(0, bar_index - z.birthBar)
+    float touchPts = math.min(40.0, z.touches * 8.0)
+    float agePts = math.min(20.0, age * 0.4)
+    float activePts = z.swept ? 0.0 : 30.0
+    float clusterPts = math.min(10.0, math.max(0, z.touches - 1) * 5.0)
+    float raw = touchPts + agePts + activePts + clusterPts
+    z.strength := math.min(100.0, touchPts + agePts + clusterPts + (z.swept ? 0.0 : 20.0))
+    z.score := math.min(100.0, raw)
+    z.isStrong := not z.swept
+    z
+
+f_liqBarSeen(array<int> arr, int barIdx) =>
+    bool seen = false
+    int sz = array.size(arr)
+    if sz > 0
+        for i = 0 to sz - 1
+            if array.get(arr, i) == barIdx
+                seen := true
+                break
+    seen
+
+f_liqMarkSeen(array<int> arr, int barIdx) =>
+    if not f_liqBarSeen(arr, barIdx)
+        array.push(arr, barIdx)
+        while array.size(arr) > maxLiqStore * 4
+            array.shift(arr)
+
+// ---- Object management / drawing ----
+f_liqDisposeZone(LiquidityZone z) =>
+    f_deleteLine(z.liqLine)
+    f_deleteLabel(z.liqLabel)
+    f_deleteBox(z.liqBox)
+    z.liqLine := na
+    z.liqLabel := na
+    z.liqBox := na
+    z.drawn := false
+
+f_liqTrim(LiquidityEngine eng) =>
+    while array.size(eng.zones) > maxLiqStore
+        LiquidityZone old = array.shift(eng.zones)
+        f_liqDisposeZone(old)
+
+f_liqZoneText(LiquidityZone z) =>
+    // Compact zone tag: side · Strong/Weak · score% · touches · age
+    // Example: "BSL·S 92%×4 a18"
+    string side = z.kind == KIND_HIGH ? "BSL" : "SSL"
+    string sw = z.isStrong ? "S" : "W"
+    int age = math.max(0, bar_index - z.birthBar)
+    side + "·" + sw + " " + str.tostring(math.round(z.score)) + "%×" + str.tostring(z.touches) + " a" + str.tostring(age)
+
+f_liqEnsureDraw(LiquidityZone z) =>
+    bool showSide = z.kind == KIND_HIGH ? (showEqHigh or showLiqPools) : (showEqLow or showLiqPools)
+    if not showSide or z.touches < 2
+        z
+    else
+        color col = z.kind == KIND_HIGH ? bslCol : sslCol
+        if z.swept
+            col := color.new(col, 70)
+
+        // Line — create once, extend right while active
+        if showLiqPools or showEqHigh or showEqLow
+            if na(z.liqLine)
+                z.liqLine := f_newLevelLine(z.birthBar, z.price, bar_index, col, liqLineWidth)
+                if z.swept
+                    line.set_style(z.liqLine, line.style_dotted)
+            else
+                line.set_x2(z.liqLine, z.swept and not na(z.sweepBar) ? z.sweepBar : bar_index)
+                line.set_color(z.liqLine, col)
+                line.set_y1(z.liqLine, z.price)
+                line.set_y2(z.liqLine, z.price)
+
+        // Optional box around pool band (pad flat equals by 1 tick for visibility)
+        if showLiqBoxes
+            float boxTop = z.top
+            float boxBot = z.bottom
+            if boxTop - boxBot < syminfo.mintick
+                boxTop := z.price + syminfo.mintick
+                boxBot := z.price - syminfo.mintick
+            if na(z.liqBox)
+                if pool.liveBoxes < pool.boxBudget
+                    z.liqBox := box.new(z.birthBar, boxTop, bar_index, boxBot, xloc = xloc.bar_index, border_color = col, bgcolor = color.new(col, 88), border_width = 1)
+                    pool.liveBoxes := pool.liveBoxes + 1
+            else
+                box.set_right(z.liqBox, z.swept and not na(z.sweepBar) ? z.sweepBar : bar_index)
+                box.set_top(z.liqBox, boxTop)
+                box.set_bottom(z.liqBox, boxBot)
+                box.set_border_color(z.liqBox, col)
+                box.set_bgcolor(z.liqBox, color.new(col, 88))
+
+        // Label — one stamp at last touch; text may update in place for score only
+        // (position stays on lastTouchBar — never relocated to a new bar)
+        if showLiqLabels
+            string txt = f_liqZoneText(z)
+            if na(z.liqLabel)
+                z.liqLabel := f_newStampLabel(
+                     z.lastTouchBar, z.price, txt, col,
+                     z.kind == KIND_HIGH ? label.style_label_down : label.style_label_up,
+                     size.tiny, false)
+            else
+                label.set_text(z.liqLabel, txt)
+                label.set_color(z.liqLabel, color.new(col, 100))
+                label.set_textcolor(z.liqLabel, col)
+
+        z.drawn := true
+        z
+
+// ---- Detection: find / merge pools ----
+f_liqFindPool(LiquidityEngine eng, float price, int kind, float tol) =>
+    int found = -1
+    int sz = array.size(eng.zones)
+    if sz > 0
+        for i = sz - 1 to 0
+            LiquidityZone z = array.get(eng.zones, i)
+            if z.kind == kind and not z.swept and math.abs(z.price - price) <= tol
+                found := i
+                break
+    found
+
+f_liqCreateZone(LiquidityEngine eng, float p1, int b1, float p2, int b2, int kind) =>
+    float top = math.max(p1, p2)
+    float bot = math.min(p1, p2)
+    float mid = (p1 + p2) * 0.5
+    int birth = math.min(b1, b2)
+    int lastT = math.max(b1, b2)
+    array<int> mb = array.new<int>()
+    array<float> mp = array.new<float>()
+    array.push(mb, b1)
+    array.push(mb, b2)
+    array.push(mp, p1)
+    array.push(mp, p2)
+    LiquidityZone z = LiquidityZone.new(
+         mid, top, bot, kind, birth, lastT, 2,
+         false, na, 0.0, 0.0, true, false, false, false,
+         mb, mp, na, na, na)
+    z := f_liqCalcScore(z)
+    z := f_liqEnsureDraw(z)
+    array.push(eng.zones, z)
+    f_liqTrim(eng)
+    if kind == KIND_HIGH
+        eng.newEqHigh := true
+    else
+        eng.newEqLow := true
+
+f_liqMergeInto(LiquidityEngine eng, int zi, float price, int barIdx) =>
+    LiquidityZone z = array.get(eng.zones, zi)
+    // Avoid duplicate member bars
+    bool dup = f_liqBarSeen(z.memberBars, barIdx)
+    if not dup
+        array.push(z.memberBars, barIdx)
+        array.push(z.memberPrices, price)
+        z.touches := array.size(z.memberBars)
+        z.lastTouchBar := barIdx
+        z.top := math.max(z.top, price)
+        z.bottom := math.min(z.bottom, price)
+        // Recompute mean price
+        float sum = 0.0
+        for i = 0 to array.size(z.memberPrices) - 1
+            sum := sum + array.get(z.memberPrices, i)
+        z.price := sum / array.size(z.memberPrices)
+        z := f_liqCalcScore(z)
+        z := f_liqEnsureDraw(z)
+        array.set(eng.zones, zi, z)
+        if z.kind == KIND_HIGH
+            eng.newEqHigh := true
+        else
+            eng.newEqLow := true
+        if not z.eqAlerted and z.touches >= 2
+            z.eqAlerted := true
+            array.set(eng.zones, zi, z)
+
+f_liqPartnerSwing(StructureState st, SwingPoint src, float tol) =>
+    float pOut = float(na)
+    int bOut = int(na)
+    int sz = array.size(st.swings)
+    if sz > 0
+        for i = sz - 1 to 0
+            SwingPoint s = array.get(st.swings, i)
+            if s.kind == src.kind and s.barIndex != src.barIndex
+                if math.abs(s.price - src.price) <= tol
+                    pOut := s.price
+                    bOut := s.barIndex
+                    break
+    [pOut, bOut]
+
+f_liqIngestSwing(LiquidityEngine eng, StructureState st, SwingPoint sp, float atrVal) =>
+    float tol = f_liqTolerance(sp.price, atrVal)
+    array<int> seen = sp.kind == KIND_HIGH ? eng.seenHighBars : eng.seenLowBars
+    if not f_liqBarSeen(seen, sp.barIndex)
+        f_liqMarkSeen(seen, sp.barIndex)
+        int zi = f_liqFindPool(eng, sp.price, sp.kind, tol)
+        if zi >= 0
+            f_liqMergeInto(eng, zi, sp.price, sp.barIndex)
+        else
+            [pp, pb] = f_liqPartnerSwing(st, sp, tol)
+            if not na(pp) and not na(pb)
+                // Also try merge if partner already in a pool
+                int zj = f_liqFindPool(eng, pp, sp.kind, tol)
+                if zj >= 0
+                    f_liqMergeInto(eng, zj, sp.price, sp.barIndex)
+                else
+                    f_liqCreateZone(eng, sp.price, sp.barIndex, pp, pb, sp.kind)
+
+f_liqIngestState(LiquidityEngine eng, StructureState st, float atrVal) =>
+    int sz = array.size(st.swings)
+    if sz > 0
+        // Newest first — prefer fresh structure tips
+        for i = sz - 1 to 0
+            SwingPoint sp = array.get(st.swings, i)
+            f_liqIngestSwing(eng, st, sp, atrVal)
+
+// ---- Sweep detection (confirmed bar only) ----
+f_liqDetectSweeps(LiquidityEngine eng) =>
+    eng.bullSweep := false
+    eng.bearSweep := false
+    int sz = array.size(eng.zones)
+    if sz > 0
+        float rng = high - low
+        for i = 0 to sz - 1
+            LiquidityZone z = array.get(eng.zones, i)
+            if not z.swept and z.touches >= 2 and rng > 0
+                if z.kind == KIND_HIGH
+                    // Bearish sweep: wick through BSL, close back below zone
+                    bool wickThru = high > z.top
+                    bool closeBack = close < z.bottom
+                    bool wickOk = f_liqWickPct(true) >= minWickPct
+                    if wickThru and closeBack and wickOk
+                        z.swept := true
+                        z.sweepBar := bar_index
+                        z.isStrong := false
+                        z := f_liqCalcScore(z)
+                        z := f_liqEnsureDraw(z)
+                        if showSweeps
+                            f_newStampLabel(bar_index, high, "Sweep", sweepBearCol, label.style_label_down, size.small, true)
+                        eng.bearSweep := true
+                        eng.lastSweepDir := TREND_BEAR
+                        eng.lastSweepBar := bar_index
+                        array.set(eng.zones, i, z)
+                else
+                    // Bullish sweep: wick through SSL, close back above zone
+                    bool wickThru = low < z.bottom
+                    bool closeBack = close > z.top
+                    bool wickOk = f_liqWickPct(false) >= minWickPct
+                    if wickThru and closeBack and wickOk
+                        z.swept := true
+                        z.sweepBar := bar_index
+                        z.isStrong := false
+                        z := f_liqCalcScore(z)
+                        z := f_liqEnsureDraw(z)
+                        if showSweeps
+                            f_newStampLabel(bar_index, low, "Sweep", sweepBullCol, label.style_label_up, size.small, true)
+                        eng.bullSweep := true
+                        eng.lastSweepDir := TREND_BULL
+                        eng.lastSweepBar := bar_index
+                        array.set(eng.zones, i, z)
+
+// ---- Book-keeping / nearest liquidity ----
+f_liqRefreshStats(LiquidityEngine eng) =>
+    eng.nearestBSL := na
+    eng.nearestSSL := na
+    eng.nearestLiq := na
+    eng.bestScore := na
+    eng.activeBSL := 0
+    eng.activeSSL := 0
+    float best = -1.0
+    float nearDist = 1e100
+    float nearPrice = na
+    int sz = array.size(eng.zones)
+    if sz > 0
+        for i = 0 to sz - 1
+            LiquidityZone z = array.get(eng.zones, i)
+            z := f_liqCalcScore(z)
+            // Extend active drawings each bar
+            if not z.swept
+                z := f_liqEnsureDraw(z)
+            array.set(eng.zones, i, z)
+            if not z.swept and z.touches >= 2
+                if z.kind == KIND_HIGH
+                    eng.activeBSL := eng.activeBSL + 1
+                    if z.price >= close and (na(eng.nearestBSL) or z.price < eng.nearestBSL)
+                        eng.nearestBSL := z.price
+                else
+                    eng.activeSSL := eng.activeSSL + 1
+                    if z.price <= close and (na(eng.nearestSSL) or z.price > eng.nearestSSL)
+                        eng.nearestSSL := z.price
+                if z.score > best
+                    best := z.score
+                float d = math.abs(z.price - close)
+                if d < nearDist
+                    nearDist := d
+                    nearPrice := z.price
+    eng.bestScore := best >= 0 ? best : float(na)
+    eng.nearestLiq := nearPrice
+
+// ---- Module 2 entrypoint ----
+f_liqOnConfirmed(LiquidityEngine eng, StructureState stInt, StructureState stExt, float atrVal) =>
+    eng.newEqHigh := false
+    eng.newEqLow := false
+    eng.bullSweep := false
+    eng.bearSweep := false
+
+    if liqSource == "External" or liqSource == "Both"
+        f_liqIngestState(eng, stExt, atrVal)
+    if liqSource == "Internal" or liqSource == "Both"
+        f_liqIngestState(eng, stInt, atrVal)
+
+    f_liqDetectSweeps(eng)
+    f_liqRefreshStats(eng)
+
 // ============================================================================
 // MODULE STATE
 // ============================================================================
 var StructureState stInternal = newStructureState(LAYER_INTERNAL)
 var StructureState stExternal = newStructureState(LAYER_EXTERNAL)
 
+var LiquidityEngine liqEng = newLiquidityEngine()
+
 var MarketContext ctx = MarketContext.new(
      stInternal, stExternal,
      newEmptyEvent(), newEmptyEvent(),
-     na, TREND_FLAT, na)
+     na, TREND_FLAT, na,
+     liqEng)
 
 // Guard: external fractal length must exceed internal for true separation
 int effExtLen = math.max(extFractalLen, intFractalLen + 1)
@@ -623,6 +1050,12 @@ int iDir = TREND_FLAT
 int eEvt = EVT_NONE
 int eDir = TREND_FLAT
 
+// Module 2 alert wires — reset every bar (prevents sticky realtime alerts)
+bool aBullSweep = false
+bool aBearSweep = false
+bool aNewEqHigh = false
+bool aNewEqLow  = false
+
 // ============================================================================
 // MAIN — confirmed bars only
 // ============================================================================
@@ -630,6 +1063,7 @@ if barstate.isconfirmed
     // Keep pool budgets in sync with inputs
     pool.lineBudget  := maxActiveLines
     pool.labelBudget := maxActiveLabels
+    pool.boxBudget   := 200
 
     // --- Fractal detection (right-side closed → non-repaint) ---
     float iH = f_fractalHigh(intFractalLen)
@@ -671,11 +1105,18 @@ if barstate.isconfirmed
     ctx.bias          := stExternal.trend
     ctx.confirmedBar  := bar_index
 
+    // --- Module 2: Liquidity Engine (uses Structure swings via ctx states) ---
+    f_liqOnConfirmed(liqEng, stInternal, stExternal, f_atr)
+    ctx.liquidity := liqEng
+    aBullSweep := liqEng.bullSweep
+    aBearSweep := liqEng.bearSweep
+    aNewEqHigh := liqEng.newEqHigh
+    aNewEqLow  := liqEng.newEqLow
+
 // ============================================================================
 // FUTURE MODULE HOOKS (placeholders — compile-safe stubs)
 // ----------------------------------------------------------------------------
-// Module 2 Liquidity  → consumes ctx.external activeHigh/Low + equal highs/lows
-// Module 3 OrderBlock → consumes displacement after ctx last events + ATR
+// Module 3 OrderBlock → consumes displacement after ctx last events + ATR + sweeps
 // Module 4 FVG        → consumes impulse legs between structure swings + ATR
 // Module 5 MM Models  → consumes EQH/EQL sweeps + MSS + OB + premium/discount
 // These modules must only commit on barstate.isconfirmed using ctx.confirmedBar.
@@ -688,6 +1129,10 @@ f_ctxProtHigh() => ctx.external.protHigh
 f_ctxProtLow() => ctx.external.protLow
 f_ctxActiveExtHigh() => ctx.external.activeHigh
 f_ctxActiveExtLow() => ctx.external.activeLow
+f_ctxNearestBSL() => ctx.liquidity.nearestBSL
+f_ctxNearestSSL() => ctx.liquidity.nearestSSL
+f_ctxLiqScore() => ctx.liquidity.bestScore
+f_ctxNearestLiq() => ctx.liquidity.nearestLiq
 
 // ============================================================================
 // DATA WINDOW — exports for Dashboard (Module 7) + ctx accessors
@@ -704,6 +1149,12 @@ plot(ctx.internal.activeLow, title = "Int Active Low", display = display.data_wi
 plot(iEvt, title = "Internal Event", display = display.data_window)
 plot(eEvt, title = "External Event", display = display.data_window)
 plot(f_ctxAtr(), title = "ATR", display = display.data_window)
+plot(f_ctxNearestBSL(), title = "Nearest BSL", display = display.data_window)
+plot(f_ctxNearestSSL(), title = "Nearest SSL", display = display.data_window)
+plot(f_ctxNearestLiq(), title = "Nearest Liquidity", display = display.data_window)
+plot(f_ctxLiqScore(), title = "Liquidity Score", display = display.data_window)
+plot(liqEng.activeBSL, title = "Active BSL Count", display = display.data_window)
+plot(liqEng.activeSSL, title = "Active SSL Count", display = display.data_window)
 
 // ============================================================================
 // ALERTS — structure foundation (Module 8)
@@ -716,18 +1167,22 @@ alertcondition(eEvt == EVT_BOS and eDir == TREND_BULL, "External Bullish BOS", "
 alertcondition(eEvt == EVT_BOS and eDir == TREND_BEAR, "External Bearish BOS", "MM SM PRO: External Bearish BOS")
 alertcondition(eEvt == EVT_MSS and eDir == TREND_BULL, "Bullish MSS", "MM SM PRO: Bullish MSS")
 alertcondition(eEvt == EVT_MSS and eDir == TREND_BEAR, "Bearish MSS", "MM SM PRO: Bearish MSS")
+alertcondition(aBullSweep, "Bullish Liquidity Sweep", "MM SM PRO: Bullish Liquidity Sweep (SSL)")
+alertcondition(aBearSweep, "Bearish Liquidity Sweep", "MM SM PRO: Bearish Liquidity Sweep (BSL)")
+alertcondition(aNewEqHigh, "New Equal High", "MM SM PRO: New Equal High / BSL")
+alertcondition(aNewEqLow, "New Equal Low", "MM SM PRO: New Equal Low / SSL")
 
 // ============================================================================
-// HUD
+// HUD — Structure + Liquidity
 // ============================================================================
-var table hud = table.new(position.top_right, 2, 7, border_width = 1)
+var table hud = table.new(position.top_right, 2, 12, border_width = 1)
 
 if showHud and barstate.isconfirmed and barstate.islast
     color bg = color.new(#1e222d, 10)
     table.cell(hud, 0, 0, "MM Smart Money PRO", text_color = color.white, bgcolor = color.new(#1e222d, 0), text_halign = text.align_center)
     table.merge_cells(hud, 0, 0, 1, 0)
-    table.cell(hud, 0, 1, "Module", text_color = color.gray, bgcolor = bg)
-    table.cell(hud, 1, 1, "1 · Fractal Structure", text_color = color.white, bgcolor = bg)
+    table.cell(hud, 0, 1, "Modules", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 1, "1 Structure · 2 Liquidity", text_color = color.white, bgcolor = bg)
     table.cell(hud, 0, 2, "Internal", text_color = color.gray, bgcolor = bg)
     table.cell(hud, 1, 2, f_trendName(stInternal.trend), text_color = stInternal.trend == TREND_BULL ? bullBosCol : stInternal.trend == TREND_BEAR ? bearBosCol : color.gray, bgcolor = bg)
     table.cell(hud, 0, 3, "External", text_color = color.gray, bgcolor = bg)
@@ -738,3 +1193,13 @@ if showHud and barstate.isconfirmed and barstate.islast
     table.cell(hud, 1, 5, na(stExternal.protHigh) ? "—" : str.tostring(stExternal.protHigh, format.mintick), text_color = protHighCol, bgcolor = bg)
     table.cell(hud, 0, 6, "Prot Low", text_color = color.gray, bgcolor = bg)
     table.cell(hud, 1, 6, na(stExternal.protLow) ? "—" : str.tostring(stExternal.protLow, format.mintick), text_color = protLowCol, bgcolor = bg)
+    table.cell(hud, 0, 7, "Buy Side Liq", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 7, str.tostring(liqEng.activeBSL) + (na(liqEng.nearestBSL) ? "" : " · " + str.tostring(liqEng.nearestBSL, format.mintick)), text_color = bslCol, bgcolor = bg)
+    table.cell(hud, 0, 8, "Sell Side Liq", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 8, str.tostring(liqEng.activeSSL) + (na(liqEng.nearestSSL) ? "" : " · " + str.tostring(liqEng.nearestSSL, format.mintick)), text_color = sslCol, bgcolor = bg)
+    table.cell(hud, 0, 9, "Nearest Liq", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 9, na(liqEng.nearestLiq) ? "—" : str.tostring(liqEng.nearestLiq, format.mintick), text_color = color.white, bgcolor = bg)
+    table.cell(hud, 0, 10, "Liq Score", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 10, na(liqEng.bestScore) ? "—" : str.tostring(liqEng.bestScore, "#.##") + "%", text_color = color.white, bgcolor = bg)
+    table.cell(hud, 0, 11, "Last Sweep", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 11, liqEng.lastSweepDir == TREND_BULL ? "Bullish" : liqEng.lastSweepDir == TREND_BEAR ? "Bearish" : "—", text_color = liqEng.lastSweepDir == TREND_BULL ? sweepBullCol : liqEng.lastSweepDir == TREND_BEAR ? sweepBearCol : color.gray, bgcolor = bg)

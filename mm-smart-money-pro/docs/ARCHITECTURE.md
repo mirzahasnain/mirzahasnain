@@ -20,12 +20,17 @@ MODULE 1  Fractal Structure Engine (Internal + External)
   f_fractalHigh/Low · f_acceptSwing · f_detectBreaks
   f_applyTrendProtection
         │
+        ▼
+MODULE 2  Liquidity Engine
+  EQH/EQL · BSL/SSL pools · sweeps · strong/weak · score
+  f_liqOnConfirmed → ctx.liquidity
+        │
         │  ctx (MarketContext)
         ▼
-   ┌────────────┬────────────┬────────────┐
-   ▼            ▼            ▼            ▼
- M2 Liquidity  M3 OB      M4 FVG      M5 MM Models
-   └────────────┴────────────┴────────────┘
+   ┌────────────┬────────────┐
+   ▼            ▼            ▼
+ M3 Order Blocks   M4 FVG   M5 MM Models
+   └────────────┴────────────┘
                       │
                       ▼
               M6 Trade Engine
@@ -36,7 +41,7 @@ MODULE 1  Fractal Structure Engine (Internal + External)
 
 ## MarketContext contract
 
-Future modules **read** from `ctx` after Module 1 updates it on the confirmed bar:
+Modules **read** from `ctx` after Module 1–2 update it on the confirmed bar:
 
 | Field | Use |
 |-------|-----|
@@ -45,8 +50,9 @@ Future modules **read** from `ctx` after Module 1 updates it on the confirmed ba
 | `ctx.bias` | Institutional bias (= external trend) |
 | `ctx.atr` | Size filters (FVG, OB, liquidity tolerance) |
 | `ctx.confirmedBar` | Commit alignment guard |
+| `ctx.liquidity` | Pools, nearest BSL/SSL, sweeps, scores |
 
-Modules must **not** re-detect pivots/fractals independently for structure — they consume Module 1 output.
+Modules must **not** re-detect fractals for structure — they consume Module 1 output. Liquidity consumes Module 1 swings only.
 
 ## Non-repaint checklist per module
 
