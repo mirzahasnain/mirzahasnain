@@ -1,6 +1,6 @@
 # MM Smart Money PRO
 
-Institutional-grade **Smart Money Concepts** engine for TradingView — original Pine Script v6 implementation.
+Institutional-grade **Smart Money Concepts** engine for TradingView — original Pine Script v6.
 
 > Not affiliated with, and not derived from, LuxAlgo, Photon, ICT Toolkit, or other commercial SMC products.
 
@@ -8,7 +8,7 @@ Institutional-grade **Smart Money Concepts** engine for TradingView — original
 
 | Module | Name | Status |
 |--------|------|--------|
-| 1 | Structure Engine | **Done — awaiting confirmation** |
+| 1 | Fractal Structure Engine | **Done — awaiting confirmation** |
 | 2 | Liquidity Engine | Pending |
 | 3 | Order Blocks | Pending |
 | 4 | Fair Value Gap | Pending |
@@ -26,22 +26,22 @@ Institutional-grade **Smart Money Concepts** engine for TradingView — original
 ## Design principles
 
 - Pine Script **v6** only
+- **Fractal-based** structure (not pivot-based)
 - **No repaint** — confirmed bars only (`barstate.isconfirmed`)
-- **No lookahead** — no `request.security()` in Module 1; future HTF uses `lookahead_off`
-- Arrays + UDTs for modular, memory-aware architecture
-- Event labels drawn once on the break candle — never moved
+- **No lookahead** — no `request.security()` in Module 1
+- Reusable UDTs + `MarketContext` bus for Modules 2–5
+- Owned drawings via `DrawPool` budgets
 
 ## Project layout
 
 ```
 mm-smart-money-pro/
-├── MM_Smart_Money_PRO.pine          # Main indicator (paste into TradingView)
+├── MM_Smart_Money_PRO.pine
 ├── modules/
-│   └── 01_structure_engine.pine     # Module 1 snapshot
+│   └── 01_structure_engine.pine
 └── docs/
-    └── MODULE_01_STRUCTURE.md       # Module 1 notes
+    ├── ARCHITECTURE.md
+    └── MODULE_01_STRUCTURE.md
 ```
 
-## Module 1 summary
-
-Detects internal + external structure: swings, HH/HL/LH/LL, protected high/low, BOS, CHoCH, MSS. Color-coded lines and break-candle labels. See `docs/MODULE_01_STRUCTURE.md`.
+See `docs/MODULE_01_STRUCTURE.md` for Module 1 details.

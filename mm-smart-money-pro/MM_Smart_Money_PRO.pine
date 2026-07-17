@@ -4,7 +4,7 @@
 // Institutional-grade Smart Money Concepts engine (original implementation).
 //
 // Build status:
-//   [x] Module 1 — Structure Engine   ← active (this file mirrors modules/)
+//   [x] Module 1 — Structure Engine (fractal-based)  ← active
 //   [ ] Module 2 — Liquidity Engine
 //   [ ] Module 3 — Order Blocks
 //   [ ] Module 4 — Fair Value Gap
@@ -13,9 +13,17 @@
 //   [ ] Module 7 — Dashboard
 //   [ ] Module 8 — Alerts (full)
 //
-// Paste this file into TradingView → Pine Editor → Add to chart.
-// Source of truth for Module 1 also lives at:
-//   modules/01_structure_engine.pine
+// Architecture:
+//   CORE     — shared constants, types, draw pool, math helpers
+//   MODULE 1 — fractal Structure Engine (Internal + External)
+//   HOOKS    — MarketContext bridge for Liquidity / OB / FVG / MM
+//
+// Non-repaint contract:
+//   • All commits require barstate.isconfirmed
+//   • Fractals confirm only after right-side bars have closed
+//   • Breaks use closed-bar Close or Wick only
+//   • Event labels created once — never moved
+//   • No request.security() / no lookahead
 // ============================================================================
 
 //@version=6
@@ -25,57 +33,62 @@ indicator(
      overlay          = true,
      max_lines_count  = 500,
      max_labels_count = 500,
-     max_boxes_count  = 100,
+     max_boxes_count  = 200,
      max_bars_back    = 5000)
 
 // ============================================================================
 // INPUTS
 // ============================================================================
+string GRP_FRAC = "Fractal Structure"
+int  intFractalLen = input.int(2, "Internal Fractal Length", minval = 1, maxval = 20, group = GRP_FRAC,
+     tooltip = "Williams-style fractal half-span for INTERNAL structure. Length 2 = classic 5-bar fractal.")
+int  extFractalLen = input.int(5, "External Fractal Length", minval = 2, maxval = 50, group = GRP_FRAC,
+     tooltip = "Larger fractal half-span for EXTERNAL / major structure. Must be > Internal for correct separation.")
+bool alternateOnly = input.bool(true, "Enforce Alternating Swings", group = GRP_FRAC,
+     tooltip = "Reject consecutive same-side fractals; keep the more extreme one. Recommended for clean structure.")
+
 string GRP_INT = "Internal Structure"
-int  iLeft           = input.int(3, "Internal Left Bars", minval = 1, maxval = 50, group = GRP_INT)
-int  iRight          = input.int(3, "Internal Right Bars", minval = 1, maxval = 50, group = GRP_INT)
-bool showInt         = input.bool(true, "Show Internal Structure", group = GRP_INT)
-bool showIntSwings   = input.bool(false, "Show Internal Swing Markers", group = GRP_INT)
+bool showInt       = input.bool(true,  "Show Internal Structure", group = GRP_INT)
+bool showIntSwings = input.bool(false, "Show Internal HH/HL/LH/LL", group = GRP_INT)
+bool showIntEvents = input.bool(true,  "Show Internal BOS / CHoCH", group = GRP_INT)
 
 string GRP_EXT = "External Structure"
-int  eLeft           = input.int(8, "External Left Bars", minval = 1, maxval = 100, group = GRP_EXT)
-int  eRight          = input.int(8, "External Right Bars", minval = 1, maxval = 100, group = GRP_EXT)
-bool showExt         = input.bool(true, "Show External Structure", group = GRP_EXT)
-bool showExtSwings   = input.bool(true, "Show External Swing Markers", group = GRP_EXT)
+bool showExt       = input.bool(true, "Show External Structure", group = GRP_EXT)
+bool showExtSwings = input.bool(true, "Show External HH/HL/LH/LL", group = GRP_EXT)
+bool showExtEvents = input.bool(true, "Show External BOS / MSS", group = GRP_EXT)
 
-string GRP_EVT = "Structure Events"
-bool showBOS         = input.bool(true, "Show BOS", group = GRP_EVT)
-bool showCHoCH       = input.bool(true, "Show CHoCH", group = GRP_EVT)
-bool showMSS         = input.bool(true, "Show MSS", group = GRP_EVT)
-bool showHHLL        = input.bool(true, "Show HH / HL / LH / LL Labels", group = GRP_EVT)
-bool showProt        = input.bool(true, "Show Protected High / Low", group = GRP_EVT)
-string breakBasis    = input.string("Close", "Break Confirmation", options = ["Close", "Wick"], group = GRP_EVT, tooltip = "Evaluated on the closed candle only. Close = body close through level. Wick = high/low of the closed bar.")
+string GRP_EVT = "Break Rules"
+string breakBasis = input.string("Close", "Break Confirmation", options = ["Close", "Wick"], group = GRP_EVT,
+     tooltip = "Evaluated on the CLOSED candle only.")
+bool showProt     = input.bool(true, "Show Protected High / Low", group = GRP_EVT)
+bool showHud      = input.bool(true, "Show Module HUD", group = GRP_EVT)
 
-string GRP_VIS = "Visuals & Limits"
-color bullBosCol     = input.color(color.new(#089981, 0), "Bullish BOS", group = GRP_VIS)
-color bearBosCol     = input.color(color.new(#f23645, 0), "Bearish BOS", group = GRP_VIS)
-color bullChochCol   = input.color(color.new(#00bcd4, 0), "Bullish CHoCH", group = GRP_VIS)
-color bearChochCol   = input.color(color.new(#e91e63, 0), "Bearish CHoCH", group = GRP_VIS)
-color bullMssCol     = input.color(color.new(#2962ff, 0), "Bullish MSS", group = GRP_VIS)
-color bearMssCol     = input.color(color.new(#ff6d00, 0), "Bearish MSS", group = GRP_VIS)
-color bullStructCol  = input.color(color.new(#089981, 45), "Bullish Structure Line", group = GRP_VIS)
-color bearStructCol  = input.color(color.new(#f23645, 45), "Bearish Structure Line", group = GRP_VIS)
-color protHighCol    = input.color(color.new(#f23645, 0), "Protected High", group = GRP_VIS)
-color protLowCol     = input.color(color.new(#089981, 0), "Protected Low", group = GRP_VIS)
-int  lineWidthInt    = input.int(1, "Internal Line Width", minval = 1, maxval = 4, group = GRP_VIS)
-int  lineWidthExt    = input.int(2, "External Line Width", minval = 1, maxval = 4, group = GRP_VIS)
-int  maxSwingsKeep   = input.int(40, "Max Stored Swings / Layer", minval = 10, maxval = 100, group = GRP_VIS)
-bool showHud         = input.bool(true, "Show Module HUD", group = GRP_VIS)
+string GRP_VIS = "Visuals & Object Budget"
+color bullBosCol    = input.color(color.new(#089981, 0),  "Bullish BOS", group = GRP_VIS)
+color bearBosCol    = input.color(color.new(#f23645, 0),  "Bearish BOS", group = GRP_VIS)
+color bullChochCol  = input.color(color.new(#00bcd4, 0),  "Bullish CHoCH", group = GRP_VIS)
+color bearChochCol  = input.color(color.new(#e91e63, 0),  "Bearish CHoCH", group = GRP_VIS)
+color bullMssCol    = input.color(color.new(#2962ff, 0),  "Bullish MSS", group = GRP_VIS)
+color bearMssCol    = input.color(color.new(#ff6d00, 0),  "Bearish MSS", group = GRP_VIS)
+color bullLineCol   = input.color(color.new(#089981, 50), "Bullish Level Line", group = GRP_VIS)
+color bearLineCol   = input.color(color.new(#f23645, 50), "Bearish Level Line", group = GRP_VIS)
+color protHighCol   = input.color(color.new(#f23645, 0),  "Protected High", group = GRP_VIS)
+color protLowCol    = input.color(color.new(#089981, 0),  "Protected Low", group = GRP_VIS)
+int  lineWInt       = input.int(1, "Internal Line Width", minval = 1, maxval = 4, group = GRP_VIS)
+int  lineWExt       = input.int(2, "External Line Width", minval = 1, maxval = 4, group = GRP_VIS)
+int  maxSwingStore  = input.int(30, "Max Swings Stored / Layer", minval = 8, maxval = 80, group = GRP_VIS)
+int  maxActiveLines = input.int(80, "Max Active Structure Lines", minval = 20, maxval = 400, group = GRP_VIS)
+int  maxActiveLabels= input.int(80, "Max Active Structure Labels", minval = 20, maxval = 400, group = GRP_VIS)
 
 // ============================================================================
-// CONSTANTS
+// CORE — CONSTANTS (shared by all future modules)
 // ============================================================================
-const int SWING_HIGH    = 1
-const int SWING_LOW     = -1
+const int KIND_HIGH =  1
+const int KIND_LOW  = -1
 
-const int TREND_FLAT    = 0
-const int TREND_BULLISH = 1
-const int TREND_BEARISH = -1
+const int TREND_FLAT =  0
+const int TREND_BULL =  1
+const int TREND_BEAR = -1
 
 const int EVT_NONE  = 0
 const int EVT_BOS   = 1
@@ -88,9 +101,22 @@ const int CLASS_HL   = 2
 const int CLASS_LH   = 3
 const int CLASS_LL   = 4
 
+const int LAYER_INTERNAL = 1
+const int LAYER_EXTERNAL = 2
+
 // ============================================================================
-// TYPES
+// CORE — REUSABLE TYPES
 // ============================================================================
+
+// Confirmed fractal pivot (immutable once created)
+type Fractal
+    float price
+    int   barIndex
+    int   kind          // KIND_HIGH / KIND_LOW
+    int   strength      // fractal length used
+    bool  used          // consumed by a structure layer
+
+// Structure swing derived from a fractal
 type SwingPoint
     float price
     int   barIndex
@@ -98,53 +124,143 @@ type SwingPoint
     int   classification
     bool  broken
     bool  isProtected
-    bool  protLabeled
+    bool  protStamped
+    int   layerId
     line  levelLine
-    label swingLabel
+    label classLabel
     label protLabel
 
-type StructureLayer
+// One structure event (BOS / CHoCH / MSS) — immutable after emit
+type StructureEvent
+    int   eventType
+    int   direction
+    int   layerId
+    float level
+    int   breakBar
+    int   swingBar
+
+// Per-layer live state
+type StructureState
     array<SwingPoint> swings
     int   trend
-    float lastHighPrice
+    int   layerId
+    float lastHigh
     int   lastHighBar
-    float lastLowPrice
+    float lastLow
     int   lastLowBar
-    float activeHigh
+    float activeHigh            // current unbroken swing high (break target)
     int   activeHighBar
     float activeLow
     int   activeLowBar
+    float protHigh              // trend-protected high
+    int   protHighBar
+    float protLow               // trend-protected low
+    int   protLowBar
     int   lastEventBar
     int   lastEventType
     int   lastEventDir
+    int   lastKind              // last accepted swing kind (for alternating filter)
     int   lastClassBar
-    float protHighPrice
-    int   protHighBar
-    float protLowPrice
-    int   protLowBar
+
+// Shared draw budget — counts only; disposal is always via swing ownership
+type DrawPool
+    int liveLines
+    int liveLabels
+    int lineBudget
+    int labelBudget
+
+// Bridge object for Modules 2–5 (Liquidity, OB, FVG, MM Models)
+// Populated every confirmed bar; future modules read from here only.
+type MarketContext
+    StructureState internal
+    StructureState external
+    StructureEvent lastIntEvent
+    StructureEvent lastExtEvent
+    float atr
+    int   bias                  // external trend as institutional bias
+    int   confirmedBar          // bar_index of last commit (na if none)
 
 // ============================================================================
-// FACTORY
+// CORE — FACTORIES
 // ============================================================================
-newLayer() =>
-    StructureLayer.new(
+newStructureState(int layerId) =>
+    StructureState.new(
          array.new<SwingPoint>(),
          TREND_FLAT,
+         layerId,
          na, na, na, na,
          na, na, na, na,
-         na, EVT_NONE, TREND_FLAT, na,
-         na, na, na, na)
+         na, na, na, na,
+         na, EVT_NONE, TREND_FLAT,
+         0, na)
 
-var StructureLayer internalLayer = newLayer()
-var StructureLayer externalLayer = newLayer()
+newDrawPool(int lineBudget, int labelBudget) =>
+    DrawPool.new(0, 0, lineBudget, labelBudget)
+
+newEmptyEvent() =>
+    StructureEvent.new(EVT_NONE, TREND_FLAT, 0, na, na, na)
 
 // ============================================================================
-// HELPERS
+// CORE — DRAW POOL (object management)
+// ----------------------------------------------------------------------------
+// Ownership model:
+//   • Every line/label belongs to a SwingPoint (or is an event stamp).
+//   • Event stamps are never moved; they may be retired only when the global
+//     label budget is exceeded (oldest first) via f_retireOldestLabel_().
+//   • Swing drawings are deleted only when their SwingPoint is trimmed.
+//   • Never call line/label methods after delete — refs are nulled immediately.
 // ============================================================================
-bullBreak(float level) =>
+var DrawPool pool = newDrawPool(maxActiveLines, maxActiveLabels)
+var array<label> eventStamps = array.new<label>()
+
+f_deleteLine(line ln) =>
+    if not na(ln)
+        line.delete(ln)
+        pool.liveLines := math.max(0, pool.liveLines - 1)
+
+f_deleteLabel(label lb) =>
+    if not na(lb)
+        label.delete(lb)
+        pool.liveLabels := math.max(0, pool.liveLabels - 1)
+
+f_disposeSwingDraw(SwingPoint s) =>
+    f_deleteLine(s.levelLine)
+    f_deleteLabel(s.classLabel)
+    f_deleteLabel(s.protLabel)
+    s.levelLine := na
+    s.classLabel := na
+    s.protLabel := na
+
+f_newLevelLine(int x1, float y, int x2, color col, int w) =>
+    line ln = line.new(x1, y, x2, y, xloc = xloc.bar_index, color = col, width = w)
+    pool.liveLines := pool.liveLines + 1
+    ln
+
+f_newStampLabel(int x, float y, string txt, color col, string style, string sz, bool isEvent) =>
+    // Retire oldest event stamps first if over label budget
+    while isEvent and array.size(eventStamps) > 0 and pool.liveLabels >= pool.labelBudget
+        label old = array.shift(eventStamps)
+        f_deleteLabel(old)
+    label lb = label.new(
+         x, y, txt,
+         xloc = xloc.bar_index,
+         yloc = yloc.price,
+         color = color.new(col, 100),
+         textcolor = col,
+         style = style,
+         size = sz)
+    pool.liveLabels := pool.liveLabels + 1
+    if isEvent
+        array.push(eventStamps, lb)
+    lb
+
+// ============================================================================
+// CORE — MATH / SERIES HELPERS
+// ============================================================================
+f_bullBreak(float level) =>
     breakBasis == "Close" ? close > level : high > level
 
-bearBreak(float level) =>
+f_bearBreak(float level) =>
     breakBasis == "Close" ? close < level : low < level
 
 f_className(int c) =>
@@ -163,154 +279,274 @@ f_eventName(int e) =>
         => ""
 
 f_eventColor(int e, int dir) =>
-    dir == TREND_BULLISH ? (e == EVT_BOS ? bullBosCol : e == EVT_CHOCH ? bullChochCol : bullMssCol) : (e == EVT_BOS ? bearBosCol : e == EVT_CHOCH ? bearChochCol : bearMssCol)
+    dir == TREND_BULL ? (e == EVT_BOS ? bullBosCol : e == EVT_CHOCH ? bullChochCol : bullMssCol) : (e == EVT_BOS ? bearBosCol : e == EVT_CHOCH ? bearChochCol : bearMssCol)
 
-f_trimSwings(StructureLayer layer) =>
-    while array.size(layer.swings) > maxSwingsKeep
-        SwingPoint old = array.shift(layer.swings)
-        if not na(old.levelLine)
-            line.delete(old.levelLine)
-        if not na(old.swingLabel)
-            label.delete(old.swingLabel)
-        if not na(old.protLabel)
-            label.delete(old.protLabel)
+f_trendName(int t) =>
+    t == TREND_BULL ? "Bullish" : t == TREND_BEAR ? "Bearish" : "Flat"
 
-f_classifyHigh(StructureLayer layer, float price) =>
+f_atr = ta.atr(14)
+
+// ============================================================================
+// CORE — FRACTAL ENGINE (non-repainting)
+// ----------------------------------------------------------------------------
+// A fractal high of length L is confirmed on the current CLOSED bar when the
+// bar at offset L has a high strictly greater than the L bars to its left and
+// the L bars to its right. Right-side bars are already closed → no lookahead.
+// Same logic inverted for fractal lows.
+// ============================================================================
+f_fractalHigh(int len) =>
+    bool ok = bar_index >= 2 * len
+    float center = high[len]
+    if ok
+        for i = 1 to len
+            if high[len - i] >= center or high[len + i] >= center
+                ok := false
+                break
+    ok ? center : float(na)
+
+f_fractalLow(int len) =>
+    bool ok = bar_index >= 2 * len
+    float center = low[len]
+    if ok
+        for i = 1 to len
+            if low[len - i] <= center or low[len + i] <= center
+                ok := false
+                break
+    ok ? center : float(na)
+
+f_makeFractal(float price, int len, int kind) =>
+    Fractal.new(price, bar_index - len, kind, len, false)
+
+// ============================================================================
+// MODULE 1 — STRUCTURE HELPERS
+// ============================================================================
+f_trimSwings(StructureState st) =>
+    while array.size(st.swings) > maxSwingStore
+        SwingPoint old = array.shift(st.swings)
+        f_disposeSwingDraw(old)
+    // Soft line budget: if still over, dispose oldest broken swings' lines first
+    if pool.liveLines > pool.lineBudget and array.size(st.swings) > 0
+        for i = 0 to array.size(st.swings) - 1
+            if pool.liveLines <= pool.lineBudget
+                break
+            SwingPoint s = array.get(st.swings, i)
+            if s.broken and not na(s.levelLine)
+                f_deleteLine(s.levelLine)
+                s.levelLine := na
+                array.set(st.swings, i, s)
+
+f_classify(StructureState st, float price, int kind) =>
     int cls = CLASS_NONE
-    if not na(layer.lastHighPrice)
-        cls := price > layer.lastHighPrice ? CLASS_HH : CLASS_LH
+    if kind == KIND_HIGH and not na(st.lastHigh)
+        cls := price > st.lastHigh ? CLASS_HH : CLASS_LH
+    else if kind == KIND_LOW and not na(st.lastLow)
+        cls := price > st.lastLow ? CLASS_HL : CLASS_LL
     cls
 
-f_classifyLow(StructureLayer layer, float price) =>
-    int cls = CLASS_NONE
-    if not na(layer.lastLowPrice)
-        cls := price > layer.lastLowPrice ? CLASS_HL : CLASS_LL
-    cls
+f_findSwingIndex(StructureState st, int barIdx, int kind) =>
+    int found = -1
+    int sz = array.size(st.swings)
+    if sz > 0
+        for i = sz - 1 to 0
+            SwingPoint s = array.get(st.swings, i)
+            if s.barIndex == barIdx and s.kind == kind
+                found := i
+                break
+    found
 
-f_markKindBroken(StructureLayer layer, int kind) =>
-    int sz = array.size(layer.swings)
+f_markBroken(StructureState st, int kind) =>
+    int sz = array.size(st.swings)
     if sz > 0
         for i = 0 to sz - 1
-            SwingPoint s = array.get(layer.swings, i)
+            SwingPoint s = array.get(st.swings, i)
             if s.kind == kind and not s.broken
-                bool crossed = kind == SWING_HIGH ? bullBreak(s.price) : bearBreak(s.price)
-                if crossed
+                bool hit = kind == KIND_HIGH ? f_bullBreak(s.price) : f_bearBreak(s.price)
+                if hit
                     s.broken := true
                     s.isProtected := false
                     if not na(s.levelLine)
                         line.set_x2(s.levelLine, bar_index)
-                    array.set(layer.swings, i, s)
+                    array.set(st.swings, i, s)
 
-f_refreshProtection(StructureLayer layer, bool allowDraw) =>
-    float uh = na
-    int   uhBar = na
-    float ul = na
-    int   ulBar = na
-    int sz = array.size(layer.swings)
-    if sz > 0
-        for i = sz - 1 to 0
-            SwingPoint s = array.get(layer.swings, i)
-            if s.kind == SWING_HIGH and not s.broken and na(uh)
-                uh := s.price
-                uhBar := s.barIndex
-            if s.kind == SWING_LOW and not s.broken and na(ul)
-                ul := s.price
-                ulBar := s.barIndex
-            if not na(uh) and not na(ul)
-                break
-
-    layer.protHighPrice := layer.trend == TREND_BEARISH ? uh : na
-    layer.protHighBar   := layer.trend == TREND_BEARISH ? uhBar : na
-    layer.protLowPrice  := layer.trend == TREND_BULLISH ? ul : na
-    layer.protLowBar    := layer.trend == TREND_BULLISH ? ulBar : na
-
+f_extendLines(StructureState st) =>
+    int sz = array.size(st.swings)
     if sz > 0
         for i = 0 to sz - 1
-            SwingPoint s = array.get(layer.swings, i)
-            bool prot = false
-            if not s.broken
-                if layer.trend == TREND_BEARISH and s.kind == SWING_HIGH and s.barIndex == layer.protHighBar
-                    prot := true
-                if layer.trend == TREND_BULLISH and s.kind == SWING_LOW and s.barIndex == layer.protLowBar
-                    prot := true
-            s.isProtected := prot
-            if allowDraw and showProt and prot and not s.protLabeled
-                s.protLabel := label.new(
-                     s.barIndex, s.price,
-                     s.kind == SWING_HIGH ? "PH" : "PL",
-                     xloc = xloc.bar_index,
-                     yloc = yloc.price,
-                     color = color.new(s.kind == SWING_HIGH ? protHighCol : protLowCol, 100),
-                     textcolor = s.kind == SWING_HIGH ? protHighCol : protLowCol,
-                     style = s.kind == SWING_HIGH ? label.style_label_down : label.style_label_up,
-                     size = size.tiny)
-                s.protLabeled := true
-            array.set(layer.swings, i, s)
-
-f_extendUnbrokenLines(StructureLayer layer) =>
-    int sz = array.size(layer.swings)
-    if sz > 0
-        for i = 0 to sz - 1
-            SwingPoint s = array.get(layer.swings, i)
+            SwingPoint s = array.get(st.swings, i)
             if not s.broken and not na(s.levelLine)
                 line.set_x2(s.levelLine, bar_index)
 
+// ----------------------------------------------------------------------------
+// Trend-protection logic for Protected High / Protected Low
+// ----------------------------------------------------------------------------
+// Bullish trend:
+//   • Structure protects demand → Protected Low = last unbroken swing low
+//     that supports the bullish bias (prefer last HL after a bullish event).
+//   • Updates when a newer HL is accepted; cleared when that low is broken.
+// Bearish trend:
+//   • Structure protects supply → Protected High = last unbroken swing high
+//     that supports the bearish bias (prefer last LH after a bearish event).
+//   • Updates when a newer LH is accepted; cleared when that high is broken.
+// Stamps are one-shot on the swing bar — never relocated.
+// ----------------------------------------------------------------------------
+f_applyTrendProtection(StructureState st, bool allowDraw, bool showLayer) =>
+    // Trend protection:
+    //   Bullish → protect demand (PL). Prefer newest unbroken HL; fallback newest low.
+    //   Bearish → protect supply (PH). Prefer newest unbroken LH; fallback newest high.
+    float candPH = na
+    int   candPHBar = na
+    float candPL = na
+    int   candPLBar = na
+    int sz = array.size(st.swings)
+
+    if st.trend == TREND_BULL and sz > 0
+        // Pass 1: newest HL
+        for i = sz - 1 to 0
+            SwingPoint s = array.get(st.swings, i)
+            if s.kind == KIND_LOW and not s.broken and s.classification == CLASS_HL
+                candPL := s.price
+                candPLBar := s.barIndex
+                break
+        // Pass 2: fallback newest unbroken low
+        if na(candPL)
+            for i = sz - 1 to 0
+                SwingPoint s = array.get(st.swings, i)
+                if s.kind == KIND_LOW and not s.broken
+                    candPL := s.price
+                    candPLBar := s.barIndex
+                    break
+
+    if st.trend == TREND_BEAR and sz > 0
+        for i = sz - 1 to 0
+            SwingPoint s = array.get(st.swings, i)
+            if s.kind == KIND_HIGH and not s.broken and s.classification == CLASS_LH
+                candPH := s.price
+                candPHBar := s.barIndex
+                break
+        if na(candPH)
+            for i = sz - 1 to 0
+                SwingPoint s = array.get(st.swings, i)
+                if s.kind == KIND_HIGH and not s.broken
+                    candPH := s.price
+                    candPHBar := s.barIndex
+                    break
+
+    st.protHigh    := candPH
+    st.protHighBar := candPHBar
+    st.protLow     := candPL
+    st.protLowBar  := candPLBar
+
+    if sz > 0
+        for i = 0 to sz - 1
+            SwingPoint s = array.get(st.swings, i)
+            bool prot = false
+            if not s.broken
+                if s.kind == KIND_HIGH and not na(st.protHighBar) and s.barIndex == st.protHighBar
+                    prot := true
+                if s.kind == KIND_LOW and not na(st.protLowBar) and s.barIndex == st.protLowBar
+                    prot := true
+            s.isProtected := prot
+            if allowDraw and showLayer and showProt and prot and not s.protStamped
+                s.protLabel := f_newStampLabel(
+                     s.barIndex, s.price,
+                     s.kind == KIND_HIGH ? "PH" : "PL",
+                     s.kind == KIND_HIGH ? protHighCol : protLowCol,
+                     s.kind == KIND_HIGH ? label.style_label_down : label.style_label_up,
+                     size.tiny, false)
+                s.protStamped := true
+            array.set(st.swings, i, s)
+
 // ============================================================================
-// SWING REGISTRATION
+// MODULE 1 — REGISTER FRACTAL INTO A STRUCTURE LAYER
 // ============================================================================
-f_registerSwing(StructureLayer layer, float price, int pivotBar, int kind, bool showLayer, bool showMarkers, color lineCol, int lineW) =>
-    int cls = kind == SWING_HIGH ? f_classifyHigh(layer, price) : f_classifyLow(layer, price)
+f_acceptSwing(StructureState st, Fractal fr, bool showLayer, bool showClass, color lineCol, int lineW) =>
+    bool accepted = true
 
-    line ln = na
-    if showLayer
-        ln := line.new(pivotBar, price, bar_index, price, xloc = xloc.bar_index, color = lineCol, width = lineW)
+    // Alternating swing filter (clean structure)
+    if alternateOnly and st.lastKind != 0
+        if fr.kind == st.lastKind
+            // Same side: keep more extreme, replace previous active tip
+            int idx = f_findSwingIndex(st, st.lastKind == KIND_HIGH ? st.lastHighBar : st.lastLowBar, fr.kind)
+            if fr.kind == KIND_HIGH
+                if not na(st.lastHigh) and fr.price <= st.lastHigh
+                    accepted := false
+                else if idx >= 0
+                    SwingPoint prev = array.get(st.swings, idx)
+                    prev.broken := true
+                    if not na(prev.levelLine)
+                        line.set_x2(prev.levelLine, fr.barIndex)
+                    array.set(st.swings, idx, prev)
+            else
+                if not na(st.lastLow) and fr.price >= st.lastLow
+                    accepted := false
+                else if idx >= 0
+                    SwingPoint prev = array.get(st.swings, idx)
+                    prev.broken := true
+                    if not na(prev.levelLine)
+                        line.set_x2(prev.levelLine, fr.barIndex)
+                    array.set(st.swings, idx, prev)
 
-    label lb = na
-    if showLayer and showMarkers and showHHLL and cls != CLASS_NONE
-        if na(layer.lastClassBar) or layer.lastClassBar != pivotBar
-            lb := label.new(
-                 pivotBar, price, f_className(cls),
-                 xloc = xloc.bar_index,
-                 yloc = yloc.price,
-                 color = color.new(lineCol, 100),
-                 textcolor = lineCol,
-                 style = kind == SWING_HIGH ? label.style_label_down : label.style_label_up,
-                 size = size.tiny)
-            layer.lastClassBar := pivotBar
+    if accepted
+        int cls = f_classify(st, fr.price, fr.kind)
+        line ln = na
+        label lb = na
 
-    SwingPoint sp = SwingPoint.new(price, pivotBar, kind, cls, false, false, false, ln, lb, na)
-    array.push(layer.swings, sp)
-    f_trimSwings(layer)
+        if showLayer
+            ln := f_newLevelLine(fr.barIndex, fr.price, bar_index, lineCol, lineW)
 
-    if kind == SWING_HIGH
-        layer.lastHighPrice := price
-        layer.lastHighBar   := pivotBar
-        layer.activeHigh    := price
-        layer.activeHighBar := pivotBar
-    else
-        layer.lastLowPrice := price
-        layer.lastLowBar   := pivotBar
-        layer.activeLow    := price
-        layer.activeLowBar := pivotBar
+        if showLayer and showClass and cls != CLASS_NONE
+            if na(st.lastClassBar) or st.lastClassBar != fr.barIndex
+                lb := f_newStampLabel(
+                     fr.barIndex, fr.price, f_className(cls), lineCol,
+                     fr.kind == KIND_HIGH ? label.style_label_down : label.style_label_up,
+                     size.tiny, false)
+                st.lastClassBar := fr.barIndex
 
-    if layer.trend == TREND_FLAT
-        if cls == CLASS_HH or cls == CLASS_HL
-            layer.trend := TREND_BULLISH
-        else if cls == CLASS_LL or cls == CLASS_LH
-            layer.trend := TREND_BEARISH
+        SwingPoint sp = SwingPoint.new(
+             fr.price, fr.barIndex, fr.kind, cls,
+             false, false, false, st.layerId,
+             ln, lb, na)
+        array.push(st.swings, sp)
+        f_trimSwings(st)
 
-    f_refreshProtection(layer, showLayer)
+        if fr.kind == KIND_HIGH
+            st.lastHigh     := fr.price
+            st.lastHighBar  := fr.barIndex
+            st.activeHigh   := fr.price
+            st.activeHighBar:= fr.barIndex
+        else
+            st.lastLow      := fr.price
+            st.lastLowBar   := fr.barIndex
+            st.activeLow    := fr.price
+            st.activeLowBar := fr.barIndex
+
+        st.lastKind := fr.kind
+
+        // Seed bias from first classified pair
+        if st.trend == TREND_FLAT
+            if cls == CLASS_HH or cls == CLASS_HL
+                st.trend := TREND_BULL
+            else if cls == CLASS_LL or cls == CLASS_LH
+                st.trend := TREND_BEAR
+
+        f_applyTrendProtection(st, true, showLayer)
+        fr.used := true
+
+    accepted
 
 // ============================================================================
-// BREAK ENGINE — BOS / CHoCH / MSS
+// MODULE 1 — BREAK ENGINE (BOS / CHoCH / MSS)
+// ----------------------------------------------------------------------------
+// Internal layer opposing break → CHoCH
+// External layer opposing break → MSS
+// Same-direction break          → BOS
 // ============================================================================
-f_detectBreaks(StructureLayer layer, bool isExternal, bool showLayer) =>
-    int evt = EVT_NONE
-    int dir = TREND_FLAT
+f_detectBreaks(StructureState st, bool showLayer, bool showEvents) =>
+    StructureEvent ev = newEmptyEvent()
 
     if barstate.isconfirmed
-        bool didBull = not na(layer.activeHigh) and bullBreak(layer.activeHigh)
-        bool didBear = not na(layer.activeLow) and bearBreak(layer.activeLow)
+        bool didBull = not na(st.activeHigh) and f_bullBreak(st.activeHigh)
+        bool didBear = not na(st.activeLow) and f_bearBreak(st.activeLow)
 
         if didBull and didBear
             if close >= open
@@ -319,128 +555,186 @@ f_detectBreaks(StructureLayer layer, bool isExternal, bool showLayer) =>
                 didBull := false
 
         if didBull or didBear
-            dir := didBull ? TREND_BULLISH : TREND_BEARISH
+            int dir = didBull ? TREND_BULL : TREND_BEAR
+            int evt = EVT_NONE
+            float lvl = didBull ? st.activeHigh : st.activeLow
+            int swingBar = didBull ? st.activeHighBar : st.activeLowBar
 
-            if layer.trend == TREND_FLAT
+            if st.trend == TREND_FLAT
                 evt := EVT_BOS
             else if didBull
-                evt := layer.trend == TREND_BULLISH ? EVT_BOS : (isExternal ? EVT_MSS : EVT_CHOCH)
+                evt := st.trend == TREND_BULL ? EVT_BOS : (st.layerId == LAYER_EXTERNAL ? EVT_MSS : EVT_CHOCH)
             else
-                evt := layer.trend == TREND_BEARISH ? EVT_BOS : (isExternal ? EVT_MSS : EVT_CHOCH)
+                evt := st.trend == TREND_BEAR ? EVT_BOS : (st.layerId == LAYER_EXTERNAL ? EVT_MSS : EVT_CHOCH)
 
-            if na(layer.lastEventBar) or layer.lastEventBar != bar_index
-                layer.lastEventBar  := bar_index
-                layer.lastEventType := evt
-                layer.lastEventDir  := dir
-                layer.trend         := dir
+            if na(st.lastEventBar) or st.lastEventBar != bar_index
+                st.lastEventBar  := bar_index
+                st.lastEventType := evt
+                st.lastEventDir  := dir
+                st.trend         := dir
 
                 if didBull
-                    f_markKindBroken(layer, SWING_HIGH)
-                    layer.activeHigh    := na
-                    layer.activeHighBar := na
+                    f_markBroken(st, KIND_HIGH)
+                    st.activeHigh    := na
+                    st.activeHighBar := na
                 else
-                    f_markKindBroken(layer, SWING_LOW)
-                    layer.activeLow    := na
-                    layer.activeLowBar := na
+                    f_markBroken(st, KIND_LOW)
+                    st.activeLow    := na
+                    st.activeLowBar := na
 
-                f_refreshProtection(layer, showLayer)
+                // After BOS, the opposite swing that held the move becomes protected
+                f_applyTrendProtection(st, true, showLayer)
 
-                bool drawIt = showLayer and ((evt == EVT_BOS and showBOS) or (evt == EVT_CHOCH and showCHoCH) or (evt == EVT_MSS and showMSS))
+                bool drawIt = showLayer and showEvents and evt != EVT_NONE
                 if drawIt
-                    string txt = (isExternal ? "" : "i") + f_eventName(evt)
-                    color  col = f_eventColor(evt, dir)
-                    label.new(
+                    string prefix = st.layerId == LAYER_INTERNAL ? "i" : ""
+                    f_newStampLabel(
                          bar_index,
-                         dir == TREND_BULLISH ? low : high,
-                         txt,
-                         xloc = xloc.bar_index,
-                         yloc = yloc.price,
-                         color = color.new(col, 100),
-                         textcolor = col,
-                         style = dir == TREND_BULLISH ? label.style_label_up : label.style_label_down,
-                         size = size.small)
+                         dir == TREND_BULL ? low : high,
+                         prefix + f_eventName(evt),
+                         f_eventColor(evt, dir),
+                         dir == TREND_BULL ? label.style_label_up : label.style_label_down,
+                         size.small, true)
+
+                ev := StructureEvent.new(evt, dir, st.layerId, lvl, bar_index, swingBar)
 
         if showLayer
-            f_extendUnbrokenLines(layer)
+            f_extendLines(st)
 
-    [evt, dir]
+    ev
 
 // ============================================================================
-// PIVOT SERIES
+// MODULE STATE
 // ============================================================================
-float iPivotH = ta.pivothigh(high, iLeft, iRight)
-float iPivotL = ta.pivotlow(low, iLeft, iRight)
-float ePivotH = ta.pivothigh(high, eLeft, eRight)
-float ePivotL = ta.pivotlow(low, eLeft, eRight)
+var StructureState stInternal = newStructureState(LAYER_INTERNAL)
+var StructureState stExternal = newStructureState(LAYER_EXTERNAL)
 
+var MarketContext ctx = MarketContext.new(
+     stInternal, stExternal,
+     newEmptyEvent(), newEmptyEvent(),
+     na, TREND_FLAT, na)
+
+// Guard: external fractal length must exceed internal for true separation
+int effExtLen = math.max(extFractalLen, intFractalLen + 1)
+
+// Per-bar event wires (series — safe for alerts / future modules)
 int iEvt = EVT_NONE
 int iDir = TREND_FLAT
 int eEvt = EVT_NONE
 int eDir = TREND_FLAT
 
 // ============================================================================
-// MAIN LOOP — confirmed candles only
+// MAIN — confirmed bars only
 // ============================================================================
 if barstate.isconfirmed
-    if not na(iPivotH)
-        f_registerSwing(internalLayer, iPivotH, bar_index - iRight, SWING_HIGH, showInt, showIntSwings, bearStructCol, lineWidthInt)
-    if not na(iPivotL)
-        f_registerSwing(internalLayer, iPivotL, bar_index - iRight, SWING_LOW, showInt, showIntSwings, bullStructCol, lineWidthInt)
+    // Keep pool budgets in sync with inputs
+    pool.lineBudget  := maxActiveLines
+    pool.labelBudget := maxActiveLabels
 
-    if not na(ePivotH)
-        f_registerSwing(externalLayer, ePivotH, bar_index - eRight, SWING_HIGH, showExt, showExtSwings, bearStructCol, lineWidthExt)
-    if not na(ePivotL)
-        f_registerSwing(externalLayer, ePivotL, bar_index - eRight, SWING_LOW, showExt, showExtSwings, bullStructCol, lineWidthExt)
+    // --- Fractal detection (right-side closed → non-repaint) ---
+    float iH = f_fractalHigh(intFractalLen)
+    float iL = f_fractalLow(intFractalLen)
+    float eH = f_fractalHigh(effExtLen)
+    float eL = f_fractalLow(effExtLen)
 
-    [ie, idir] = f_detectBreaks(internalLayer, false, showInt)
-    [ee, edir] = f_detectBreaks(externalLayer, true, showExt)
-    iEvt := ie
-    iDir := idir
-    eEvt := ee
-    eDir := edir
+    // --- Internal layer (micro structure) ---
+    if not na(iH)
+        Fractal fr = f_makeFractal(iH, intFractalLen, KIND_HIGH)
+        f_acceptSwing(stInternal, fr, showInt, showIntSwings, bearLineCol, lineWInt)
+    if not na(iL)
+        Fractal fr = f_makeFractal(iL, intFractalLen, KIND_LOW)
+        f_acceptSwing(stInternal, fr, showInt, showIntSwings, bullLineCol, lineWInt)
+
+    // --- External layer (macro structure) — independent larger fractal stream ---
+    if not na(eH)
+        Fractal fr = f_makeFractal(eH, effExtLen, KIND_HIGH)
+        f_acceptSwing(stExternal, fr, showExt, showExtSwings, bearLineCol, lineWExt)
+    if not na(eL)
+        Fractal fr = f_makeFractal(eL, effExtLen, KIND_LOW)
+        f_acceptSwing(stExternal, fr, showExt, showExtSwings, bullLineCol, lineWExt)
+
+    // --- Breaks: internal first (early warning), then external (major) ---
+    StructureEvent evI = f_detectBreaks(stInternal, showInt, showIntEvents)
+    StructureEvent evE = f_detectBreaks(stExternal, showExt, showExtEvents)
+
+    iEvt := evI.eventType
+    iDir := evI.direction
+    eEvt := evE.eventType
+    eDir := evE.direction
+
+    // --- MarketContext bridge (Modules 2–5 read this; never raw pivots) ---
+    ctx.internal      := stInternal
+    ctx.external      := stExternal
+    ctx.lastIntEvent  := evI
+    ctx.lastExtEvent  := evE
+    ctx.atr           := f_atr
+    ctx.bias          := stExternal.trend
+    ctx.confirmedBar  := bar_index
 
 // ============================================================================
-// DATA WINDOW EXPORTS
+// FUTURE MODULE HOOKS (placeholders — compile-safe stubs)
+// ----------------------------------------------------------------------------
+// Module 2 Liquidity  → consumes ctx.external activeHigh/Low + equal highs/lows
+// Module 3 OrderBlock → consumes displacement after ctx last events + ATR
+// Module 4 FVG        → consumes impulse legs between structure swings + ATR
+// Module 5 MM Models  → consumes EQH/EQL sweeps + MSS + OB + premium/discount
+// These modules must only commit on barstate.isconfirmed using ctx.confirmedBar.
 // ============================================================================
-plot(internalLayer.trend, title = "Internal Trend", display = display.data_window)
-plot(externalLayer.trend, title = "External Trend", display = display.data_window)
-plot(internalLayer.activeHigh, title = "Internal Active High", display = display.data_window)
-plot(internalLayer.activeLow, title = "Internal Active Low", display = display.data_window)
-plot(externalLayer.activeHigh, title = "External Active High", display = display.data_window)
-plot(externalLayer.activeLow, title = "External Active Low", display = display.data_window)
-plot(externalLayer.protHighPrice, title = "Protected High", display = display.data_window)
-plot(externalLayer.protLowPrice, title = "Protected Low", display = display.data_window)
+f_ctxBias() => ctx.bias
+f_ctxAtr() => ctx.atr
+f_ctxInternalTrend() => ctx.internal.trend
+f_ctxExternalTrend() => ctx.external.trend
+f_ctxProtHigh() => ctx.external.protHigh
+f_ctxProtLow() => ctx.external.protLow
+f_ctxActiveExtHigh() => ctx.external.activeHigh
+f_ctxActiveExtLow() => ctx.external.activeLow
+
+// ============================================================================
+// DATA WINDOW — exports for Dashboard (Module 7) + ctx accessors
+// ============================================================================
+plot(f_ctxInternalTrend(), title = "Internal Trend", display = display.data_window)
+plot(f_ctxExternalTrend(), title = "External Trend", display = display.data_window)
+plot(f_ctxBias(), title = "Bias", display = display.data_window)
+plot(f_ctxProtHigh(), title = "Protected High", display = display.data_window)
+plot(f_ctxProtLow(), title = "Protected Low", display = display.data_window)
+plot(f_ctxActiveExtHigh(), title = "Ext Active High", display = display.data_window)
+plot(f_ctxActiveExtLow(), title = "Ext Active Low", display = display.data_window)
+plot(ctx.internal.activeHigh, title = "Int Active High", display = display.data_window)
+plot(ctx.internal.activeLow, title = "Int Active Low", display = display.data_window)
 plot(iEvt, title = "Internal Event", display = display.data_window)
 plot(eEvt, title = "External Event", display = display.data_window)
+plot(f_ctxAtr(), title = "ATR", display = display.data_window)
 
 // ============================================================================
-// ALERTS — structure foundation
+// ALERTS — structure foundation (Module 8)
 // ============================================================================
-alertcondition(iEvt == EVT_BOS and iDir == TREND_BULLISH, "Internal Bullish BOS", "MM SM PRO: Internal Bullish BOS")
-alertcondition(iEvt == EVT_BOS and iDir == TREND_BEARISH, "Internal Bearish BOS", "MM SM PRO: Internal Bearish BOS")
-alertcondition(iEvt == EVT_CHOCH and iDir == TREND_BULLISH, "Internal Bullish CHoCH", "MM SM PRO: Internal Bullish CHoCH")
-alertcondition(iEvt == EVT_CHOCH and iDir == TREND_BEARISH, "Internal Bearish CHoCH", "MM SM PRO: Internal Bearish CHoCH")
-alertcondition(eEvt == EVT_BOS and eDir == TREND_BULLISH, "External Bullish BOS", "MM SM PRO: External Bullish BOS")
-alertcondition(eEvt == EVT_BOS and eDir == TREND_BEARISH, "External Bearish BOS", "MM SM PRO: External Bearish BOS")
-alertcondition(eEvt == EVT_MSS and eDir == TREND_BULLISH, "Bullish MSS", "MM SM PRO: Bullish MSS")
-alertcondition(eEvt == EVT_MSS and eDir == TREND_BEARISH, "Bearish MSS", "MM SM PRO: Bearish MSS")
+alertcondition(iEvt == EVT_BOS and iDir == TREND_BULL, "Internal Bullish BOS", "MM SM PRO: Internal Bullish BOS")
+alertcondition(iEvt == EVT_BOS and iDir == TREND_BEAR, "Internal Bearish BOS", "MM SM PRO: Internal Bearish BOS")
+alertcondition(iEvt == EVT_CHOCH and iDir == TREND_BULL, "Internal Bullish CHoCH", "MM SM PRO: Internal Bullish CHoCH")
+alertcondition(iEvt == EVT_CHOCH and iDir == TREND_BEAR, "Internal Bearish CHoCH", "MM SM PRO: Internal Bearish CHoCH")
+alertcondition(eEvt == EVT_BOS and eDir == TREND_BULL, "External Bullish BOS", "MM SM PRO: External Bullish BOS")
+alertcondition(eEvt == EVT_BOS and eDir == TREND_BEAR, "External Bearish BOS", "MM SM PRO: External Bearish BOS")
+alertcondition(eEvt == EVT_MSS and eDir == TREND_BULL, "Bullish MSS", "MM SM PRO: Bullish MSS")
+alertcondition(eEvt == EVT_MSS and eDir == TREND_BEAR, "Bearish MSS", "MM SM PRO: Bearish MSS")
 
 // ============================================================================
-// MODULE HUD
+// HUD
 // ============================================================================
-var table hud = table.new(position.top_right, 2, 6, border_width = 1)
+var table hud = table.new(position.top_right, 2, 7, border_width = 1)
 
 if showHud and barstate.isconfirmed and barstate.islast
     color bg = color.new(#1e222d, 10)
     table.cell(hud, 0, 0, "MM Smart Money PRO", text_color = color.white, bgcolor = color.new(#1e222d, 0), text_halign = text.align_center)
     table.merge_cells(hud, 0, 0, 1, 0)
     table.cell(hud, 0, 1, "Module", text_color = color.gray, bgcolor = bg)
-    table.cell(hud, 1, 1, "1 · Structure", text_color = color.white, bgcolor = bg)
+    table.cell(hud, 1, 1, "1 · Fractal Structure", text_color = color.white, bgcolor = bg)
     table.cell(hud, 0, 2, "Internal", text_color = color.gray, bgcolor = bg)
-    table.cell(hud, 1, 2, internalLayer.trend == TREND_BULLISH ? "Bullish" : internalLayer.trend == TREND_BEARISH ? "Bearish" : "Flat", text_color = internalLayer.trend == TREND_BULLISH ? bullBosCol : internalLayer.trend == TREND_BEARISH ? bearBosCol : color.gray, bgcolor = bg)
+    table.cell(hud, 1, 2, f_trendName(stInternal.trend), text_color = stInternal.trend == TREND_BULL ? bullBosCol : stInternal.trend == TREND_BEAR ? bearBosCol : color.gray, bgcolor = bg)
     table.cell(hud, 0, 3, "External", text_color = color.gray, bgcolor = bg)
-    table.cell(hud, 1, 3, externalLayer.trend == TREND_BULLISH ? "Bullish" : externalLayer.trend == TREND_BEARISH ? "Bearish" : "Flat", text_color = externalLayer.trend == TREND_BULLISH ? bullBosCol : externalLayer.trend == TREND_BEARISH ? bearBosCol : color.gray, bgcolor = bg)
-    table.cell(hud, 0, 4, "Prot High", text_color = color.gray, bgcolor = bg)
-    table.cell(hud, 1, 4, na(externalLayer.protHighPrice) ? "—" : str.tostring(externalLayer.protHighPrice, format.mintick), text_color = protHighCol, bgcolor = bg)
-    table.cell(hud, 0, 5, "Prot Low", text_color = color.gray, bgcolor = bg)
-    table.cell(hud, 1, 5, na(externalLayer.protLowPrice) ? "—" : str.tostring(externalLayer.protLowPrice, format.mintick), text_color = protLowCol, bgcolor = bg)
+    table.cell(hud, 1, 3, f_trendName(stExternal.trend), text_color = stExternal.trend == TREND_BULL ? bullBosCol : stExternal.trend == TREND_BEAR ? bearBosCol : color.gray, bgcolor = bg)
+    table.cell(hud, 0, 4, "Bias", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 4, f_trendName(ctx.bias), text_color = ctx.bias == TREND_BULL ? bullBosCol : ctx.bias == TREND_BEAR ? bearBosCol : color.gray, bgcolor = bg)
+    table.cell(hud, 0, 5, "Prot High", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 5, na(stExternal.protHigh) ? "—" : str.tostring(stExternal.protHigh, format.mintick), text_color = protHighCol, bgcolor = bg)
+    table.cell(hud, 0, 6, "Prot Low", text_color = color.gray, bgcolor = bg)
+    table.cell(hud, 1, 6, na(stExternal.protLow) ? "—" : str.tostring(stExternal.protLow, format.mintick), text_color = protLowCol, bgcolor = bg)

@@ -1,66 +1,77 @@
-# Module 1 — Structure Engine
+# Module 1 — Fractal Structure Engine
 
 ## Status
 
-**Complete** — awaiting confirmation before Module 2 (Liquidity Engine).
+**Complete (refactored)** — fractal-based, awaiting confirmation before Module 2.
 
 ## File
 
-- Working copy: `mm-smart-money-pro/MM_Smart_Money_PRO.pine`
-- Module snapshot: `mm-smart-money-pro/modules/01_structure_engine.pine`
+- `mm-smart-money-pro/MM_Smart_Money_PRO.pine`
+- Snapshot: `mm-smart-money-pro/modules/01_structure_engine.pine`
 
-## How to load in TradingView
+## What changed from pivot version
 
-1. Open TradingView → Pine Editor
-2. Paste contents of `MM_Smart_Money_PRO.pine`
-3. Save → Add to chart
-4. Confirm compile: **0 errors**
+| Before | After |
+|--------|--------|
+| `ta.pivothigh` / `ta.pivotlow` | Confirmed Williams-style **fractals** |
+| Left/right bar inputs | Internal / External **fractal length** |
+| Ad-hoc PH/PL | **Trend-protection** PH/PL (HL in bull, LH in bear) |
+| Flat helpers | Reusable **UDT classes** + `MarketContext` bridge |
+| Unbounded drawings | **DrawPool** ownership + budgets |
 
-## What it detects
+## Fractal confirmation (non-repaint)
 
-| Feature | Internal | External |
-|---------|----------|----------|
-| Swing High / Swing Low | Yes | Yes |
-| HH / HL / LH / LL | Yes | Yes |
-| Protected High / Low | Yes | Yes |
-| BOS | `iBOS` | `BOS` |
-| CHoCH | `iCHoCH` | — |
-| MSS | — | `MSS` |
+A fractal of length `L` confirms on the current **closed** bar when the bar at offset `L` is strictly higher/lower than the `L` bars on both sides. Right-side bars are already closed — no lookahead.
 
-## Event model (original)
+## Internal vs External
 
-- **BOS** — continuation break in the direction of the current layer bias
-- **CHoCH** — first opposing break on the **internal** layer (early character change)
-- **MSS** — first opposing break on the **external** layer (major market structure shift)
+| Layer | Default length | Role | Opposing break |
+|-------|----------------|------|----------------|
+| Internal | 2 (5-bar fractal) | Micro structure | `iCHoCH` |
+| External | 5+ (forced `> internal`) | Macro / bias | `MSS` |
+| Either | — | Continuation | `BOS` |
 
-## Non-repaint rules enforced
+Optional **alternating swing filter** rejects consecutive same-side fractals unless more extreme (keeps structure clean).
 
-- State updates only when `barstate.isconfirmed`
-- Pivots via `ta.pivothigh` / `ta.pivotlow` (emit after `rightBars`)
-- Breaks evaluated on the closed bar only (`Close` or closed-bar `Wick`)
-- Event labels created once on the break candle — never moved
-- Structure lines extend right until broken, then freeze at the break bar
-- No `request.security()` (no lookahead path)
+## Protected High / Low (trend protection)
 
-## Note on `calc_on_every_tick`
+- **Bullish bias** → protect demand → **PL** = newest unbroken **HL** (fallback: newest unbroken low)
+- **Bearish bias** → protect supply → **PH** = newest unbroken **LH** (fallback: newest unbroken high)
+- Stamps are one-shot on the swing bar — never moved
 
-That flag exists on `strategy()`, not `indicator()`. Closed-bar gating via `barstate.isconfirmed` provides the equivalent non-repaint behavior for this indicator module.
+## Reusable architecture
 
-## Inputs
+```
+Fractal → SwingPoint → StructureState (Internal | External)
+                              ↓
+                        StructureEvent
+                              ↓
+                        MarketContext  ← Modules 2–5 read only from here
+                              ↓
+                        DrawPool (line/label budgets)
+```
 
-- Internal / External left & right pivot lengths
-- Show/hide layers, swing markers, BOS / CHoCH / MSS / HHLL / PH-PL
-- Break confirmation mode
-- Colors, line widths, swing memory cap, HUD toggle
+### Types
 
-## Alerts included
+- `Fractal`, `SwingPoint`, `StructureEvent`, `StructureState`
+- `DrawPool`, `MarketContext`
 
-- Internal Bullish/Bearish BOS
-- Internal Bullish/Bearish CHoCH
-- External Bullish/Bearish BOS
-- Bullish/Bearish MSS
+### Context accessors (for future modules)
 
-## Next module (after your confirmation)
+- `f_ctxBias()`, `f_ctxAtr()`
+- `f_ctxInternalTrend()`, `f_ctxExternalTrend()`
+- `f_ctxProtHigh()`, `f_ctxProtLow()`
+- `f_ctxActiveExtHigh()`, `f_ctxActiveExtLow()`
 
-**Module 2 — Liquidity Engine**
-Equal Highs/Lows, BSL/SSL, sweeps, strong/weak highs & lows.
+Future modules must commit only when `barstate.isconfirmed` and prefer `ctx.confirmedBar`.
+
+## Object management
+
+- Swing owns its line / class label / PH-PL label
+- Trim disposes drawings and nulls refs (no use-after-delete)
+- Event labels tracked separately; oldest retired only under label budget pressure
+- Broken swing lines frozen at break bar, eligible for budget reclaim
+
+## Alerts
+
+Internal BOS/CHoCH, External BOS, MSS (bullish & bearish).
