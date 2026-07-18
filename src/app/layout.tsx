@@ -15,6 +15,7 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://nibbo.fun"),
   title: "NIBBO | Born Weird. Built to Meme.",
   description:
     "NIBBO is a mysterious little creature from another galaxy that landed on Solana to spread memes, fun, and community.",
