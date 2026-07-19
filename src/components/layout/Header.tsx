@@ -6,6 +6,34 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+function InstagramIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <rect
+        x="3"
+        y="3"
+        width="18"
+        height="18"
+        rx="5"
+        stroke="currentColor"
+        strokeWidth="2"
+      />
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" />
+      <circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" />
+    </svg>
+  );
+}
+
+const headerBtnClass = "!rounded-full !px-5 !py-2.5 !text-xs";
+const headerIconBtnClass = "!rounded-full !px-3.5 !py-2.5 !text-xs";
+
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -50,10 +78,33 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
-          <Button href={LINKS.buy} className="!px-5 !py-2.5 !text-xs">
+          <Button href={LINKS.buy} className={headerBtnClass} aria-label="Buy NIBBO">
             Buy
           </Button>
-          <Button href={LINKS.telegram} variant="outline" className="!px-5 !py-2.5 !text-xs">
+          <Button
+            href={LINKS.twitter}
+            variant="outline"
+            className={headerIconBtnClass}
+            aria-label="Follow NIBBO on X"
+          >
+            <X size={14} />
+            X
+          </Button>
+          <Button
+            href={LINKS.instagram}
+            variant="outline"
+            className={headerIconBtnClass}
+            aria-label="Follow NIBBO on Instagram"
+          >
+            <InstagramIcon size={14} />
+            Instagram
+          </Button>
+          <Button
+            href={LINKS.telegram}
+            variant="outline"
+            className={headerBtnClass}
+            aria-label="Join NIBBO Telegram"
+          >
             Join Telegram
           </Button>
         </div>
@@ -88,8 +139,33 @@ export function Header() {
                 </a>
               ))}
               <div className="mt-2 flex flex-col gap-3">
-                <Button href={LINKS.buy}>Buy</Button>
-                <Button href={LINKS.telegram} variant="outline">
+                <Button href={LINKS.buy} className="!rounded-full" aria-label="Buy NIBBO">
+                  Buy
+                </Button>
+                <Button
+                  href={LINKS.twitter}
+                  variant="outline"
+                  className="!rounded-full"
+                  aria-label="Follow NIBBO on X"
+                >
+                  <X size={16} />
+                  X
+                </Button>
+                <Button
+                  href={LINKS.instagram}
+                  variant="outline"
+                  className="!rounded-full"
+                  aria-label="Follow NIBBO on Instagram"
+                >
+                  <InstagramIcon size={16} />
+                  Instagram
+                </Button>
+                <Button
+                  href={LINKS.telegram}
+                  variant="outline"
+                  className="!rounded-full"
+                  aria-label="Join NIBBO Telegram"
+                >
                   Join Telegram
                 </Button>
               </div>

@@ -11,6 +11,7 @@ type ButtonProps = {
   onClick?: () => void;
   target?: string;
   rel?: string;
+  "aria-label"?: string;
 };
 
 export function Button({
@@ -21,6 +22,7 @@ export function Button({
   onClick,
   target = "_blank",
   rel = "noopener noreferrer",
+  "aria-label": ariaLabel,
 }: ButtonProps) {
   const base =
     "inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-heading text-sm font-semibold tracking-wide transition-transform duration-300";
@@ -45,6 +47,7 @@ export function Button({
         href={href}
         target={target}
         rel={rel}
+        aria-label={ariaLabel}
         className={classes}
         onClick={handleClick}
         whileHover={{ scale: 1.04, y: -2 }}
@@ -58,6 +61,7 @@ export function Button({
   return (
     <motion.button
       type="button"
+      aria-label={ariaLabel}
       className={classes}
       onClick={handleClick}
       whileHover={{ scale: 1.04, y: -2 }}
