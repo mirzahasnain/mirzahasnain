@@ -208,3 +208,10 @@ body.cursor-custom [role="button"] {
     cursor: auto;
   }
 }
+
+/* Game-specific utilities */
+.touch-none {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}

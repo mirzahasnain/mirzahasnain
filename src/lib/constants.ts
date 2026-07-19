@@ -14,6 +14,8 @@ export const LINKS = {
   pumpfun: "https://pump.fun",
   email: "mailto:hello@nibbo.fun",
   github: "https://github.com/mirzahasnain/mirzahasnain",
+  play: "/play",
+  leaderboard: "/play/leaderboard",
 } as const;
 
 /** Replace this string with the live contract address on launch day. */
@@ -22,6 +24,7 @@ export const CONTRACT_ADDRESS = "COMING ON LAUNCH DAY";
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },
   { label: "About", href: "#about" },
+  { label: "Play", href: "/play" },
   { label: "Community", href: "#community" },
   { label: "Roadmap", href: "#roadmap" },
   { label: "FAQ", href: "#faq" },
