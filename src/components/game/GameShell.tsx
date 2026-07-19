@@ -11,7 +11,6 @@ import { futureFeatures } from "@/lib/game/future";
 import {
   saveScore,
   setUsername,
-  shouldShowDailyChallenge,
   getUsername,
 } from "@/lib/game/storage";
 import type { GamePhase } from "@/lib/game/types";
@@ -68,7 +67,7 @@ export function GameShell() {
   }, [startWithCountdown]);
 
   const showDaily = useCallback(() => {
-    if (shouldShowDailyChallenge()) setDailyOpen(true);
+    setDailyOpen(true);
   }, []);
 
   return (
