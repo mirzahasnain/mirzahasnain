@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { LaunchCountdown } from "@/components/sections/LaunchCountdown";
 import { LINKS, SITE } from "@/lib/constants";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
@@ -63,6 +64,8 @@ export function Hero() {
           >
             {SITE.description}
           </motion.p>
+
+          <LaunchCountdown />
 
           <motion.div
             className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
