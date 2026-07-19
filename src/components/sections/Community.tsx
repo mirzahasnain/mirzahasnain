@@ -25,10 +25,13 @@ export function Community() {
               description="Weirdos welcome. Degens preferred. Memes mandatory."
             />
 
-            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <div className="flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
               <Button href={LINKS.telegram}>Telegram</Button>
               <Button href={LINKS.twitter} variant="outline">
                 X
+              </Button>
+              <Button href={LINKS.instagram} variant="outline">
+                Instagram
               </Button>
               <Button href={LINKS.pumpfun}>Pump.fun</Button>
             </div>

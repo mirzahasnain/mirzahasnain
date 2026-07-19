@@ -2,12 +2,12 @@
 
 import { LINKS, SITE } from "@/lib/constants";
 import { motion } from "framer-motion";
-import { MessageCircle, Send, X } from "lucide-react";
+import { Camera, Send, X } from "lucide-react";
 
 const socials = [
   { label: "Telegram", href: LINKS.telegram, icon: Send },
   { label: "X", href: LINKS.twitter, icon: X },
-  { label: "Discord", href: LINKS.discord, icon: MessageCircle },
+  { label: "Instagram", href: LINKS.instagram, icon: Camera },
 ];
 
 export function Footer() {

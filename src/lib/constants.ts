@@ -8,9 +8,9 @@ export const SITE = {
 
 export const LINKS = {
   buy: "https://pump.fun",
-  telegram: "https://t.me",
-  twitter: "https://x.com",
-  discord: "https://discord.com",
+  telegram: "https://t.me/nibboarmy",
+  twitter: "https://x.com/realnibbo",
+  instagram: "https://instagram.com/nibbocoin",
   pumpfun: "https://pump.fun",
 } as const;
 
