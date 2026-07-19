@@ -12,7 +12,12 @@ export const LINKS = {
   twitter: "https://x.com/realnibbo",
   instagram: "https://instagram.com/nibbocoin",
   pumpfun: "https://pump.fun",
+  email: "mailto:hello@nibbo.fun",
+  github: "https://github.com/mirzahasnain/mirzahasnain",
 } as const;
+
+/** Replace this string with the live contract address on launch day. */
+export const CONTRACT_ADDRESS = "COMING ON LAUNCH DAY";
 
 export const NAV_LINKS = [
   { label: "Home", href: "#home" },
@@ -22,13 +27,27 @@ export const NAV_LINKS = [
   { label: "FAQ", href: "#faq" },
 ] as const;
 
+export const HERO_CTAS = [
+  { label: "Buy on Pump.fun", href: LINKS.pumpfun, emoji: "🟣", variant: "gradient" as const },
+  { label: "Follow on X", href: LINKS.twitter, emoji: "❌", variant: "outline" as const },
+  { label: "Instagram", href: LINKS.instagram, emoji: "📸", variant: "outline" as const },
+  { label: "Join Telegram", href: LINKS.telegram, emoji: "✈️", variant: "outline" as const },
+] as const;
+
 export const TOKEN_INFO = [
-  { label: "Name", value: "NIBBO" },
-  { label: "Ticker", value: "NIBBO" },
-  { label: "Chain", value: "Solana" },
-  { label: "Tax", value: "0%" },
-  { label: "Launch", value: "Fair Launch" },
-  { label: "Supply", value: "TBA" },
+  { label: "Network", value: "Solana" },
+  { label: "Launch Date", value: "26 July 2026" },
+  { label: "Launch Time", value: "9:00 PM UTC" },
+  { label: "Launchpad", value: "Pump.fun" },
+  { label: "Status", value: "Launching Soon" },
+] as const;
+
+export const TOKENOMICS = [
+  { label: "Total Supply", value: "100%" },
+  { label: "Taxes", value: "0%" },
+  { label: "Mint", value: "Revoked" },
+  { label: "Freeze", value: "Disabled" },
+  { label: "Liquidity", value: "Locked" },
 ] as const;
 
 export const WHY_CARDS = [
@@ -57,18 +76,23 @@ export const WHY_CARDS = [
 export const ROADMAP = [
   {
     phase: "Phase 1",
-    title: "Ignition",
-    items: ["Create Community", "Launch", "Memes"],
+    title: "Foundation",
+    items: ["Website", "Social Media", "Community"],
   },
   {
     phase: "Phase 2",
-    title: "Orbit",
-    items: ["Dex Screener", "CoinGecko", "10k Holders"],
+    title: "Launch",
+    items: ["Token Launch", "Pump.fun", "1000 Holders"],
   },
   {
     phase: "Phase 3",
+    title: "Expansion",
+    items: ["CoinGecko", "CoinMarketCap", "Partnerships"],
+  },
+  {
+    phase: "Phase 4",
     title: "Galaxy",
-    items: ["Partnerships", "Listings", "Global Community"],
+    items: ["Meme Expansion", "NFT Collection", "Global Community"],
   },
 ] as const;
 
@@ -76,7 +100,7 @@ export const FAQ_ITEMS = [
   {
     question: "What is NIBBO?",
     answer:
-      "NIBBO is a mysterious internet creature that landed on Solana to spread memes, fun, and community. Not a cat. Not a bear. Not an alien. Just pure meme energy.",
+      "NIBBO is a mysterious blue kitten from another galaxy who landed on Solana to spread memes, fun, and community across the crypto universe.",
   },
   {
     question: "How to buy?",

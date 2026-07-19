@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/Button";
 import { LaunchCountdown } from "@/components/sections/LaunchCountdown";
-import { LINKS, SITE } from "@/lib/constants";
+import { HERO_CTAS, SITE } from "@/lib/constants";
 import { motion, useScroll, useTransform } from "framer-motion";
 import Image from "next/image";
 import { useRef } from "react";
@@ -24,7 +24,7 @@ export function Hero() {
       className="relative z-10 flex min-h-[100svh] items-center pt-24 pb-16"
     >
       <div className="container-site grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-8">
-        <motion.div style={{ y: textY, opacity }} className="relative z-10">
+        <motion.div style={{ y: textY, opacity }} className="relative z-10 min-w-0">
           <motion.p
             className="mb-4 font-heading text-xs uppercase tracking-[0.4em] text-neon-blue"
             initial={{ opacity: 0, y: 20 }}
@@ -68,15 +68,23 @@ export function Hero() {
           <LaunchCountdown />
 
           <motion.div
-            className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
+            className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.55 }}
           >
-            <Button href={LINKS.buy}>Buy on Pump.fun</Button>
-            <Button href={LINKS.telegram} variant="outline">
-              Join Community
-            </Button>
+            {HERO_CTAS.map((cta) => (
+              <Button
+                key={cta.label}
+                href={cta.href}
+                variant={cta.variant}
+                className="!rounded-full !px-5 !py-3 !text-xs w-full"
+                aria-label={cta.label}
+              >
+                <span aria-hidden="true">{cta.emoji}</span>
+                {cta.label}
+              </Button>
+            ))}
           </motion.div>
         </motion.div>
 
@@ -114,6 +122,7 @@ export function Hero() {
               width={640}
               height={640}
               priority
+              sizes="(max-width: 1024px) 90vw, 520px"
               className="relative z-10 h-auto w-full drop-shadow-[0_0_50px_rgba(62,203,255,0.45)]"
             />
           </motion.div>

@@ -2,25 +2,29 @@
 
 import { GlassCard } from "@/components/ui/GlassCard";
 import { SectionHeading } from "@/components/ui/SectionHeading";
-import { TOKEN_INFO } from "@/lib/constants";
+import { TOKENOMICS } from "@/lib/constants";
 
-export function TokenInfo() {
+export function Tokenomics() {
   return (
-    <section id="token-info" className="relative z-10 section-pad">
+    <section id="tokenomics" className="relative z-10 section-pad">
       <div className="container-site">
         <SectionHeading
-          eyebrow="Details"
-          title="Token Information"
-          description="Everything you need to know before launch day."
+          eyebrow="Economics"
+          title="Tokenomics"
+          description="Clean, fair, and built for the community."
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {TOKEN_INFO.map((item, index) => (
-            <GlassCard key={item.label} delay={index * 0.06} className="min-w-0">
+          {TOKENOMICS.map((item, index) => (
+            <GlassCard
+              key={item.label}
+              delay={index * 0.06}
+              className="text-center"
+            >
               <p className="font-heading text-[11px] uppercase tracking-[0.24em] text-text-muted">
                 {item.label}
               </p>
-              <p className="mt-3 break-words font-heading text-xl font-semibold text-white sm:text-2xl">
+              <p className="mt-3 font-heading text-2xl font-bold text-gradient sm:text-3xl">
                 {item.value}
               </p>
             </GlassCard>
