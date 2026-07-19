@@ -4,6 +4,13 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ROADMAP } from "@/lib/constants";
 import { motion } from "framer-motion";
 
+const phaseGlow = [
+  "bg-neon-blue shadow-[0_0_16px_rgba(62,203,255,0.8)]",
+  "bg-neon-purple shadow-[0_0_16px_rgba(168,85,247,0.8)]",
+  "bg-neon-pink shadow-[0_0_16px_rgba(255,107,203,0.8)]",
+  "bg-neon-blue-soft shadow-[0_0_16px_rgba(106,216,255,0.8)]",
+];
+
 export function Roadmap() {
   return (
     <section id="roadmap" className="relative z-10 section-pad">
@@ -32,8 +39,8 @@ export function Roadmap() {
                   transition={{ duration: 0.55, delay: index * 0.08 }}
                 >
                   <div
-                    className={`absolute left-2.5 top-3 h-3 w-3 rounded-full bg-neon-blue shadow-[0_0_16px_rgba(62,203,255,0.8)] md:left-1/2 md:-translate-x-1/2 ${
-                      index === 1 ? "bg-neon-purple" : index === 2 ? "bg-neon-pink" : ""
+                    className={`absolute left-2.5 top-3 h-3 w-3 rounded-full md:left-1/2 md:-translate-x-1/2 ${
+                      phaseGlow[index % phaseGlow.length]
                     }`}
                   />
 
@@ -55,7 +62,7 @@ export function Roadmap() {
                     >
                       {phase.items.map((item) => (
                         <li key={item} className="text-sm sm:text-base">
-                          {item}
+                          • {item}
                         </li>
                       ))}
                     </ul>
