@@ -12,6 +12,7 @@ import {
   saveScore,
   setUsername,
   getUsername,
+  ensureSeedLeaderboard,
 } from "@/lib/game/storage";
 import type { GamePhase } from "@/lib/game/types";
 import { AnimatePresence, motion } from "framer-motion";
@@ -27,6 +28,7 @@ export function GameShell() {
   const [dailyOpen, setDailyOpen] = useState(false);
 
   useEffect(() => {
+    ensureSeedLeaderboard();
     const offScore = gameBus.onScore(setScore);
     const offTime = gameBus.onTime(setTimeLeft);
     const offOver = gameBus.onGameOver((finalScore) => {

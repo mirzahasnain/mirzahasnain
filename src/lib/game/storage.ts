@@ -93,7 +93,7 @@ export function markDailyChallengeSeen() {
 export function ensureSeedLeaderboard() {
   if (typeof window === "undefined") return;
   const existing = getAllScores();
-  if (existing.length > 0) return;
+  if (existing.some((e) => e.id.startsWith("seed-"))) return;
 
   const names = [
     "CosmicKitty",
@@ -111,8 +111,17 @@ export function ensureSeedLeaderboard() {
     username,
     score: 140 - i * 12 + Math.floor(Math.random() * 8),
     rank: 0,
-    createdAt: now - i * 36e5 * (i % 3 === 0 ? 1 : i % 2 === 0 ? 26 : 80),
+    // Mix of today / this week / older so all tabs have data
+    createdAt:
+      i < 3
+        ? now - i * 15 * 60 * 1000
+        : i < 6
+          ? now - (1 + i) * 24 * 60 * 60 * 1000
+          : now - (10 + i) * 24 * 60 * 60 * 1000,
     period: "all",
   }));
-  localStorage.setItem(GAME.storageKeys.scores, JSON.stringify(seeded));
+  localStorage.setItem(
+    GAME.storageKeys.scores,
+    JSON.stringify([...seeded, ...existing].slice(-500))
+  );
 }
