@@ -75,7 +75,7 @@ export function GameShell() {
     <div className="relative h-[100dvh] w-full overflow-hidden bg-space-950">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(62,203,255,0.12),transparent_45%),radial-gradient(ellipse_at_bottom_right,rgba(168,85,247,0.16),transparent_40%),linear-gradient(180deg,#030014_0%,#07061a_50%,#030014_100%)]" />
 
-      <GameCanvas onReady={handleReady} />
+      <GameCanvas onReady={handleReady} interactive={phase === "playing"} />
 
       {/* Soft center mascot watermark while playing */}
       {phase === "playing" ? (

@@ -13,20 +13,30 @@ type Props = {
 export function DailyChallengePopup({ open, score, onClose }: Props) {
   const hit = score >= GAME.dailyChallengeTarget;
 
+  const close = () => {
+    markDailyChallengeSeen();
+    onClose();
+  };
+
   return (
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="absolute inset-0 z-40 flex items-center justify-center bg-black/55 px-5 backdrop-blur-sm"
+          className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 px-5 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          onClick={close}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Daily Challenge"
         >
           <motion.div
-            className="glass-strong relative w-full max-w-sm overflow-hidden rounded-3xl p-6 text-center shadow-[0_0_50px_rgba(168,85,247,0.25)]"
+            className="glass-strong relative z-10 w-full max-w-sm overflow-hidden rounded-3xl p-6 text-center shadow-[0_0_50px_rgba(168,85,247,0.25)]"
             initial={{ scale: 0.85, y: 24, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
           >
             <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-neon-pink/20 blur-3xl" />
             <p className="text-3xl">🎁</p>
@@ -54,17 +64,13 @@ export function DailyChallengePopup({ open, score, onClose }: Props) {
                 </p>
               )}
             </div>
-            <motion.button
+            <button
               type="button"
-              className="btn-gradient mt-5 w-full rounded-xl py-3 font-heading text-sm font-bold tracking-[0.16em]"
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                markDailyChallengeSeen();
-                onClose();
-              }}
+              className="btn-gradient relative z-20 mt-5 w-full rounded-xl py-3 font-heading text-sm font-bold tracking-[0.16em]"
+              onClick={close}
             >
               Got it
-            </motion.button>
+            </button>
           </motion.div>
         </motion.div>
       ) : null}

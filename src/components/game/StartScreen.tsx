@@ -60,8 +60,12 @@ export function StartScreen({ onPlay, ready }: Props) {
       <motion.button
         type="button"
         disabled={!ready}
-        onClick={onPlay}
-        className="btn-gradient relative mt-8 rounded-2xl px-12 py-4 font-heading text-lg font-bold tracking-[0.2em] disabled:cursor-wait disabled:opacity-60"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (ready) onPlay();
+        }}
+        className="btn-gradient relative z-10 mt-8 rounded-2xl px-12 py-4 font-heading text-lg font-bold tracking-[0.2em] disabled:cursor-wait disabled:opacity-60"
         whileHover={{ scale: ready ? 1.05 : 1 }}
         whileTap={{ scale: ready ? 0.96 : 1 }}
         initial={{ y: 12, opacity: 0 }}

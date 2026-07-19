@@ -13,6 +13,7 @@ export class MainScene extends Phaser.Scene {
   private score = 0;
   private timeLeft: number = GAME.durationSeconds;
   private elapsed = 0;
+  private roundStartedAt = 0;
   private spawnTimer = 0;
   private spawnInterval: number = DIFFICULTY.baseSpawnMs;
   private moveSpeed: number = DIFFICULTY.baseMoveSpeed;
@@ -112,6 +113,7 @@ export class MainScene extends Phaser.Scene {
     this.playing = true;
     this.ended = false;
     this.clearNibbos();
+    this.roundStartedAt = performance.now();
     gameBus.emitScore(0);
     gameBus.emitTime(this.timeLeft);
     this.spawnNibbo();
@@ -121,8 +123,10 @@ export class MainScene extends Phaser.Scene {
   update(_time: number, delta: number) {
     if (!this.playing || this.ended) return;
 
-    this.elapsed += delta;
-    this.spawnTimer += delta;
+    // Cap delta so backgrounded tabs don't dump seconds of movement at once
+    const dt = Math.min(delta, 50);
+    this.elapsed = performance.now() - this.roundStartedAt;
+    this.spawnTimer += dt;
 
     const nextTime = Math.max(
       0,
@@ -148,9 +152,9 @@ export class MainScene extends Phaser.Scene {
     this.nibbos.getChildren().forEach((child) => {
       const n = child as NibboSprite;
       if (!n.active) return;
-      n.x += (n.vx || 0) * (delta / 1000);
-      n.y += (n.vy || 0) * (delta / 1000);
-      n.wobble = (n.wobble || 0) + delta * 0.008;
+      n.x += (n.vx || 0) * (dt / 1000);
+      n.y += (n.vy || 0) * (dt / 1000);
+      n.wobble = (n.wobble || 0) + dt * 0.008;
       n.setScale(
         (n.getData("baseScale") as number) * (1 + Math.sin(n.wobble) * 0.06)
       );

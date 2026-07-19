@@ -4,12 +4,21 @@ import { useEffect, useRef } from "react";
 
 type Props = {
   onReady: () => void;
+  interactive?: boolean;
   className?: string;
 };
 
-export function GameCanvas({ onReady, className = "" }: Props) {
+export function GameCanvas({
+  onReady,
+  interactive = false,
+  className = "",
+}: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const gameRef = useRef<{ destroy: (removeCanvas: boolean) => void; scale: { resize: (w: number, h: number) => void } } | null>(null);
+  const gameRef = useRef<{
+    destroy: (removeCanvas: boolean) => void;
+    scale: { resize: (w: number, h: number) => void };
+    input?: { enabled: boolean };
+  } | null>(null);
 
   useEffect(() => {
     let destroyed = false;
@@ -32,7 +41,9 @@ export function GameCanvas({ onReady, className = "" }: Props) {
       const height = Math.max(480, Math.floor(rect.height || window.innerHeight));
 
       const config = createGameConfig(hostRef.current, width, height);
-      gameRef.current = new Phaser.Game(config);
+      const game = new Phaser.Game(config);
+      game.input.enabled = interactive;
+      gameRef.current = game;
 
       unbindReady = gameBus.onReady(() => onReady());
     }
@@ -45,7 +56,17 @@ export function GameCanvas({ onReady, className = "" }: Props) {
       gameRef.current?.destroy(true);
       gameRef.current = null;
     };
+    // interactive is synced in a separate effect
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onReady]);
+
+  useEffect(() => {
+    const game = gameRef.current;
+    if (game?.input) game.input.enabled = interactive;
+    if (hostRef.current) {
+      hostRef.current.style.pointerEvents = interactive ? "auto" : "none";
+    }
+  }, [interactive]);
 
   useEffect(() => {
     const onResize = () => {
@@ -62,8 +83,11 @@ export function GameCanvas({ onReady, className = "" }: Props) {
   return (
     <div
       ref={hostRef}
-      className={`absolute inset-0 touch-none ${className}`}
-      style={{ WebkitTapHighlightColor: "transparent" }}
+      className={`absolute inset-0 z-0 touch-none ${className}`}
+      style={{
+        WebkitTapHighlightColor: "transparent",
+        pointerEvents: interactive ? "auto" : "none",
+      }}
     />
   );
 }
