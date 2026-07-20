@@ -3,6 +3,10 @@ import { env } from "../../config/env.js";
 import { LINKS } from "../../config/constants.js";
 import { logger } from "../../utils/logger.js";
 import { PARSE_HTML } from "../../utils/messages.js";
+import {
+  comingSoonMessage,
+  isTokenLive,
+} from "../../utils/token.js";
 
 interface DexPair {
   chainId?: string;
@@ -49,19 +53,11 @@ function formatUsd(value: string | number | undefined): string {
 
 export function registerPrice(bot: Telegraf): void {
   bot.command("price", async (ctx) => {
-    if (!env.tokenMint) {
-      await ctx.reply(
-        [
-          "💰 <b>NIBBO Price</b>",
-          "",
-          "Token isn't live yet — charts are still warming up in the other galaxy. 🌌",
-          "",
-          `Launch target: <b>26 July 2026 · 9:00 PM UTC</b> on <a href="${LINKS.pumpfun}">Pump.fun</a>.`,
-          "",
-          "First build. Then moon. 🚀",
-        ].join("\n"),
-        { ...PARSE_HTML, link_preview_options: { is_disabled: true } },
-      );
+    if (!isTokenLive()) {
+      await ctx.reply(comingSoonMessage("price"), {
+        ...PARSE_HTML,
+        link_preview_options: { is_disabled: true },
+      });
       return;
     }
 

@@ -1,9 +1,9 @@
 import type { Telegraf } from "telegraf";
-import { BRAND, LINKS } from "../../config/constants.js";
+import { Markup } from "telegraf";
+import { BRAND, FUN_REPLY_HINTS, LINKS } from "../../config/constants.js";
 import {
   displayName,
   mentionHtml,
-  PARSE_HTML,
 } from "../../utils/messages.js";
 
 export function registerWelcome(bot: Telegraf): void {
@@ -15,27 +15,40 @@ export function registerWelcome(bot: Telegraf): void {
 
       const name = displayName(member);
       const who = mentionHtml(member.id, name);
+      const funHints = FUN_REPLY_HINTS.map((h) => `<b>${h}</b>`).join(" · ");
 
       const text = [
-        `🐾 <b>Welcome to the ${BRAND.name} Army!</b> ${BRAND.emoji}`,
+        `🐾 <b>Welcome to ${BRAND.name}!</b> ${BRAND.emoji}`,
         "",
         `${who} just landed from another galaxy.`,
         "",
         `<i>${BRAND.tagline}</i>`,
         "",
-        `${BRAND.description}`,
+        BRAND.description,
         "",
-        "Here's your starter pack:",
+        "<b>Starter pack</b>",
         `🌐 Website → ${LINKS.website}`,
-        `🎮 Play → ${LINKS.play}`,
+        `✈️ Community → ${LINKS.telegram}`,
         `🐦 X → ${LINKS.twitter}`,
+        `🎮 Play → ${LINKS.play}`,
         "",
-        "Type /help for commands — or just say <b>GM</b> / <b>Hello</b> / <b>Wen Moon</b> for vibes.",
+        "Type /help for commands.",
+        `Or just say ${funHints}`,
         "",
         "Stay weird. Stay meme. Stay NIBBO. 🚀",
       ].join("\n");
 
-      await ctx.reply(text, PARSE_HTML);
+      await ctx.reply(text, {
+        parse_mode: "HTML",
+        link_preview_options: { is_disabled: true },
+        ...Markup.inlineKeyboard([
+          [Markup.button.url("Join vibes", LINKS.telegram)],
+          [
+            Markup.button.url("Website", LINKS.website),
+            Markup.button.url("X", LINKS.twitter),
+          ],
+        ]),
+      });
     }
   });
 }

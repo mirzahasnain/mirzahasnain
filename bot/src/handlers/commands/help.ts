@@ -1,5 +1,9 @@
 import type { Telegraf } from "telegraf";
-import { BRAND, BOT_COMMANDS } from "../../config/constants.js";
+import {
+  BRAND,
+  BOT_COMMANDS,
+  FUN_REPLY_HINTS,
+} from "../../config/constants.js";
 import { PARSE_HTML } from "../../utils/messages.js";
 
 export function registerHelp(bot: Telegraf): void {
@@ -8,19 +12,20 @@ export function registerHelp(bot: Telegraf): void {
       (c) => `/${c.command} — ${c.description}`,
     ).join("\n");
 
+    const funLines = FUN_REPLY_HINTS.map((h) => `• ${h}`).join("\n");
+
     const text = [
       `🐾 <b>${BRAND.name} Bot</b> ${BRAND.emoji}`,
       `<i>${BRAND.tagline}</i>`,
       "",
+      "Premium meme-coin community bot.",
       "Cute. Funny. Energetic. Meme-powered.",
-      "Here's what I can do:",
       "",
+      "<b>Commands</b>",
       commandLines,
       "",
       "<b>Fun replies</b> (just type them):",
-      "• GM",
-      "• Hello",
-      "• Wen Moon",
+      funLines,
       "",
       "New members get an automatic NIBBO welcome. Let's meme. 🚀",
     ].join("\n");
