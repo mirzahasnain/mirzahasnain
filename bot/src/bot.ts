@@ -46,7 +46,7 @@ export async function startBot(bot: Telegraf): Promise<void> {
   process.once("SIGTERM", () => void stop("SIGTERM"));
 
   // Retry launch if another instance briefly holds getUpdates
-  const maxAttempts = 5;
+  const maxAttempts = 8;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       await bot.launch({ dropPendingUpdates: true });
@@ -57,7 +57,7 @@ export async function startBot(bot: Telegraf): Promise<void> {
       if (!conflict || attempt === maxAttempts) {
         throw error;
       }
-      const waitMs = attempt * 2000;
+      const waitMs = Math.min(attempt * 3000, 15_000);
       logger.warn(
         `getUpdates conflict (attempt ${attempt}/${maxAttempts}) — retrying in ${waitMs}ms. Stop other bot instances (local / Railway / Render).`,
       );

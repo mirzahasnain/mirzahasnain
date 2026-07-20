@@ -47,7 +47,8 @@ export function attachCommandHandlers(bot: Telegraf): void {
 
 /**
  * Push the full command menu to Telegram (default + private + groups).
- * Call on every startup so BotFather / client menus stay in sync.
+ * Deletes any previous menu first so BotFather / clients pick up new commands.
+ * Call on every startup so menus stay in sync.
  */
 export async function syncTelegramCommandMenu(bot: Telegraf): Promise<void> {
   assertHandlersCoverMenu();
@@ -64,6 +65,10 @@ export async function syncTelegramCommandMenu(bot: Telegraf): Promise<void> {
   ];
 
   for (const scope of scopes) {
+    await bot.telegram.deleteMyCommands({ scope });
+  }
+
+  for (const scope of scopes) {
     await bot.telegram.setMyCommands(commands, { scope });
     logger.info(
       `setMyCommands OK (${scope.type}): ${commands.map((c) => c.command).join(", ")}`,
@@ -71,9 +76,10 @@ export async function syncTelegramCommandMenu(bot: Telegraf): Promise<void> {
   }
 
   const verified = await bot.telegram.getMyCommands();
-  const missing = commands
-    .map((c) => c.command)
-    .filter((name) => !verified.some((c) => c.command === name));
+  const required = ["community", "launch", "buy", "countdown", "airdrop"];
+  const missing = required.filter(
+    (name) => !verified.some((c) => c.command === name),
+  );
 
   if (missing.length > 0) {
     throw new Error(
