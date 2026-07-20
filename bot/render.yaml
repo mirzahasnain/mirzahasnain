@@ -1,0 +1,17 @@
+services:
+  - type: worker
+    name: nibbo-telegram-bot
+    runtime: node
+    plan: free
+    rootDir: bot
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: WEBSITE_URL
+        value: https://nibbo.fun
+      - key: TOKEN_MINT
+        sync: false
