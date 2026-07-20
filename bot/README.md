@@ -154,7 +154,10 @@ roadmap - The path to the galaxy
 | `npm run dev` | Hot-reload with `tsx watch` |
 | `npm run build` | Compile TypeScript → `dist/` |
 | `npm start` | Run compiled bot |
+| `npm run sync-commands` | Push full `/command` menu to Telegram (no polling) |
 | `npm run typecheck` | Type-check without emit |
+
+> **Only one bot instance can poll at a time.** If commands appear in the menu but do not reply, stop every other running instance (another terminal, Railway, Render, or a second `npm run dev`), then start this bot again. On boot the bot calls `setMyCommands` for default, private, and group scopes.
 
 ## License
 

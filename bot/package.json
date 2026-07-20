@@ -12,7 +12,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "sync-commands": "tsx src/scripts/syncCommands.ts"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
