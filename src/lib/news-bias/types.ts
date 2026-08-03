@@ -43,33 +43,61 @@ export type ReleaseOutcome = "above" | "below";
 
 export type Bias = "bullish" | "bearish";
 
-export type NewsEvent = {
+/** How far the actual landed from the forecast. Selected manually in V2. */
+export type DeviationSize = "inline" | "small" | "medium" | "large";
+
+export type ImpactStrength = "weak" | "moderate" | "strong" | "very-strong";
+
+export type Confidence = "low" | "medium" | "high" | "very-high";
+
+export interface NewsEvent {
   id: NewsEventId;
   label: string;
   /** Short context line shown under the selection. */
   description: string;
-};
+  /** How the market reads the print, keyed by outcome. */
+  explanation: Record<ReleaseOutcome, string>;
+}
 
-export type TradingPair = {
+export interface TradingPair {
   id: PairId;
   label: string;
+  /** Trader-facing name, used in the affected assets grid and explanations. */
+  displayName: string;
   category: PairCategory;
   usdRelation: UsdRelation;
   /** Short context line shown under the selection. */
   description: string;
-};
+}
 
-export type BiasVerdict = {
+export interface AffectedAsset {
+  id: PairId;
+  name: string;
+  bias: Bias;
+  isSelected: boolean;
+}
+
+export interface BiasVerdict {
   event: NewsEvent;
   pair: TradingPair;
   outcome: ReleaseOutcome;
   usdBias: Bias;
   pairBias: Bias;
   rationale: string;
-};
+}
 
-export type DropdownOption<TValue extends string> = {
+export interface BiasAnalysis extends BiasVerdict {
+  deviation: DeviationSize;
+  strength: ImpactStrength;
+  confidence: Confidence;
+  reason: string;
+  /** One sentence per line, shown in the market explanation card. */
+  explanation: string[];
+  affectedAssets: AffectedAsset[];
+}
+
+export interface DropdownOption<TValue extends string> {
   value: TValue;
   label: string;
   description?: string;
-};
+}

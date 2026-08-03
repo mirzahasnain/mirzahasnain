@@ -1,8 +1,13 @@
-import { NEWS_EVENTS, TRADING_PAIRS } from "./constants";
+import { findEvent } from "./news";
+import { findPair, TRADING_PAIRS } from "./pairs";
 import type {
+  AffectedAsset,
   Bias,
+  BiasAnalysis,
   BiasVerdict,
-  DropdownOption,
+  Confidence,
+  DeviationSize,
+  ImpactStrength,
   NewsEvent,
   NewsEventId,
   PairId,
@@ -26,12 +31,38 @@ export function getPairBias(pair: TradingPair, outcome: ReleaseOutcome): Bias {
   return isBullish ? "bullish" : "bearish";
 }
 
-export function findEvent(id: NewsEventId | null): NewsEvent | null {
-  return NEWS_EVENTS.find((event) => event.id === id) ?? null;
+export const DEVIATION_SIZES: DeviationSize[] = [
+  "inline",
+  "small",
+  "medium",
+  "large",
+];
+
+const STRENGTH_BY_DEVIATION: Record<DeviationSize, ImpactStrength> = {
+  inline: "weak",
+  small: "moderate",
+  medium: "strong",
+  large: "very-strong",
+};
+
+const CONFIDENCE_BY_STRENGTH: Record<ImpactStrength, Confidence> = {
+  weak: "low",
+  moderate: "medium",
+  strong: "high",
+  "very-strong": "very-high",
+};
+
+/**
+ * How far the actual landed from the forecast drives how hard the market is
+ * expected to react. V2 takes the deviation from a manual selection; a later
+ * version can derive it from real actual and forecast values.
+ */
+export function getImpactStrength(deviation: DeviationSize): ImpactStrength {
+  return STRENGTH_BY_DEVIATION[deviation];
 }
 
-export function findPair(id: PairId | null): TradingPair | null {
-  return TRADING_PAIRS.find((pair) => pair.id === id) ?? null;
+export function getConfidence(strength: ImpactStrength): Confidence {
+  return CONFIDENCE_BY_STRENGTH[strength];
 }
 
 export function getBiasVerdict(
@@ -51,6 +82,72 @@ export function getBiasVerdict(
     pairBias: getPairBias(pair, outcome),
     rationale: buildRationale(event, pair, outcome),
   };
+}
+
+export function getBiasAnalysis(
+  eventId: NewsEventId | null,
+  pairId: PairId | null,
+  outcome: ReleaseOutcome | null,
+  deviation: DeviationSize,
+): BiasAnalysis | null {
+  const verdict = getBiasVerdict(eventId, pairId, outcome);
+  if (!verdict) return null;
+
+  const strength = getImpactStrength(deviation);
+
+  return {
+    ...verdict,
+    deviation,
+    strength,
+    confidence: getConfidence(strength),
+    reason: buildReason(verdict.event, verdict.outcome),
+    explanation: buildExplanation(verdict.event, verdict.pair, verdict.outcome),
+    affectedAssets: getAffectedAssets(verdict.outcome, verdict.pair.id),
+  };
+}
+
+/** Every tracked market, inverse pairs first so the two blocks read together. */
+export function getAffectedAssets(
+  outcome: ReleaseOutcome,
+  selectedId: PairId | null,
+): AffectedAsset[] {
+  const toAsset = (pair: TradingPair): AffectedAsset => ({
+    id: pair.id,
+    name: pair.displayName,
+    bias: getPairBias(pair, outcome),
+    isSelected: pair.id === selectedId,
+  });
+
+  return [
+    ...TRADING_PAIRS.filter((pair) => pair.usdRelation === "inverse"),
+    ...TRADING_PAIRS.filter((pair) => pair.usdRelation === "direct"),
+  ].map(toAsset);
+}
+
+export function buildReason(
+  event: NewsEvent,
+  outcome: ReleaseOutcome,
+): string {
+  return outcome === "above"
+    ? `USD is expected to strengthen after a stronger-than-forecast ${event.label} release.`
+    : `USD is expected to weaken after a weaker-than-forecast ${event.label} release.`;
+}
+
+export function buildExplanation(
+  event: NewsEvent,
+  pair: TradingPair,
+  outcome: ReleaseOutcome,
+): string[] {
+  const dollar = outcome === "above" ? "A stronger USD" : "A weaker USD";
+  const pairBias = getPairBias(pair, outcome);
+  const effect =
+    pairBias === "bullish" ? "lifts" : "pressures";
+  const direction = pairBias === "bullish" ? "higher" : "lower";
+
+  return [
+    event.explanation[outcome],
+    `${dollar} normally ${effect} ${pair.displayName} ${direction}.`,
+  ];
 }
 
 function buildRationale(
@@ -75,19 +172,3 @@ function describeRelation(pair: TradingPair): string {
   }
   return `${pair.label} is quoted against USD, so it moves against the dollar.`;
 }
-
-export const newsEventOptions: DropdownOption<NewsEventId>[] = NEWS_EVENTS.map(
-  (event) => ({
-    value: event.id,
-    label: event.label,
-    description: event.description,
-  }),
-);
-
-export const tradingPairOptions: DropdownOption<PairId>[] = TRADING_PAIRS.map(
-  (pair) => ({
-    value: pair.id,
-    label: pair.label,
-    description: pair.description,
-  }),
-);
