@@ -98,7 +98,7 @@ function Detail({ label, value }: { label: string; value: string }) {
       <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
         {label}
       </dt>
-      <dd className="mt-1 truncate text-sm font-bold text-slate-100">
+      <dd className="mt-1 text-sm font-bold text-balance text-slate-100">
         {value}
       </dd>
     </div>
