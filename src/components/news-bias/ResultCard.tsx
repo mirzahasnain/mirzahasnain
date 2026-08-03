@@ -1,14 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { RotateCcw, TrendingDown, TrendingUp } from "lucide-react";
 import { BIAS_LABELS, OUTCOME_LABELS } from "@/lib/news-bias/constants";
 import type { BiasVerdict } from "@/lib/news-bias/types";
 
-type ResultCardProps = {
+interface ResultCardProps {
   verdict: BiasVerdict;
   onReset: () => void;
-};
+}
 
 const THEME = {
   bullish: {
@@ -34,11 +33,7 @@ export function ResultCard({ verdict, onReset }: ResultCardProps) {
   const Icon = theme.icon;
 
   return (
-    <motion.section
-      key={`${verdict.event.id}-${verdict.pair.id}-${verdict.outcome}`}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: "easeOut" }}
+    <section
       aria-live="polite"
       className={`relative overflow-hidden rounded-2xl border bg-[#0b1119]/80 p-6 sm:p-8 ${theme.border}`}
     >
@@ -88,7 +83,7 @@ export function ResultCard({ verdict, onReset }: ResultCardProps) {
         <RotateCcw aria-hidden className="size-4" />
         New selection
       </button>
-    </motion.section>
+    </section>
   );
 }
 
