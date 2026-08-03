@@ -69,7 +69,7 @@ export function ExportActions({ analysis }: ExportActionsProps) {
   };
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className="grid grid-cols-2 gap-2">
       {ORDER.map((action) => {
         const active = feedback?.action === action ? feedback : null;
         const Icon = active
