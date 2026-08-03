@@ -46,30 +46,54 @@ public/nibbo-mascot.png
 ## News Bias Tool
 
 A standalone trading utility at [/news-bias](http://localhost:3000/news-bias). Pick a
-high-impact USD economic release, a trading pair, and whether the actual came in
-above or below forecast — the tool returns the expected **Bullish** or **Bearish**
-bias for that pair, plus impact strength, a trade bias card, a plain-English
-explanation, every affected market, and a one-click copy of the analysis.
+high-impact USD economic release and a trading pair, type in the release numbers,
+and the decision engine works out the rest: surprise, strength, direction,
+expected market impact, confidence, a BUY/SELL/WAIT call, a written analysis,
+every affected market, and exports.
 
-The tool is intentionally offline: no API, database, or auth. Data and rules are
-split so components stay presentational:
+The tool is intentionally offline: no API, database, or auth.
+
+### Decision engine
+
+```
+Actual - Forecast          -> surprise
+|surprise| vs thresholds   -> Neutral / Weak / Moderate / Strong / Extreme
+strength                   -> expected impact + confidence (0-100%)
+sign of surprise           -> USD Bullish / Bearish / Neutral
+USD direction + pair       -> pair direction (via each pair's usdRelation)
+pair direction + strength  -> BUY / SELL / WAIT
+```
+
+A surprise inside the neutral band (under 0.20) resolves to **WAIT**: there is a
+direction, but not enough of one to trade.
+
+### Layout
 
 ```
 lib/news-bias/
-  news.ts        # Economic events + per-direction market explanations
-  pairs.ts       # Trading pairs, display names, USD relation
-  logic.ts       # Bias, impact strength, confidence, affected assets
-  constants.ts   # Labels and copy
-  share.ts       # Copy Analysis payload
-  future.ts      # Typed seams for later versions
-  types.ts       # Interfaces and unions
+  news.ts                     # Events + per-direction dollar effects
+  pairs.ts                    # Pairs, display names, USD relation
+  logic.ts                    # Composition root: request -> Analysis
+  constants.ts                # All user-facing copy and engine thresholds
+  types/interfaces.ts         # Interfaces and unions
+  utils/calculateSurprise.ts  # Actual - forecast, parsing, formatting
+  utils/calculateStrength.ts  # Strength bands + expected impact
+  utils/calculateConfidence.ts
+  utils/marketLogic.ts        # Asset mapping engine + trade decision
+  utils/analysisGenerator.ts  # Reason, full analysis, export fields
+  utils/exportAnalysis.ts     # Copy, TXT, PDF, Share
+  utils/pdf.ts                # Dependency-free PDF writer
+  utils/history.ts            # Last 20 analyses in localStorage
+  utils/clipboard.ts, download.ts
+  services/calendar.ts        # V4 seams, typed and inert today
+  services/news.ts
+  services/market.ts
 ```
 
-Direction comes from each pair's `usdRelation` (`direct` pairs follow the dollar,
-`inverse` pairs move against it), so adding a pair only means adding a row to
-`TRADING_PAIRS`. Impact strength comes from a manually selected deviation bucket
-(`In Line`, `Small`, `Medium`, `Large`); once real actual and forecast numbers are
-available, `gradeDeviation` in `future.ts` is the only piece that needs filling in.
+Adding a market is one row in `TRADING_PAIRS` with its `usdRelation` (`direct`
+for USD-base pairs, `inverse` for anything quoted or priced in dollars); no
+component or engine change is needed. Every export format is built from the same
+`buildAnalysisFields` output, so a new field appears in the clipboard, the TXT
+and the PDF at once.
 
-`future.ts` also holds the seams for a live economic calendar, market data API,
-AI analysis, probability, and expected move.
+`services/` is where Version 4 plugs in a live calendar, headlines, and quotes.
