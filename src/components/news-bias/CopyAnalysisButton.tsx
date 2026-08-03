@@ -1,18 +1,41 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, TriangleAlert } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 interface CopyAnalysisButtonProps {
   text: string;
 }
 
+type CopyStatus = "idle" | "copied" | "failed";
+
+const FEEDBACK_MS = 3000;
+
+const STATE = {
+  idle: {
+    label: "Copy Analysis",
+    icon: Copy,
+    className:
+      "border-sky-400/40 bg-sky-400/10 text-sky-200 hover:bg-sky-400/15",
+  },
+  copied: {
+    label: "Copied",
+    icon: Check,
+    className: "border-emerald-400/50 bg-emerald-400/10 text-emerald-300",
+  },
+  failed: {
+    label: "Copy Failed",
+    icon: TriangleAlert,
+    className: "border-red-400/50 bg-red-400/10 text-red-300",
+  },
+} as const;
+
 export function CopyAnalysisButton({ text }: CopyAnalysisButtonProps) {
-  const [copied, setCopied] = useState(false);
+  const [status, setStatus] = useState<CopyStatus>("idle");
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    setCopied(false);
+    setStatus("idle");
   }, [text]);
 
   useEffect(
@@ -23,31 +46,24 @@ export function CopyAnalysisButton({ text }: CopyAnalysisButtonProps) {
   );
 
   const handleClick = async () => {
-    if (!(await writeToClipboard(text))) return;
-
-    setCopied(true);
+    setStatus((await writeToClipboard(text)) ? "copied" : "failed");
     if (timerRef.current) clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setCopied(false), 2000);
+    timerRef.current = setTimeout(() => setStatus("idle"), FEEDBACK_MS);
   };
+
+  const { label, icon: Icon, className } = STATE[status];
 
   return (
     <button
       type="button"
       onClick={handleClick}
-      className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-4 text-sm font-bold uppercase tracking-[0.12em] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 ${
-        copied
-          ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-300"
-          : "border-sky-400/40 bg-sky-400/10 text-sky-200 hover:bg-sky-400/15"
-      }`}
+      className={`flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-4 text-sm font-bold uppercase tracking-[0.12em] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 ${className}`}
     >
-      {copied ? (
-        <Check aria-hidden className="size-4" />
-      ) : (
-        <Copy aria-hidden className="size-4" />
-      )}
-      {copied ? "Copied" : "Copy Analysis"}
+      <Icon aria-hidden className="size-4" />
+      {label}
       <span aria-live="polite" className="sr-only">
-        {copied ? "Analysis copied to clipboard" : ""}
+        {status === "copied" ? "Analysis copied to clipboard" : ""}
+        {status === "failed" ? "Could not copy the analysis" : ""}
       </span>
     </button>
   );
@@ -60,7 +76,7 @@ async function writeToClipboard(text: string): Promise<boolean> {
       return true;
     }
   } catch {
-    // Clipboard API can be blocked by permissions; fall back below.
+    // Blocked by permissions or an unfocused document; try the fallback.
   }
 
   return copyWithTextarea(text);
