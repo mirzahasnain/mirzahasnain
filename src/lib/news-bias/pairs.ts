@@ -1,4 +1,8 @@
-import type { DropdownOption, PairId, TradingPair } from "./types";
+import type {
+  DropdownOption,
+  PairId,
+  TradingPair,
+} from "./types/interfaces";
 
 export const TRADING_PAIRS: TradingPair[] = [
   {

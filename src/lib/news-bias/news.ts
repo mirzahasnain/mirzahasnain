@@ -1,14 +1,18 @@
-import type { DropdownOption, NewsEvent, NewsEventId } from "./types";
+import type {
+  DropdownOption,
+  NewsEvent,
+  NewsEventId,
+} from "./types/interfaces";
 
 export const NEWS_EVENTS: NewsEvent[] = [
   {
     id: "cpi",
     label: "CPI",
     description: "Headline consumer inflation",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Higher-than-expected CPI points to hotter inflation, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Lower-than-expected CPI points to cooling inflation, which usually weakens the US Dollar.",
     },
   },
@@ -16,10 +20,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "core-cpi",
     label: "Core CPI",
     description: "Consumer inflation excluding food & energy",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Higher-than-expected Core CPI shows underlying inflation running hot, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Lower-than-expected Core CPI shows underlying inflation easing, which usually weakens the US Dollar.",
     },
   },
@@ -27,10 +31,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "ppi",
     label: "PPI",
     description: "Headline producer inflation",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Higher-than-expected PPI signals rising cost pressure at the producer level, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Lower-than-expected PPI signals easing cost pressure at the producer level, which usually weakens the US Dollar.",
     },
   },
@@ -38,10 +42,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "core-ppi",
     label: "Core PPI",
     description: "Producer inflation excluding food & energy",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Higher-than-expected Core PPI points to sticky producer costs, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Lower-than-expected Core PPI points to fading producer costs, which usually weakens the US Dollar.",
     },
   },
@@ -49,10 +53,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "nfp",
     label: "NFP",
     description: "Non-farm payrolls job growth",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "A higher-than-expected NFP print shows a stronger labour market, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "A lower-than-expected NFP print shows a softer labour market, which usually weakens the US Dollar.",
     },
   },
@@ -60,10 +64,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "unemployment-rate",
     label: "Unemployment Rate",
     description: "Share of the labour force out of work",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "The Unemployment Rate came in above forecast, and an above-forecast release is treated as US Dollar positive.",
-      below:
+      negative:
         "The Unemployment Rate came in below forecast, and a below-forecast release is treated as US Dollar negative.",
     },
   },
@@ -71,10 +75,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "interest-rate-decision",
     label: "Interest Rate Decision",
     description: "Federal funds rate announcement",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "A higher-than-expected rate decision is hawkish, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "A lower-than-expected rate decision is dovish, which usually weakens the US Dollar.",
     },
   },
@@ -82,10 +86,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "fomc-statement",
     label: "FOMC Statement",
     description: "Policy tone from the Fed committee",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "A more hawkish-than-expected FOMC statement usually strengthens the US Dollar.",
-      below:
+      negative:
         "A more dovish-than-expected FOMC statement usually weakens the US Dollar.",
     },
   },
@@ -93,10 +97,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "ism-manufacturing-pmi",
     label: "ISM Manufacturing PMI",
     description: "Factory sector activity survey",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Higher-than-expected ISM Manufacturing PMI signals expanding factory activity, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Lower-than-expected ISM Manufacturing PMI signals slowing factory activity, which usually weakens the US Dollar.",
     },
   },
@@ -104,10 +108,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "ism-services-pmi",
     label: "ISM Services PMI",
     description: "Services sector activity survey",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Higher-than-expected ISM Services PMI signals a resilient services sector, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Lower-than-expected ISM Services PMI signals a cooling services sector, which usually weakens the US Dollar.",
     },
   },
@@ -115,10 +119,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "gdp",
     label: "GDP",
     description: "Gross domestic product growth",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Stronger-than-expected GDP growth points to a resilient economy, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Weaker-than-expected GDP growth points to a slowing economy, which usually weakens the US Dollar.",
     },
   },
@@ -126,10 +130,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "retail-sales",
     label: "Retail Sales",
     description: "Consumer spending at retail level",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Stronger-than-expected Retail Sales show healthy consumer demand, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Weaker-than-expected Retail Sales show softer consumer demand, which usually weakens the US Dollar.",
     },
   },
@@ -137,10 +141,10 @@ export const NEWS_EVENTS: NewsEvent[] = [
     id: "core-pce",
     label: "Core PCE",
     description: "The Fed's preferred inflation gauge",
-    explanation: {
-      above:
+    dollarEffect: {
+      positive:
         "Higher-than-expected Core PCE keeps pressure on the Fed to stay restrictive, which usually strengthens the US Dollar.",
-      below:
+      negative:
         "Lower-than-expected Core PCE gives the Fed room to ease, which usually weakens the US Dollar.",
     },
   },
