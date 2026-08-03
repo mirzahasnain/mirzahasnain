@@ -3,15 +3,15 @@
 import { Check, ChevronDown } from "lucide-react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
-import type { DropdownOption } from "@/lib/news-bias/types";
+import type { DropdownOption } from "@/lib/news-bias/types/interfaces";
 
-type DropdownProps<TValue extends string> = {
+interface DropdownProps<TValue extends string> {
   label: string;
   placeholder: string;
   options: DropdownOption<TValue>[];
   value: TValue | null;
   onChange: (value: TValue) => void;
-};
+}
 
 export function Dropdown<TValue extends string>({
   label,

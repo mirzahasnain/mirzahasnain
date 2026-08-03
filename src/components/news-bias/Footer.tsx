@@ -6,9 +6,7 @@ export function Footer() {
       <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">
         {APP.version}
       </p>
-      <p className="mt-2 text-xs text-slate-600">
-        Educational reference only. Not financial advice.
-      </p>
+      <p className="mt-2 text-xs text-slate-600">{APP.disclaimer}</p>
     </footer>
   );
 }

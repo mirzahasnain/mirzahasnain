@@ -1,66 +1,104 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AffectedAssetsGrid } from "@/components/news-bias/AffectedAssetsGrid";
-import { ButtonGroup } from "@/components/news-bias/ButtonGroup";
-import { CopyAnalysisButton } from "@/components/news-bias/CopyAnalysisButton";
 import { Dropdown } from "@/components/news-bias/Dropdown";
-import { ImpactStrengthCard } from "@/components/news-bias/ImpactStrengthCard";
-import { MarketExplanation } from "@/components/news-bias/MarketExplanation";
+import { ExportActions } from "@/components/news-bias/ExportActions";
+import { FullAnalysis } from "@/components/news-bias/FullAnalysis";
+import { HistoryPanel } from "@/components/news-bias/HistoryPanel";
+import { ReleaseInputs } from "@/components/news-bias/ReleaseInputs";
+import type { ReleaseInputValues } from "@/components/news-bias/ReleaseInputs";
 import { ResultCard } from "@/components/news-bias/ResultCard";
 import { Section } from "@/components/news-bias/Section";
-import { TradeBiasCard } from "@/components/news-bias/TradeBiasCard";
-import { DEFAULT_DEVIATION } from "@/lib/news-bias/constants";
-import { getBiasAnalysis } from "@/lib/news-bias/logic";
+import { SurpriseCard } from "@/components/news-bias/SurpriseCard";
+import { TradeDecisionCard } from "@/components/news-bias/TradeDecisionCard";
+import {
+  EMPTY_STATE,
+  HISTORY_SAVE_DELAY_MS,
+  SECTION_COPY,
+} from "@/lib/news-bias/constants";
+import { buildAnalysis } from "@/lib/news-bias/logic";
 import { newsEventOptions } from "@/lib/news-bias/news";
 import { tradingPairOptions } from "@/lib/news-bias/pairs";
-import { buildAnalysisText } from "@/lib/news-bias/share";
 import type {
-  DeviationSize,
+  HistoryEntry,
   NewsEventId,
   PairId,
-  ReleaseOutcome,
-} from "@/lib/news-bias/types";
+} from "@/lib/news-bias/types/interfaces";
+import { parseNumber } from "@/lib/news-bias/utils/calculateSurprise";
+import {
+  clearHistory,
+  loadHistory,
+  saveToHistory,
+} from "@/lib/news-bias/utils/history";
+
+const EMPTY_INPUTS: ReleaseInputValues = {
+  forecast: "",
+  previous: "",
+  actual: "",
+};
 
 export function BiasTool() {
   const [eventId, setEventId] = useState<NewsEventId | null>(null);
   const [pairId, setPairId] = useState<PairId | null>(null);
-  const [outcome, setOutcome] = useState<ReleaseOutcome | null>(null);
-  const [deviation, setDeviation] =
-    useState<DeviationSize>(DEFAULT_DEVIATION);
-  const resultRef = useRef<HTMLDivElement>(null);
+  const [inputs, setInputs] = useState<ReleaseInputValues>(EMPTY_INPUTS);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
 
-  const isReady = Boolean(eventId && pairId);
-  const analysis = getBiasAnalysis(eventId, pairId, outcome, deviation);
+  const forecast = parseNumber(inputs.forecast);
+  const previous = parseNumber(inputs.previous);
+  const actual = parseNumber(inputs.actual);
+
+  const isSelected = Boolean(eventId && pairId);
+  const analysis = buildAnalysis({ eventId, pairId, forecast, previous, actual });
 
   useEffect(() => {
-    if (!outcome) return;
-    resultRef.current?.scrollIntoView({ block: "nearest" });
-  }, [outcome]);
+    setHistory(loadHistory());
+  }, []);
 
-  const reset = () => {
+  useEffect(() => {
+    if (!eventId || !pairId || forecast === null || actual === null) return;
+
+    const timer = setTimeout(() => {
+      setHistory(
+        saveToHistory({ eventId, pairId, forecast, previous, actual }),
+      );
+    }, HISTORY_SAVE_DELAY_MS);
+
+    return () => clearTimeout(timer);
+  }, [eventId, pairId, forecast, previous, actual]);
+
+  const reset = useCallback(() => {
     setEventId(null);
     setPairId(null);
-    setOutcome(null);
-    setDeviation(DEFAULT_DEVIATION);
-  };
+    setInputs(EMPTY_INPUTS);
+  }, []);
+
+  const openEntry = useCallback((entry: HistoryEntry) => {
+    setEventId(entry.eventId);
+    setPairId(entry.pairId);
+    setInputs({
+      forecast: String(entry.forecast),
+      previous: entry.previous === null ? "" : String(entry.previous),
+      actual: String(entry.actual),
+    });
+  }, []);
 
   return (
     <div className="space-y-4">
-      <Section step="01" title="Economic News">
+      <Section step={SECTION_COPY.news.step} title={SECTION_COPY.news.title}>
         <Dropdown
-          label="Economic news event"
-          placeholder="Select an economic news event"
+          label={SECTION_COPY.news.label}
+          placeholder={SECTION_COPY.news.placeholder}
           options={newsEventOptions}
           value={eventId}
           onChange={setEventId}
         />
       </Section>
 
-      <Section step="02" title="Trading Pair">
+      <Section step={SECTION_COPY.pair.step} title={SECTION_COPY.pair.title}>
         <Dropdown
-          label="Trading pair"
-          placeholder="Select a trading pair"
+          label={SECTION_COPY.pair.label}
+          placeholder={SECTION_COPY.pair.placeholder}
           options={tradingPairOptions}
           value={pairId}
           onChange={setPairId}
@@ -68,37 +106,42 @@ export function BiasTool() {
       </Section>
 
       <Section
-        step="03"
-        title="Result"
+        step={SECTION_COPY.release.step}
+        title={SECTION_COPY.release.title}
         hint={
-          isReady
-            ? "How did the release land against the forecast?"
-            : "Select a news event and trading pair first."
+          isSelected
+            ? SECTION_COPY.release.readyHint
+            : SECTION_COPY.release.waitingHint
         }
       >
-        <ButtonGroup value={outcome} onChange={setOutcome} disabled={!isReady} />
+        <ReleaseInputs values={inputs} onChange={setInputs} />
       </Section>
 
-      <div ref={resultRef} className="space-y-4">
-        {analysis ? (
-          <>
-            <ResultCard verdict={analysis} onReset={reset} />
-            <ImpactStrengthCard
-              outcome={analysis.outcome}
-              value={deviation}
-              onChange={setDeviation}
-            />
-            <TradeBiasCard analysis={analysis} />
-            <MarketExplanation lines={analysis.explanation} />
-            <AffectedAssetsGrid assets={analysis.affectedAssets} />
-            <CopyAnalysisButton text={buildAnalysisText(analysis)} />
-          </>
-        ) : (
-          <p className="rounded-2xl border border-dashed border-white/10 px-6 py-10 text-center text-sm text-slate-500">
-            Your bias will appear here.
-          </p>
-        )}
-      </div>
+      {analysis ? (
+        <>
+          <ResultCard analysis={analysis} onReset={reset} />
+          <SurpriseCard
+            surprise={analysis.surprise}
+            values={analysis.values}
+          />
+          <TradeDecisionCard analysis={analysis} />
+          <FullAnalysis lines={analysis.analysisLines} />
+          <AffectedAssetsGrid assets={analysis.affectedAssets} />
+          <ExportActions analysis={analysis} />
+        </>
+      ) : (
+        <p className="rounded-2xl border border-dashed border-white/10 px-6 py-10 text-center text-sm text-slate-500">
+          {isSelected ? EMPTY_STATE.missingValues : EMPTY_STATE.waiting}
+        </p>
+      )}
+
+      {history.length > 0 ? (
+        <HistoryPanel
+          entries={history}
+          onOpen={openEntry}
+          onClear={() => setHistory(clearHistory())}
+        />
+      ) : null}
     </div>
   );
 }

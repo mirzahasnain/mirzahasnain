@@ -1,11 +1,11 @@
 import type { ReactNode } from "react";
 
-type SectionProps = {
+interface SectionProps {
   step: string;
   title: string;
   hint?: string;
   children: ReactNode;
-};
+}
 
 export function Section({ step, title, hint, children }: SectionProps) {
   return (

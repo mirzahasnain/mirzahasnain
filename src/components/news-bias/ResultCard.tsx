@@ -1,15 +1,30 @@
 "use client";
 
-import { RotateCcw, TrendingDown, TrendingUp } from "lucide-react";
-import { BIAS_LABELS, OUTCOME_LABELS } from "@/lib/news-bias/constants";
-import type { BiasVerdict } from "@/lib/news-bias/types";
+import { Minus, RotateCcw, TrendingDown, TrendingUp } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Field } from "@/components/news-bias/Field";
+import {
+  CARD_COPY,
+  DIRECTION_LABELS,
+  OUTCOME_LABELS,
+} from "@/lib/news-bias/constants";
+import type { Analysis, Direction } from "@/lib/news-bias/types/interfaces";
 
 interface ResultCardProps {
-  verdict: BiasVerdict;
+  analysis: Analysis;
   onReset: () => void;
 }
 
-const THEME = {
+interface DirectionTheme {
+  icon: LucideIcon;
+  text: string;
+  border: string;
+  halo: string;
+  ring: string;
+  chip: string;
+}
+
+const THEME: Record<Direction, DirectionTheme> = {
   bullish: {
     icon: TrendingUp,
     text: "text-emerald-400",
@@ -26,11 +41,20 @@ const THEME = {
     ring: "ring-red-400/30",
     chip: "bg-red-400/10 text-red-300",
   },
-} as const;
+  neutral: {
+    icon: Minus,
+    text: "text-slate-300",
+    border: "border-white/15",
+    halo: "bg-slate-500/15",
+    ring: "ring-white/20",
+    chip: "bg-white/5 text-slate-300",
+  },
+};
 
-export function ResultCard({ verdict, onReset }: ResultCardProps) {
-  const theme = THEME[verdict.pairBias];
+export function ResultCard({ analysis, onReset }: ResultCardProps) {
+  const theme = THEME[analysis.pairDirection];
   const Icon = theme.icon;
+  const { eyebrow, usdPrefix, reset, labels } = CARD_COPY.result;
 
   return (
     <section
@@ -50,30 +74,29 @@ export function ResultCard({ verdict, onReset }: ResultCardProps) {
         </div>
 
         <p className="mt-5 text-xs font-semibold uppercase tracking-[0.35em] text-slate-500">
-          Expected Bias
+          {eyebrow}
         </p>
         <p
           className={`mt-2 text-5xl font-black uppercase tracking-tight sm:text-6xl ${theme.text}`}
         >
-          {BIAS_LABELS[verdict.pairBias]}
+          {DIRECTION_LABELS[analysis.pairDirection]}
         </p>
 
         <span
           className={`mt-4 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-widest ${theme.chip}`}
         >
-          USD {BIAS_LABELS[verdict.usdBias]}
+          {usdPrefix} {DIRECTION_LABELS[analysis.usdDirection]}
         </span>
       </div>
 
       <dl className="relative mt-8 grid gap-3 sm:grid-cols-3">
-        <Detail label="News" value={verdict.event.label} />
-        <Detail label="Pair" value={verdict.pair.label} />
-        <Detail label="Result" value={OUTCOME_LABELS[verdict.outcome]} />
+        <Field label={labels.news} value={analysis.event.label} />
+        <Field label={labels.pair} value={analysis.pair.label} />
+        <Field
+          label={labels.result}
+          value={OUTCOME_LABELS[analysis.surprise.sign]}
+        />
       </dl>
-
-      <p className="relative mt-5 text-sm leading-relaxed text-slate-400">
-        {verdict.rationale}
-      </p>
 
       <button
         type="button"
@@ -81,21 +104,8 @@ export function ResultCard({ verdict, onReset }: ResultCardProps) {
         className="relative mt-6 inline-flex items-center gap-2 rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-slate-300 transition-colors hover:border-white/25 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70"
       >
         <RotateCcw aria-hidden className="size-4" />
-        New selection
+        {reset}
       </button>
     </section>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3">
-      <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
-        {label}
-      </dt>
-      <dd className="mt-1 text-sm font-bold text-balance text-slate-100">
-        {value}
-      </dd>
-    </div>
   );
 }

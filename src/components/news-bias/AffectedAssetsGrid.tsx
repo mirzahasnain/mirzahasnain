@@ -1,22 +1,26 @@
 import { Card } from "@/components/news-bias/Card";
-import { BIAS_LABELS } from "@/lib/news-bias/constants";
-import type { AffectedAsset, Bias } from "@/lib/news-bias/types";
+import { CARD_COPY, DIRECTION_LABELS } from "@/lib/news-bias/constants";
+import type {
+  AffectedAsset,
+  Direction,
+} from "@/lib/news-bias/types/interfaces";
 
 interface AffectedAssetsGridProps {
   assets: AffectedAsset[];
 }
 
-const BADGE_CLASS: Record<Bias, string> = {
+const BADGE_CLASS: Record<Direction, string> = {
   bullish: "bg-emerald-400/10 text-emerald-300 ring-emerald-400/30",
   bearish: "bg-red-400/10 text-red-300 ring-red-400/30",
+  neutral: "bg-slate-400/10 text-slate-300 ring-slate-400/30",
 };
 
 export function AffectedAssetsGrid({ assets }: AffectedAssetsGridProps) {
   return (
-    <Card title="Assets Affected">
+    <Card title={CARD_COPY.assets.title}>
       <div className="space-y-4">
-        {groupByBias(assets).map(([bias, group]) => (
-          <ul key={bias} className="grid gap-2 sm:grid-cols-2">
+        {groupByDirection(assets).map(([direction, group]) => (
+          <ul key={direction} className="grid gap-2 sm:grid-cols-2">
             {group.map((asset) => (
               <li
                 key={asset.id}
@@ -31,10 +35,10 @@ export function AffectedAssetsGrid({ assets }: AffectedAssetsGridProps) {
                 </span>
                 <span
                   className={`shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wider ring-1 ${
-                    BADGE_CLASS[asset.bias]
+                    BADGE_CLASS[asset.direction]
                   }`}
                 >
-                  {BIAS_LABELS[asset.bias]}
+                  {DIRECTION_LABELS[asset.direction]}
                 </span>
               </li>
             ))}
@@ -46,13 +50,15 @@ export function AffectedAssetsGrid({ assets }: AffectedAssetsGridProps) {
 }
 
 /**
- * Bullish and bearish assets are listed as separate grids so a row never mixes
- * the two colours, which is easy to misread at a glance.
+ * Each direction gets its own grid so a row never mixes two colours, which is
+ * easy to misread at a glance.
  */
-function groupByBias(assets: AffectedAsset[]): [Bias, AffectedAsset[]][] {
-  const order = [...new Set(assets.map((asset) => asset.bias))];
-  return order.map((bias) => [
-    bias,
-    assets.filter((asset) => asset.bias === bias),
+function groupByDirection(
+  assets: AffectedAsset[],
+): [Direction, AffectedAsset[]][] {
+  const order = [...new Set(assets.map((asset) => asset.direction))];
+  return order.map((direction) => [
+    direction,
+    assets.filter((asset) => asset.direction === direction),
   ]);
 }
