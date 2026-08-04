@@ -1,5 +1,4 @@
 import {
-  ACTION_LABELS,
   DIRECTION_LABELS,
   EXPORT_COPY,
   IMPACT_LABELS,
@@ -183,7 +182,7 @@ function joinWithAnd(names: string[]): string {
 
 export function buildAnalysisFields(analysis: Analysis): AnalysisField[] {
   const { fields } = EXPORT_COPY;
-  const { event, pair, values, surprise, pairDirection, action } = analysis;
+  const { event, pair, values, surprise, pairDirection } = analysis;
 
   const rows: AnalysisField[] = [
     { label: fields.news, value: event.label },
@@ -209,13 +208,34 @@ export function buildAnalysisFields(analysis: Analysis): AnalysisField[] {
     });
   }
 
+  if (surprise.percentage !== null) {
+    rows.push({
+      label: "% Surprise",
+      value: `${surprise.percentage > 0 ? "+" : ""}${surprise.percentage}%`,
+    });
+  }
+
   rows.push(
     { label: fields.strength, value: STRENGTH_LABELS[surprise.strength] },
     { label: fields.impact, value: IMPACT_LABELS[surprise.impact] },
     { label: fields.bias, value: DIRECTION_LABELS[pairDirection] },
-    { label: fields.recommendation, value: ACTION_LABELS[action] },
-    { label: fields.confidence, value: formatConfidence(surprise.confidence) },
+    { label: fields.recommendation, value: analysis.summary.recommendation },
+    {
+      label: fields.confidence,
+      value: formatConfidence(analysis.summary.confidence),
+    },
     { label: fields.reason, value: analysis.reason },
+  );
+
+  if (analysis.playbook.expectedMove) {
+    rows.push({
+      label: "Expected Move",
+      value: analysis.playbook.expectedMove.label,
+    });
+  }
+
+  rows.push(
+    { label: "Risk Warning", value: analysis.riskWarning },
     { label: fields.analysis, value: analysis.analysisLines.join("\n") },
   );
 

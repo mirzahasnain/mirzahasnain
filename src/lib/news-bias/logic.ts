@@ -1,60 +1,56 @@
-import { QUICK_STRENGTH } from "./constants";
 import { findEvent } from "./news";
 import { findPair } from "./pairs";
+import {
+  decisionEngine,
+  listPairDirections,
+  type DecisionResult,
+} from "./engine";
 import type {
   Analysis,
-  AnalysisContext,
   AnalysisRequest,
   ReleaseValues,
   SurpriseReading,
-  SurpriseSign,
 } from "./types/interfaces";
-import { buildAnalysisLines, buildReason } from "./utils/analysisGenerator";
-import { calculateConfidence } from "./utils/calculateConfidence";
-import { calculateStrength, getExpectedImpact } from "./utils/calculateStrength";
-import { calculateSurprise, getSurpriseSign } from "./utils/calculateSurprise";
-import {
-  getAffectedAssets,
-  getPairDirection,
-  getTradeAction,
-  getUsdDirection,
-} from "./utils/marketLogic";
 
 /**
- * Composition root of the decision engine. A tapped outcome is enough for a
- * result; entering the release numbers upgrades that estimate to a measured
- * surprise. Returns null while the selection is incomplete, so the UI has a
- * single truth for "no result yet".
+ * Composition root for the analysis UI.
+ * Delegates all intelligence to the Version 7 Smart Decision Engine.
  */
 export function buildAnalysis(request: AnalysisRequest): Analysis | null {
   const event = findEvent(request.eventId);
   const pair = findPair(request.pairId);
   if (!event || !pair) return null;
 
+  const hasNumbers = request.forecast !== null && request.actual !== null;
+  if (!hasNumbers && request.outcome === null) return null;
+
+  const decision = decisionEngine.decide({
+    newsId: event.id,
+    currency: "USD",
+    forecast: request.forecast,
+    previous: request.previous,
+    actual: request.actual,
+    outcome: request.outcome,
+    pairId: pair.id,
+  });
+
   const values = readValues(request);
-  const surprise = values
-    ? measureSurprise(values)
-    : estimateSurprise(request.outcome);
-  if (!surprise) return null;
 
-  const usdDirection = getUsdDirection(surprise.sign);
-  const pairDirection = getPairDirection(pair, usdDirection);
-
-  const context: AnalysisContext = {
+  return {
     event,
     pair,
     values,
-    surprise,
-    usdDirection,
-    pairDirection,
-    action: getTradeAction(pairDirection, surprise.strength),
-    affectedAssets: getAffectedAssets(usdDirection, pair.id),
-  };
-
-  return {
-    ...context,
-    reason: buildReason(context),
-    analysisLines: buildAnalysisLines(context),
+    surprise: toSurpriseReading(decision),
+    usdDirection: decision.usdDirection,
+    pairDirection: decision.pairDirection,
+    action: decision.action,
+    affectedAssets: listPairDirections(decision.usdDirection, pair.id),
+    playbook: decision.playbook,
+    historical: decision.historical,
+    riskWarning: decision.riskWarning,
+    summary: decision.summary,
+    reason: decision.summary.reason,
+    analysisLines: decision.explanation,
   };
 }
 
@@ -68,31 +64,45 @@ function readValues(request: AnalysisRequest): ReleaseValues | null {
   };
 }
 
-export function measureSurprise(values: ReleaseValues): SurpriseReading {
-  const value = calculateSurprise(values.actual, values.forecast);
-  return toReading(value, getSurpriseSign(value), calculateStrength(value), false);
+function toSurpriseReading(decision: DecisionResult): SurpriseReading {
+  return {
+    value: decision.surprise.difference,
+    percentage: decision.surprise.percentageSurprise,
+    sign: decision.surprise.sign,
+    strength: decision.surprise.strength,
+    impact: decision.surprise.impact,
+    confidence: decision.confidence.score,
+    isEstimate: decision.surprise.isEstimate,
+  };
 }
 
-/** Direction is known from the tap; strength is assumed until numbers arrive. */
+/** @deprecated Prefer decisionEngine.decide — kept for older call sites / tests. */
+export function measureSurprise(values: ReleaseValues): SurpriseReading {
+  const decision = decisionEngine.decide({
+    newsId: "cpi",
+    currency: "USD",
+    forecast: values.forecast,
+    previous: values.previous,
+    actual: values.actual,
+    outcome: null,
+    pairId: "XAUUSD",
+  });
+  return toSurpriseReading(decision);
+}
+
+/** @deprecated Prefer decisionEngine.decide */
 export function estimateSurprise(
-  sign: SurpriseSign | null,
+  sign: AnalysisRequest["outcome"],
 ): SurpriseReading | null {
   if (!sign) return null;
-  return toReading(null, sign, sign === "flat" ? "neutral" : QUICK_STRENGTH, true);
-}
-
-function toReading(
-  value: number | null,
-  sign: SurpriseReading["sign"],
-  strength: SurpriseReading["strength"],
-  isEstimate: boolean,
-): SurpriseReading {
-  return {
-    value,
-    sign,
-    strength,
-    impact: getExpectedImpact(strength),
-    confidence: calculateConfidence(strength),
-    isEstimate,
-  };
+  const decision = decisionEngine.decide({
+    newsId: "cpi",
+    currency: "USD",
+    forecast: null,
+    previous: null,
+    actual: null,
+    outcome: sign,
+    pairId: "XAUUSD",
+  });
+  return toSurpriseReading(decision);
 }

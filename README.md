@@ -81,6 +81,13 @@ searchable history. Opening an event auto-fills News / Forecast / Previous on
 (`calendar/config.ts`) — Mock today; TradingEconomics, FMP, and MarketAux stubs
 are ready. No paid API is connected yet.
 
+### Smart Decision Engine (Version 7)
+
+Intelligence lives under `src/lib/news-bias/engine/`. Rules and mappings are JSON
+(`newsRules.json`, `pairMappings.json`, `impactLevels.json`,
+`historicalMoves.json`) — nothing is hardcoded in React. The UI calls
+`buildAnalysis` → `decisionEngine.decide()`. Unit tests: `npm test`.
+
 ### Decision engine
 
 ```

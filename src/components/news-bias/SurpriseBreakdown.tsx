@@ -43,9 +43,16 @@ export function SurpriseBreakdown({ analysis }: SurpriseBreakdownProps) {
       <Field
         label={BREAKDOWN_LABELS.surprise}
         value={
-          surprise.value === null
+          surprise.value === null ? EMPTY_VALUE : formatSurprise(surprise.value)
+        }
+        valueClassName="text-base tabular-nums text-nb-text"
+      />
+      <Field
+        label={BREAKDOWN_LABELS.percentage}
+        value={
+          surprise.percentage === null
             ? EMPTY_VALUE
-            : formatSurprise(surprise.value)
+            : `${surprise.percentage > 0 ? "+" : ""}${surprise.percentage}%`
         }
         valueClassName="text-base tabular-nums text-nb-text"
       />
@@ -70,6 +77,7 @@ export function SurpriseBreakdown({ analysis }: SurpriseBreakdownProps) {
       <Field
         label={BREAKDOWN_LABELS.impact}
         value={IMPACT_LABELS[surprise.impact]}
+        className="sm:col-span-2"
       />
       {values && values.previous !== null ? (
         <Field

@@ -5,7 +5,6 @@ import type { LucideIcon } from "lucide-react";
 import { memo } from "react";
 import { Field } from "@/components/news-bias/Field";
 import {
-  ACTION_LABELS,
   DIRECTION_LABELS,
   IMPACT_LABELS,
   RESULT_COPY,
@@ -67,6 +66,9 @@ const ACTION_TEXT: Record<TradeAction, string> = {
 function ResultCardComponent({ analysis, onReset }: ResultCardProps) {
   const theme = THEME[analysis.pairDirection];
   const Icon = theme.icon;
+  const { summary, playbook } = analysis;
+  const [actionWord, ...rest] = summary.recommendation.split(" ");
+  const assetWord = rest.join(" ");
 
   return (
     <section
@@ -90,10 +92,8 @@ function ResultCardComponent({ analysis, onReset }: ResultCardProps) {
         </p>
 
         <h2 className="mt-2 text-4xl font-black uppercase leading-none tracking-tight sm:text-5xl">
-          <span className={ACTION_TEXT[analysis.action]}>
-            {ACTION_LABELS[analysis.action]}
-          </span>{" "}
-          <span className="text-nb-text">{analysis.pair.label}</span>
+          <span className={ACTION_TEXT[analysis.action]}>{actionWord}</span>{" "}
+          <span className="text-nb-text">{assetWord || analysis.pair.label}</span>
         </h2>
 
         <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-nb-text-soft">
@@ -106,23 +106,41 @@ function ResultCardComponent({ analysis, onReset }: ResultCardProps) {
         <dl className="mt-6 grid w-full max-w-sm grid-cols-2 gap-3 text-left">
           <Field
             label={RESULT_COPY.confidence}
-            value={formatConfidence(analysis.surprise.confidence)}
+            value={formatConfidence(summary.confidence)}
             valueClassName="text-base tabular-nums text-nb-text"
           />
           <Field
             label={RESULT_COPY.impact}
-            value={IMPACT_LABELS[analysis.surprise.impact]}
+            value={IMPACT_LABELS[summary.impact]}
             valueClassName="text-base text-nb-text"
           />
         </dl>
 
+        {playbook.expectedMove && analysis.action !== "wait" ? (
+          <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-nb-faint">
+            {RESULT_COPY.expectedMove}
+            <span className="ml-2 font-mono normal-case tracking-normal text-nb-text-soft">
+              {playbook.expectedMove.label}
+            </span>
+          </p>
+        ) : null}
+
         <p className="mt-6 max-w-md text-base leading-relaxed text-nb-text-soft">
-          {analysis.reason}
+          {summary.reason}
         </p>
 
         {analysis.surprise.isEstimate ? (
           <p className="mt-3 text-xs text-nb-faint">{RESULT_COPY.estimate}</p>
         ) : null}
+
+        <p className="mt-4 max-w-md text-xs leading-relaxed text-nb-faint">
+          <span className="font-semibold uppercase tracking-[0.14em]">
+            {RESULT_COPY.risk}
+          </span>
+          <span className="mt-1 block normal-case tracking-normal">
+            {analysis.riskWarning}
+          </span>
+        </p>
 
         <button
           type="button"

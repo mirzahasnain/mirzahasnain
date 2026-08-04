@@ -67,9 +67,9 @@ export const NEWS_EVENTS: NewsEvent[] = [
     description: "Share of the labour force out of work",
     dollarEffect: {
       positive:
-        "The Unemployment Rate came in above forecast, and an above-forecast release is treated as US Dollar positive.",
+        "The Unemployment Rate came in above forecast. Higher unemployment typically weakens the US Dollar.",
       negative:
-        "The Unemployment Rate came in below forecast, and a below-forecast release is treated as US Dollar negative.",
+        "The Unemployment Rate came in below forecast. Lower unemployment typically strengthens the US Dollar.",
     },
   },
   {

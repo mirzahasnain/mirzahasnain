@@ -14,7 +14,7 @@ import type {
 export const APP = {
   title: "News Bias Tool",
   subtitle: "Three taps to a trading bias.",
-  version: "Version 6.0",
+  version: "Version 7.0",
   disclaimer: "Educational reference only. Not financial advice.",
 } as const;
 
@@ -36,11 +36,13 @@ export const OUTCOME_OPTIONS: {
 ];
 
 export const RESULT_COPY = {
-  eyebrow: "Expected bias",
+  eyebrow: "Recommendation",
   confidence: "Confidence",
-  impact: "Expected impact",
+  impact: "Impact",
   estimate: "Estimate — add the release numbers for an exact reading",
   reset: "New analysis",
+  risk: "Risk warning",
+  expectedMove: "Expected move",
 } as const;
 
 /** One tap for the releases traders watch most. */
@@ -102,7 +104,10 @@ export const DETAILS_COPY = {
     hint: "Optional. Real numbers replace the estimate with a measured strength and confidence.",
   },
   breakdown: { title: "Surprise" },
-  analysis: { title: "Full analysis" },
+  playbook: { title: "Trade playbook" },
+  historical: { title: "Historical statistics" },
+  analysis: { title: "AI explanation" },
+  risk: { title: "Risk warning" },
   assets: { title: "Assets affected" },
   exports: { title: "Export" },
   history: {
@@ -113,14 +118,9 @@ export const DETAILS_COPY = {
   },
 } as const;
 
-export const FIELD_COPY = {
-  forecast: { label: "Forecast", placeholder: "54.0" },
-  previous: { label: "Previous", placeholder: "53.3" },
-  actual: { label: "Actual", placeholder: "55.6" },
-} as const;
-
 export const BREAKDOWN_LABELS = {
-  surprise: "Surprise",
+  surprise: "Difference",
+  percentage: "% Surprise",
   reading: "Reading",
   strength: "Strength",
   impact: "Expected impact",
@@ -128,6 +128,25 @@ export const BREAKDOWN_LABELS = {
   pair: "Pair",
   news: "News",
   result: "Result",
+} as const;
+
+export const PLAYBOOK_LABELS = {
+  direction: "Direction",
+  confidence: "Confidence",
+  bias: "Bias",
+  reason: "Reason",
+  expectedMove: "Expected reaction",
+} as const;
+
+export const HISTORICAL_LABELS = {
+  averageMove: "Average move",
+  winRate: "Win rate",
+} as const;
+
+export const FIELD_COPY = {
+  forecast: { label: "Forecast", placeholder: "54.0" },
+  previous: { label: "Previous", placeholder: "53.3" },
+  actual: { label: "Actual", placeholder: "55.6" },
 } as const;
 
 export const EMPTY_VALUE = "—";

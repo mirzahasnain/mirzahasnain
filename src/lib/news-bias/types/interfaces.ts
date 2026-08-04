@@ -106,6 +106,8 @@ export interface ReleaseValues {
 export interface SurpriseReading {
   /** Actual minus forecast, or null when the trader only tapped an outcome. */
   value: number | null;
+  /** Percentage surprise vs |forecast|, when measurable. */
+  percentage: number | null;
   sign: SurpriseSign;
   strength: SurpriseStrength;
   impact: ExpectedImpact;
@@ -122,6 +124,47 @@ export interface AffectedAsset {
   isSelected: boolean;
 }
 
+export interface ExpectedMoveView {
+  label: string;
+  min: number | null;
+  max: number | null;
+  unit: string;
+  isExtreme: boolean;
+}
+
+export interface HistoricalStatsView {
+  label: string;
+  sampleSize: number;
+  averageMove: number | null;
+  unit: string | null;
+  winRate: number | null;
+  highlights: {
+    pairId: PairId;
+    name: string;
+    averageMove: number;
+    unit: string;
+    winRate: number;
+  }[];
+}
+
+export interface TradePlaybookView {
+  pairId: PairId;
+  pairLabel: string;
+  displayName: string;
+  direction: TradeAction;
+  bias: Direction;
+  confidence: number;
+  reason: string;
+  expectedMove: ExpectedMoveView | null;
+}
+
+export interface DecisionSummaryView {
+  recommendation: string;
+  confidence: number;
+  impact: ExpectedImpact;
+  reason: string;
+}
+
 /** Everything the decision engine derives before any prose is generated. */
 export interface AnalysisContext {
   event: NewsEvent;
@@ -133,12 +176,16 @@ export interface AnalysisContext {
   pairDirection: Direction;
   action: TradeAction;
   affectedAssets: AffectedAsset[];
+  playbook: TradePlaybookView;
+  historical: HistoricalStatsView | null;
+  riskWarning: string;
+  summary: DecisionSummaryView;
 }
 
 export interface Analysis extends AnalysisContext {
   /** One-line justification for the trade decision. */
   reason: string;
-  /** Full analysis, one sentence per line. */
+  /** Full analysis / AI explanation, one sentence per line. */
   analysisLines: string[];
 }
 

@@ -5,10 +5,12 @@ import { AffectedAssetsGrid } from "@/components/news-bias/AffectedAssetsGrid";
 import { DetailsSection } from "@/components/news-bias/DetailsSection";
 import { ExportActions } from "@/components/news-bias/ExportActions";
 import { FullAnalysis } from "@/components/news-bias/FullAnalysis";
+import { HistoricalStatsPanel } from "@/components/news-bias/HistoricalStatsPanel";
 import { HistoryList } from "@/components/news-bias/HistoryList";
 import { ReleaseInputs } from "@/components/news-bias/ReleaseInputs";
 import type { ReleaseInputValues } from "@/components/news-bias/ReleaseInputs";
 import { SurpriseBreakdown } from "@/components/news-bias/SurpriseBreakdown";
+import { TradePlaybookPanel } from "@/components/news-bias/TradePlaybookPanel";
 import { DETAILS_COPY } from "@/lib/news-bias/constants";
 import type { Analysis, HistoryEntry } from "@/lib/news-bias/types/interfaces";
 
@@ -60,8 +62,22 @@ export function DetailsPanel({
             <SurpriseBreakdown analysis={analysis} />
           </DetailsSection>
 
+          <DetailsSection title={DETAILS_COPY.playbook.title}>
+            <TradePlaybookPanel analysis={analysis} />
+          </DetailsSection>
+
+          <DetailsSection title={DETAILS_COPY.historical.title}>
+            <HistoricalStatsPanel analysis={analysis} />
+          </DetailsSection>
+
           <DetailsSection title={DETAILS_COPY.analysis.title}>
             <FullAnalysis lines={analysis.analysisLines} />
+          </DetailsSection>
+
+          <DetailsSection title={DETAILS_COPY.risk.title}>
+            <p className="text-sm leading-relaxed text-nb-text-soft">
+              {analysis.riskWarning}
+            </p>
           </DetailsSection>
 
           <DetailsSection title={DETAILS_COPY.assets.title}>
