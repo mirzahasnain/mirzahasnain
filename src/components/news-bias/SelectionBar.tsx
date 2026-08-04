@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { STEP_COPY } from "@/lib/news-bias/constants";
 
 export interface SelectionChip {
@@ -16,7 +17,7 @@ interface SelectionBarProps {
  * Completed steps shrink to one row of chips, so the result card is the only
  * card on screen once the three taps are done. Tapping a chip reopens it.
  */
-export function SelectionBar({ chips }: SelectionBarProps) {
+function SelectionBarComponent({ chips }: SelectionBarProps) {
   return (
     <div className="flex flex-wrap gap-2">
       {chips.map((chip) => (
@@ -25,7 +26,7 @@ export function SelectionBar({ chips }: SelectionBarProps) {
           type="button"
           onClick={chip.onEdit}
           aria-label={`${STEP_COPY.change}: ${chip.label}`}
-          className="min-h-11 rounded-full border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-slate-300 hover:border-white/30 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70"
+          className="min-h-11 rounded-full border border-nb-border bg-nb-surface px-4 text-sm font-semibold text-nb-text-soft hover:border-nb-border-strong hover:text-nb-text focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
         >
           {chip.label}
         </button>
@@ -33,3 +34,5 @@ export function SelectionBar({ chips }: SelectionBarProps) {
     </div>
   );
 }
+
+export const SelectionBar = memo(SelectionBarComponent);

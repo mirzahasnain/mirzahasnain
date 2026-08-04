@@ -20,19 +20,19 @@ interface SurpriseBreakdownProps {
 }
 
 const STRENGTH_DOT: Record<SurpriseStrength, string> = {
-  neutral: "bg-slate-400",
-  weak: "bg-emerald-400",
-  moderate: "bg-yellow-400",
-  strong: "bg-orange-400",
-  extreme: "bg-red-500",
+  neutral: "bg-nb-flat",
+  weak: "bg-nb-up",
+  moderate: "bg-amber-500",
+  strong: "bg-orange-500",
+  extreme: "bg-nb-down",
 };
 
 const STRENGTH_TEXT: Record<SurpriseStrength, string> = {
-  neutral: "text-slate-300",
-  weak: "text-emerald-300",
-  moderate: "text-yellow-300",
-  strong: "text-orange-300",
-  extreme: "text-red-300",
+  neutral: "text-nb-flat",
+  weak: "text-nb-up",
+  moderate: "text-amber-500",
+  strong: "text-orange-500",
+  extreme: "text-nb-down",
 };
 
 export function SurpriseBreakdown({ analysis }: SurpriseBreakdownProps) {
@@ -47,7 +47,7 @@ export function SurpriseBreakdown({ analysis }: SurpriseBreakdownProps) {
             ? EMPTY_VALUE
             : formatSurprise(surprise.value)
         }
-        valueClassName="text-base tabular-nums text-slate-50"
+        valueClassName="text-base tabular-nums text-nb-text"
       />
       <Field
         label={BREAKDOWN_LABELS.reading}
@@ -77,7 +77,7 @@ export function SurpriseBreakdown({ analysis }: SurpriseBreakdownProps) {
           value={formatSurprise(
             calculateSurprise(values.actual, values.previous),
           )}
-          valueClassName="tabular-nums text-slate-100"
+          valueClassName="tabular-nums text-nb-text"
           className="sm:col-span-2"
         />
       ) : null}

@@ -21,7 +21,7 @@ export function NumberField({
     <div>
       <label
         htmlFor={inputId}
-        className="block text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-slate-500"
+        className="block text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-nb-text0"
       >
         {label}
       </label>
@@ -33,7 +33,7 @@ export function NumberField({
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#0d131d] px-4 py-3.5 text-base font-semibold tabular-nums text-slate-50 placeholder:font-normal placeholder:text-slate-600 hover:border-white/25 focus:border-sky-400/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="mt-1.5 w-full rounded-xl border border-nb-border bg-nb-input px-4 py-3.5 text-base font-semibold tabular-nums text-nb-text placeholder:font-normal placeholder:text-nb-faint hover:border-nb-border-strong focus:border-nb-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
     </div>
   );

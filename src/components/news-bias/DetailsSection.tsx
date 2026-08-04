@@ -18,10 +18,10 @@ export function DetailsSection({
     <section>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.2em] text-nb-muted">
             {title}
           </h3>
-          {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+          {hint ? <p className="mt-1 text-xs text-nb-text0">{hint}</p> : null}
         </div>
         {action}
       </div>

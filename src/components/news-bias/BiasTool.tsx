@@ -1,21 +1,31 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { DetailsPanel } from "@/components/news-bias/DetailsPanel";
+import dynamic from "next/dynamic";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Disclosure } from "@/components/news-bias/Disclosure";
+import { NewsSummary } from "@/components/news-bias/NewsSummary";
+import { focusFirstOption } from "@/components/news-bias/optionKeyboard";
 import { OutcomeButtons } from "@/components/news-bias/OutcomeButtons";
+import { QuickPresets } from "@/components/news-bias/QuickPresets";
+import { RecentAnalyses } from "@/components/news-bias/RecentAnalyses";
 import type { ReleaseInputValues } from "@/components/news-bias/ReleaseInputs";
 import { ResultCard } from "@/components/news-bias/ResultCard";
-import { SelectionBar } from "@/components/news-bias/SelectionBar";
+import { SearchField } from "@/components/news-bias/SearchField";
 import type { SelectionChip } from "@/components/news-bias/SelectionBar";
 import { StepPicker } from "@/components/news-bias/StepPicker";
 import {
+  DETAILS_COPY,
   HISTORY_SAVE_DELAY_MS,
   OUTCOME_OPTIONS,
   STEP_COPY,
 } from "@/lib/news-bias/constants";
 import { buildAnalysis } from "@/lib/news-bias/logic";
-import { findEvent, newsEventOptions } from "@/lib/news-bias/news";
-import { findPair, tradingPairOptions } from "@/lib/news-bias/pairs";
+import {
+  findEvent,
+  newsEventOptions,
+  newsPresetOptions,
+} from "@/lib/news-bias/news";
+import { findPair, getPairSections } from "@/lib/news-bias/pairs";
 import type {
   HistoryEntry,
   NewsEventId,
@@ -28,6 +38,14 @@ import {
   loadHistory,
   saveToHistory,
 } from "@/lib/news-bias/utils/history";
+import { groupRecent } from "@/lib/news-bias/utils/recent";
+
+/** Loaded the first time the disclosure is opened. */
+const DetailsPanel = dynamic(
+  () =>
+    import("@/components/news-bias/DetailsPanel").then((mod) => mod.DetailsPanel),
+  { ssr: false },
+);
 
 type StepKey = "news" | "pair" | "outcome";
 
@@ -37,26 +55,26 @@ const EMPTY_INPUTS: ReleaseInputValues = {
   actual: "",
 };
 
+const NEWS_SECTIONS = [{ id: "news", options: newsEventOptions }];
+
 export function BiasTool() {
   const [eventId, setEventId] = useState<NewsEventId | null>(null);
   const [pairId, setPairId] = useState<PairId | null>(null);
   const [outcome, setOutcome] = useState<SurpriseSign | null>(null);
   const [inputs, setInputs] = useState<ReleaseInputValues>(EMPTY_INPUTS);
   const [editingStep, setEditingStep] = useState<StepKey | null>(null);
+  const [pairQuery, setPairQuery] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
 
   const forecast = parseNumber(inputs.forecast);
   const previous = parseNumber(inputs.previous);
   const actual = parseNumber(inputs.actual);
 
-  const analysis = buildAnalysis({
-    eventId,
-    pairId,
-    outcome,
-    forecast,
-    previous,
-    actual,
-  });
+  const analysis = useMemo(
+    () =>
+      buildAnalysis({ eventId, pairId, outcome, forecast, previous, actual }),
+    [eventId, pairId, outcome, forecast, previous, actual],
+  );
 
   const effectiveSign = analysis?.surprise.sign ?? outcome;
   const nextStep: StepKey | null = !eventId
@@ -67,6 +85,9 @@ export function BiasTool() {
         ? "outcome"
         : null;
   const activeStep = editingStep ?? nextStep;
+
+  const pairSections = useMemo(() => getPairSections(pairQuery), [pairQuery]);
+  const recentGroups = useMemo(() => groupRecent(history), [history]);
 
   useEffect(() => {
     setHistory(loadHistory());
@@ -92,6 +113,7 @@ export function BiasTool() {
 
   const choosePair = useCallback((id: PairId) => {
     setPairId(id);
+    setPairQuery("");
     setEditingStep(null);
   }, []);
 
@@ -110,12 +132,15 @@ export function BiasTool() {
     [analysis],
   );
 
+  const cancelEditing = useCallback(() => setEditingStep(null), []);
+
   const reset = useCallback(() => {
     setEventId(null);
     setPairId(null);
     setOutcome(null);
     setInputs(EMPTY_INPUTS);
     setEditingStep(null);
+    setPairQuery("");
   }, []);
 
   const openEntry = useCallback((entry: HistoryEntry) => {
@@ -130,25 +155,44 @@ export function BiasTool() {
     setEditingStep(null);
   }, []);
 
-  const chips = buildChips({
-    eventId,
-    pairId,
-    sign: effectiveSign,
-    activeStep,
-    onEdit: setEditingStep,
-  });
+  const clearAllHistory = useCallback(
+    () => setHistory(clearHistory()),
+    [],
+  );
+
+  const chips = useMemo(
+    () =>
+      buildChips({
+        eventId,
+        pairId,
+        sign: effectiveSign,
+        activeStep,
+        onEdit: setEditingStep,
+      }),
+    [eventId, pairId, effectiveSign, activeStep],
+  );
+
+  const showRecent = analysis === null && recentGroups.length > 0;
 
   return (
     <div className="space-y-5">
-      {chips.length > 0 ? <SelectionBar chips={chips} /> : null}
+      <NewsSummary chips={chips} analysis={analysis} />
 
       {activeStep === "news" ? (
         <StepPicker
           step={STEP_COPY.news.step}
           title={STEP_COPY.news.title}
-          options={newsEventOptions}
+          sections={NEWS_SECTIONS}
           value={eventId}
           onChange={chooseEvent}
+          onCancel={editingStep ? cancelEditing : undefined}
+          header={
+            <QuickPresets
+              options={newsPresetOptions}
+              value={eventId}
+              onSelect={chooseEvent}
+            />
+          }
         />
       ) : null}
 
@@ -156,28 +200,53 @@ export function BiasTool() {
         <StepPicker
           step={STEP_COPY.pair.step}
           title={STEP_COPY.pair.title}
-          options={tradingPairOptions}
+          sections={pairSections}
           value={pairId}
           onChange={choosePair}
           columns={2}
+          onCancel={editingStep ? cancelEditing : undefined}
+          header={
+            <SearchField
+              value={pairQuery}
+              onChange={setPairQuery}
+              onArrowDown={() =>
+                focusFirstOption(
+                  document.querySelector<HTMLElement>("[data-nb-options]"),
+                )
+              }
+              onCancel={() => (pairQuery ? setPairQuery("") : cancelEditing())}
+            />
+          }
         />
       ) : null}
 
       {activeStep === "outcome" ? (
-        <OutcomeButtons value={effectiveSign} onChange={chooseOutcome} />
+        <OutcomeButtons
+          value={effectiveSign}
+          onChange={chooseOutcome}
+          onCancel={editingStep ? cancelEditing : undefined}
+        />
       ) : null}
 
       {analysis ? <ResultCard analysis={analysis} onReset={reset} /> : null}
 
+      {showRecent ? (
+        <RecentAnalyses groups={recentGroups} onOpen={openEntry} />
+      ) : null}
+
       {analysis || history.length > 0 ? (
-        <DetailsPanel
-          analysis={analysis}
-          inputs={inputs}
-          onInputsChange={setInputs}
-          history={history}
-          onOpenEntry={openEntry}
-          onClearHistory={() => setHistory(clearHistory())}
-        />
+        <Disclosure title={DETAILS_COPY.toggle}>
+          {() => (
+            <DetailsPanel
+              analysis={analysis}
+              inputs={inputs}
+              onInputsChange={setInputs}
+              history={history}
+              onOpenEntry={openEntry}
+              onClearHistory={clearAllHistory}
+            />
+          )}
+        </Disclosure>
       ) : null}
     </div>
   );

@@ -11,14 +11,14 @@ interface FieldProps {
 export function Field({
   label,
   value,
-  valueClassName = "text-slate-100",
+  valueClassName = "text-nb-text",
   className = "",
 }: FieldProps) {
   return (
     <div
-      className={`rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 ${className}`}
+      className={`rounded-xl border border-nb-border bg-nb-elevated px-4 py-3 ${className}`}
     >
-      <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-slate-500">
+      <dt className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-nb-text0">
         {label}
       </dt>
       <dd className={`mt-1 text-sm font-bold text-balance ${valueClassName}`}>

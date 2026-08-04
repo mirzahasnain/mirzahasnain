@@ -36,7 +36,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    // The News Bias Tool applies its saved theme to <html> before hydration.
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${orbitron.variable} antialiased`}>
         {children}
       </body>

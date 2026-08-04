@@ -2,12 +2,18 @@
 
 import { ArrowDownRight, ArrowUpRight, Equal } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { memo } from "react";
+import {
+  handleOptionKeyDown,
+  OPTION_ATTRIBUTE,
+} from "@/components/news-bias/optionKeyboard";
 import { OUTCOME_OPTIONS, STEP_COPY } from "@/lib/news-bias/constants";
 import type { SurpriseSign } from "@/lib/news-bias/types/interfaces";
 
 interface OutcomeButtonsProps {
   value: SurpriseSign | null;
   onChange: (sign: SurpriseSign) => void;
+  onCancel?: () => void;
 }
 
 const ICONS: Record<SurpriseSign, LucideIcon> = {
@@ -17,19 +23,23 @@ const ICONS: Record<SurpriseSign, LucideIcon> = {
 };
 
 const SELECTED_CLASS: Record<SurpriseSign, string> = {
-  positive: "border-emerald-400/70 bg-emerald-400/10 text-emerald-300",
-  negative: "border-red-400/70 bg-red-400/10 text-red-300",
-  flat: "border-white/25 bg-white/[0.06] text-slate-200",
+  positive: "border-nb-up/70 bg-nb-up/10 text-nb-up",
+  negative: "border-nb-down/70 bg-nb-down/10 text-nb-down",
+  flat: "border-nb-border-strong bg-nb-elevated text-nb-text",
 };
 
-export function OutcomeButtons({ value, onChange }: OutcomeButtonsProps) {
+function OutcomeButtonsComponent({
+  value,
+  onChange,
+  onCancel,
+}: OutcomeButtonsProps) {
   return (
-    <section className="rounded-3xl border border-white/10 bg-[#0b1119]/70 p-5 sm:p-6">
+    <section className="nb-fade rounded-3xl border border-nb-border bg-nb-surface p-5 sm:p-6">
       <div className="flex items-baseline gap-3">
-        <span className="text-xs font-bold tabular-nums text-sky-400">
+        <span className="text-xs font-bold tabular-nums text-nb-accent">
           {STEP_COPY.outcome.step}
         </span>
-        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-nb-muted">
           {STEP_COPY.outcome.title}
         </h2>
       </div>
@@ -37,6 +47,7 @@ export function OutcomeButtons({ value, onChange }: OutcomeButtonsProps) {
       <div
         role="group"
         aria-label={STEP_COPY.outcome.title}
+        onKeyDown={(event) => handleOptionKeyDown(event, onCancel)}
         className="mt-4 grid gap-3"
       >
         {OUTCOME_OPTIONS.map((option) => {
@@ -47,12 +58,13 @@ export function OutcomeButtons({ value, onChange }: OutcomeButtonsProps) {
             <button
               key={option.sign}
               type="button"
+              {...{ [OPTION_ATTRIBUTE]: "" }}
               aria-pressed={isSelected}
               onClick={() => onChange(option.sign)}
-              className={`flex min-h-16 items-center gap-4 rounded-2xl border px-5 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 ${
+              className={`flex min-h-16 items-center gap-4 rounded-2xl border px-5 py-4 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70 ${
                 isSelected
                   ? SELECTED_CLASS[option.sign]
-                  : "border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/25"
+                  : "border-nb-border bg-nb-elevated text-nb-text-soft hover:border-nb-border-strong"
               }`}
             >
               <Icon aria-hidden className="size-6 shrink-0" />
@@ -60,7 +72,7 @@ export function OutcomeButtons({ value, onChange }: OutcomeButtonsProps) {
                 <span className="block text-lg font-bold tracking-tight">
                   {option.label}
                 </span>
-                <span className="block text-xs uppercase tracking-[0.18em] text-slate-500">
+                <span className="block text-xs uppercase tracking-[0.18em] text-nb-faint">
                   {option.caption}
                 </span>
               </span>
@@ -71,3 +83,5 @@ export function OutcomeButtons({ value, onChange }: OutcomeButtonsProps) {
     </section>
   );
 }
+
+export const OutcomeButtons = memo(OutcomeButtonsComponent);

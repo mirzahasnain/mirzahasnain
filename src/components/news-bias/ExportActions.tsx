@@ -91,7 +91,7 @@ export function ExportActions({ analysis }: ExportActionsProps) {
             key={action}
             type="button"
             onClick={() => handleClick(action)}
-            className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3.5 text-xs font-bold uppercase tracking-[0.1em] focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70 ${activeClass(active)}`}
+            className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3.5 text-xs font-bold uppercase tracking-[0.1em] focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70 ${activeClass(active)}`}
           >
             <Icon aria-hidden className="size-4 shrink-0" />
             <span className="truncate">{active?.label ?? EXPORT_LABELS[action]}</span>
@@ -104,11 +104,11 @@ export function ExportActions({ analysis }: ExportActionsProps) {
 
 function activeClass(active: Feedback | null): string {
   if (!active) {
-    return "border-sky-400/40 bg-sky-400/10 text-sky-200 hover:bg-sky-400/15";
+    return "border-nb-accent/40 bg-nb-accent/10 text-nb-accent hover:bg-nb-accent/15";
   }
   return active.failed
-    ? "border-red-400/50 bg-red-400/10 text-red-300"
-    : "border-emerald-400/50 bg-emerald-400/10 text-emerald-300";
+    ? "border-nb-down/50 bg-nb-down/10 text-nb-down"
+    : "border-nb-up/50 bg-nb-up/10 text-nb-up";
 }
 
 async function runExport(

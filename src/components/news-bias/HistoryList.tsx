@@ -18,9 +18,9 @@ interface HistoryListProps {
 }
 
 const DIRECTION_CLASS: Record<Direction, string> = {
-  bullish: "text-emerald-300",
-  bearish: "text-red-300",
-  neutral: "text-slate-300",
+  bullish: "text-nb-up",
+  bearish: "text-nb-down",
+  neutral: "text-nb-text-soft",
 };
 
 const TIME_FORMAT: Intl.DateTimeFormatOptions = {
@@ -45,13 +45,13 @@ export function HistoryList({ entries, onOpen }: HistoryListProps) {
               type="button"
               onClick={() => onOpen(entry)}
               aria-label={`${DETAILS_COPY.history.reopen}: ${analysis.event.label}, ${analysis.pair.label}`}
-              className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.03] px-4 py-3 text-left hover:border-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70"
+              className="flex w-full items-center justify-between gap-3 rounded-xl border border-nb-border bg-nb-elevated px-4 py-3 text-left hover:border-nb-border-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
             >
               <span className="min-w-0">
-                <span className="block truncate text-sm font-semibold text-slate-100">
+                <span className="block truncate text-sm font-semibold text-nb-text">
                   {analysis.event.label}
                 </span>
-                <span className="block truncate text-xs text-slate-500">
+                <span className="block truncate text-xs text-nb-text0">
                   {analysis.pair.label} ·{" "}
                   {new Date(entry.savedAt).toLocaleString(
                     undefined,
@@ -60,7 +60,7 @@ export function HistoryList({ entries, onOpen }: HistoryListProps) {
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-sm font-bold tabular-nums text-slate-200">
+                <span className="block text-sm font-bold tabular-nums text-nb-text">
                   {surprise === null ? EMPTY_VALUE : formatSurprise(surprise)}
                 </span>
                 <span

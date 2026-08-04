@@ -3,7 +3,6 @@
 import { Trash2 } from "lucide-react";
 import { AffectedAssetsGrid } from "@/components/news-bias/AffectedAssetsGrid";
 import { DetailsSection } from "@/components/news-bias/DetailsSection";
-import { Disclosure } from "@/components/news-bias/Disclosure";
 import { ExportActions } from "@/components/news-bias/ExportActions";
 import { FullAnalysis } from "@/components/news-bias/FullAnalysis";
 import { HistoryList } from "@/components/news-bias/HistoryList";
@@ -22,7 +21,10 @@ interface DetailsPanelProps {
   onClearHistory: () => void;
 }
 
-/** Everything past the decision itself, one tap away. */
+/**
+ * Everything past the decision itself. Loaded on demand, so the export and PDF
+ * code never reaches a trader who only wants the call.
+ */
 export function DetailsPanel({
   analysis,
   inputs,
@@ -32,7 +34,7 @@ export function DetailsPanel({
   onClearHistory,
 }: DetailsPanelProps) {
   return (
-    <Disclosure title={DETAILS_COPY.toggle}>
+    <>
       {analysis ? (
         <>
           <DetailsSection
@@ -68,7 +70,7 @@ export function DetailsPanel({
             <button
               type="button"
               onClick={onClearHistory}
-              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-white/10 px-4 text-xs font-semibold text-slate-400 hover:border-white/30 hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400/70"
+              className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-full border border-nb-border px-4 text-xs font-semibold text-nb-muted hover:border-nb-border-strong hover:text-nb-text focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
             >
               <Trash2 aria-hidden className="size-3.5" />
               {DETAILS_COPY.history.clear}
@@ -78,6 +80,6 @@ export function DetailsPanel({
           <HistoryList entries={history} onOpen={onOpenEntry} />
         </DetailsSection>
       ) : null}
-    </Disclosure>
+    </>
   );
 }
