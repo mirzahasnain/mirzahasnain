@@ -69,19 +69,40 @@ function isNewsEventId(value: string | null): value is NewsEventId {
   return value !== null && NEWS_EVENT_IDS.has(value as NewsEventId);
 }
 
+function readPrefill(searchParams: URLSearchParams): {
+  eventId: NewsEventId | null;
+  inputs: ReleaseInputValues;
+  mode: DataMode | null;
+  calendarId: string | null;
+} {
+  const eventParam = searchParams.get("event");
+  const modeParam = searchParams.get("mode");
+  return {
+    eventId: isNewsEventId(eventParam) ? eventParam : null,
+    inputs: {
+      forecast: searchParams.get("forecast") ?? "",
+      previous: searchParams.get("previous") ?? "",
+      actual: searchParams.get("actual") ?? "",
+    },
+    mode: modeParam === "live" || modeParam === "manual" ? modeParam : null,
+    calendarId: searchParams.get("calendarId"),
+  };
+}
+
 export function BiasTool() {
   const searchParams = useSearchParams();
-  const autofillApplied = useRef(false);
+  const prefill = readPrefill(searchParams);
+  const autofillApplied = useRef(Boolean(prefill.eventId || prefill.calendarId || prefill.inputs.forecast));
 
-  const [eventId, setEventId] = useState<NewsEventId | null>(null);
+  const [eventId, setEventId] = useState<NewsEventId | null>(prefill.eventId);
   const [pairId, setPairId] = useState<PairId | null>(null);
   const [outcome, setOutcome] = useState<SurpriseSign | null>(null);
-  const [inputs, setInputs] = useState<ReleaseInputValues>(EMPTY_INPUTS);
+  const [inputs, setInputs] = useState<ReleaseInputValues>(prefill.inputs);
   const [editingStep, setEditingStep] = useState<StepKey | null>(null);
   const [pairQuery, setPairQuery] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [dataMode, setDataMode] = useState<DataMode>("manual");
-  const [calendarId, setCalendarId] = useState<string | null>(null);
+  const [dataMode, setDataMode] = useState<DataMode>(prefill.mode ?? "manual");
+  const [calendarId, setCalendarId] = useState<string | null>(prefill.calendarId);
 
   const forecast = parseNumber(inputs.forecast);
   const previous = parseNumber(inputs.previous);
@@ -110,39 +131,25 @@ export function BiasTool() {
 
   useEffect(() => {
     setHistory(loadHistory());
-    setDataMode(loadDataMode());
-  }, []);
+    if (!prefill.mode) setDataMode(loadDataMode());
+    else saveDataMode(prefill.mode);
+  }, [prefill.mode]);
 
-  /** Auto-fill from /event/[id] → analysis deep link. */
+  /** Re-apply auto-fill if the query string changes after mount. */
   useEffect(() => {
-    if (autofillApplied.current) return;
-    const eventParam = searchParams.get("event");
-    const forecastParam = searchParams.get("forecast");
-    const previousParam = searchParams.get("previous");
-    const actualParam = searchParams.get("actual");
-    const modeParam = searchParams.get("mode");
-    const calendarParam = searchParams.get("calendarId");
-
+    const next = readPrefill(searchParams);
     const hasAutofill =
-      eventParam ||
-      forecastParam ||
-      previousParam ||
-      actualParam ||
-      calendarParam;
-    if (!hasAutofill) return;
-
+      next.eventId ||
+      next.calendarId ||
+      next.inputs.forecast ||
+      next.inputs.previous ||
+      next.inputs.actual;
+    if (!hasAutofill || autofillApplied.current) return;
     autofillApplied.current = true;
-
-    if (isNewsEventId(eventParam)) setEventId(eventParam);
-    setInputs({
-      forecast: forecastParam ?? "",
-      previous: previousParam ?? "",
-      actual: actualParam ?? "",
-    });
-    if (modeParam === "live" || modeParam === "manual") {
-      setDataMode(saveDataMode(modeParam));
-    }
-    if (calendarParam) setCalendarId(calendarParam);
+    if (next.eventId) setEventId(next.eventId);
+    setInputs(next.inputs);
+    if (next.mode) setDataMode(saveDataMode(next.mode));
+    if (next.calendarId) setCalendarId(next.calendarId);
   }, [searchParams]);
 
   /** Live mode: push API actual into the release inputs when available. */
@@ -241,6 +248,11 @@ export function BiasTool() {
   );
 
   const showRecent = analysis === null && recentGroups.length > 0;
+  const hasPrefill =
+    inputs.forecast !== "" ||
+    inputs.previous !== "" ||
+    inputs.actual !== "" ||
+    calendarId !== null;
 
   return (
     <div className="space-y-5">
@@ -302,8 +314,8 @@ export function BiasTool() {
         <RecentAnalyses groups={recentGroups} onOpen={openEntry} />
       ) : null}
 
-      {analysis || history.length > 0 ? (
-        <Disclosure title={DETAILS_COPY.toggle}>
+      {analysis || history.length > 0 || hasPrefill ? (
+        <Disclosure title={DETAILS_COPY.toggle} defaultOpen={hasPrefill && !analysis}>
           {() => (
             <>
               <div className="mb-5">

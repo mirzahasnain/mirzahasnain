@@ -36,21 +36,26 @@ export function DetailsPanel({
   onClearHistory,
   actualReadOnly = false,
 }: DetailsPanelProps) {
+  const hasInputs =
+    inputs.forecast !== "" || inputs.previous !== "" || inputs.actual !== "";
+
   return (
     <>
+      {analysis || hasInputs ? (
+        <DetailsSection
+          title={DETAILS_COPY.values.title}
+          hint={DETAILS_COPY.values.hint}
+        >
+          <ReleaseInputs
+            values={inputs}
+            onChange={onInputsChange}
+            actualReadOnly={actualReadOnly}
+          />
+        </DetailsSection>
+      ) : null}
+
       {analysis ? (
         <>
-          <DetailsSection
-            title={DETAILS_COPY.values.title}
-            hint={DETAILS_COPY.values.hint}
-          >
-            <ReleaseInputs
-              values={inputs}
-              onChange={onInputsChange}
-              actualReadOnly={actualReadOnly}
-            />
-          </DetailsSection>
-
           <DetailsSection title={DETAILS_COPY.breakdown.title}>
             <SurpriseBreakdown analysis={analysis} />
           </DetailsSection>

@@ -71,7 +71,15 @@ Shortcuts for speed:
 - **Keyboard support**: arrows move through options, Enter selects, Escape backs
   out
 
-The tool is intentionally offline: no API, database, or auth.
+### Economic calendar (Version 6)
+
+Live calendar surfaces at [`/calendar`](http://localhost:3000/calendar) and
+[`/event/[id]`](http://localhost:3000/event/usd-cpi-upcoming). High-impact
+releases show countdown, favorites, currency filters, local reminders, and
+searchable history. Opening an event auto-fills News / Forecast / Previous on
+`/news-bias`. Providers are swapped in one config file
+(`calendar/config.ts`) — Mock today; TradingEconomics, FMP, and MarketAux stubs
+are ready. No paid API is connected yet.
 
 ### Decision engine
 
@@ -107,7 +115,10 @@ lib/news-bias/
   utils/pdf.ts                # Dependency-free PDF writer
   utils/history.ts            # Last 20 analyses in localStorage
   utils/clipboard.ts, download.ts
-  services/calendar.ts        # V4 seams, typed and inert today
+  calendar/                   # Types, config, mock JSON, providers, hooks
+  services/economicCalendar.ts
+  services/calendarProvider.ts
+  services/liveNews.ts
   services/news.ts
   services/market.ts
 ```
@@ -118,4 +129,5 @@ component or engine change is needed. Every export format is built from the same
 `buildAnalysisFields` output, so a new field appears in the clipboard, the TXT
 and the PDF at once.
 
-`services/` is where Version 4 plugs in a live calendar, headlines, and quotes.
+Switch the calendar provider with `CALENDAR_CONFIG.calendarProvider` in
+`src/lib/news-bias/calendar/config.ts`.

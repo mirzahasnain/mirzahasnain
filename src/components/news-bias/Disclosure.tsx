@@ -8,11 +8,17 @@ interface DisclosureProps {
   title: string;
   /** Rendered only once opened, so its code and work stay off the first paint. */
   children: () => ReactNode;
+  /** Open on first paint — used when calendar auto-fill lands values. */
+  defaultOpen?: boolean;
 }
 
-export function Disclosure({ title, children }: DisclosureProps) {
+export function Disclosure({
+  title,
+  children,
+  defaultOpen = false,
+}: DisclosureProps) {
   const panelId = useId();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <div className="overflow-hidden rounded-3xl border border-nb-border bg-nb-surface">
