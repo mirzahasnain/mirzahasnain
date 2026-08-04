@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { BiasTool } from "@/components/news-bias/BiasTool";
 import { Footer } from "@/components/news-bias/Footer";
 import { Header } from "@/components/news-bias/Header";
@@ -11,7 +12,13 @@ export default function NewsBiasPage() {
       />
 
       <Header />
-      <BiasTool />
+      <Suspense
+        fallback={
+          <div className="h-40 animate-pulse rounded-xl bg-nb-elevated" aria-hidden />
+        }
+      >
+        <BiasTool />
+      </Suspense>
       <div className="mt-auto pt-4">
         <Footer />
       </div>

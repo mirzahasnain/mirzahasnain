@@ -12,9 +12,14 @@ export interface ReleaseInputValues {
 interface ReleaseInputsProps {
   values: ReleaseInputValues;
   onChange: (values: ReleaseInputValues) => void;
+  actualReadOnly?: boolean;
 }
 
-export function ReleaseInputs({ values, onChange }: ReleaseInputsProps) {
+export function ReleaseInputs({
+  values,
+  onChange,
+  actualReadOnly = false,
+}: ReleaseInputsProps) {
   const update = (field: keyof ReleaseInputValues) => (value: string) =>
     onChange({ ...values, [field]: value });
 
@@ -37,6 +42,7 @@ export function ReleaseInputs({ values, onChange }: ReleaseInputsProps) {
         placeholder={FIELD_COPY.actual.placeholder}
         value={values.actual}
         onChange={update("actual")}
+        readOnly={actualReadOnly}
       />
     </div>
   );

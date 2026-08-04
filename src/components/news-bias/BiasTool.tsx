@@ -1,7 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { DataModeToggle } from "@/components/news-bias/calendar/DataModeToggle";
 import { Disclosure } from "@/components/news-bias/Disclosure";
 import { NewsSummary } from "@/components/news-bias/NewsSummary";
 import { focusFirstOption } from "@/components/news-bias/optionKeyboard";
@@ -19,6 +21,8 @@ import {
   OUTCOME_OPTIONS,
   STEP_COPY,
 } from "@/lib/news-bias/constants";
+import { useLiveNews, type DataMode } from "@/lib/news-bias/calendar";
+import { loadDataMode, saveDataMode } from "@/lib/news-bias/calendar/utils/dataMode";
 import { buildAnalysis } from "@/lib/news-bias/logic";
 import {
   findEvent,
@@ -55,9 +59,20 @@ const EMPTY_INPUTS: ReleaseInputValues = {
   actual: "",
 };
 
+const NEWS_EVENT_IDS: ReadonlySet<string> = new Set(
+  newsEventOptions.map((o) => o.value),
+);
+
 const NEWS_SECTIONS = [{ id: "news", options: newsEventOptions }];
 
+function isNewsEventId(value: string | null): value is NewsEventId {
+  return value !== null && NEWS_EVENT_IDS.has(value as NewsEventId);
+}
+
 export function BiasTool() {
+  const searchParams = useSearchParams();
+  const autofillApplied = useRef(false);
+
   const [eventId, setEventId] = useState<NewsEventId | null>(null);
   const [pairId, setPairId] = useState<PairId | null>(null);
   const [outcome, setOutcome] = useState<SurpriseSign | null>(null);
@@ -65,10 +80,14 @@ export function BiasTool() {
   const [editingStep, setEditingStep] = useState<StepKey | null>(null);
   const [pairQuery, setPairQuery] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [dataMode, setDataMode] = useState<DataMode>("manual");
+  const [calendarId, setCalendarId] = useState<string | null>(null);
 
   const forecast = parseNumber(inputs.forecast);
   const previous = parseNumber(inputs.previous);
   const actual = parseNumber(inputs.actual);
+
+  const live = useLiveNews(calendarId, dataMode, Boolean(calendarId));
 
   const analysis = useMemo(
     () =>
@@ -91,7 +110,51 @@ export function BiasTool() {
 
   useEffect(() => {
     setHistory(loadHistory());
+    setDataMode(loadDataMode());
   }, []);
+
+  /** Auto-fill from /event/[id] → analysis deep link. */
+  useEffect(() => {
+    if (autofillApplied.current) return;
+    const eventParam = searchParams.get("event");
+    const forecastParam = searchParams.get("forecast");
+    const previousParam = searchParams.get("previous");
+    const actualParam = searchParams.get("actual");
+    const modeParam = searchParams.get("mode");
+    const calendarParam = searchParams.get("calendarId");
+
+    const hasAutofill =
+      eventParam ||
+      forecastParam ||
+      previousParam ||
+      actualParam ||
+      calendarParam;
+    if (!hasAutofill) return;
+
+    autofillApplied.current = true;
+
+    if (isNewsEventId(eventParam)) setEventId(eventParam);
+    setInputs({
+      forecast: forecastParam ?? "",
+      previous: previousParam ?? "",
+      actual: actualParam ?? "",
+    });
+    if (modeParam === "live" || modeParam === "manual") {
+      setDataMode(saveDataMode(modeParam));
+    }
+    if (calendarParam) setCalendarId(calendarParam);
+  }, [searchParams]);
+
+  /** Live mode: push API actual into the release inputs when available. */
+  useEffect(() => {
+    if (dataMode !== "live") return;
+    if (live.actual === null) return;
+    setInputs((prev) => {
+      const next = String(live.actual);
+      if (prev.actual === next) return prev;
+      return { ...prev, actual: next };
+    });
+  }, [dataMode, live.actual]);
 
   useEffect(() => {
     if (!eventId || !pairId) return;
@@ -141,6 +204,7 @@ export function BiasTool() {
     setInputs(EMPTY_INPUTS);
     setEditingStep(null);
     setPairQuery("");
+    setCalendarId(null);
   }, []);
 
   const openEntry = useCallback((entry: HistoryEntry) => {
@@ -159,6 +223,10 @@ export function BiasTool() {
     () => setHistory(clearHistory()),
     [],
   );
+
+  const onDataModeChange = useCallback((mode: DataMode) => {
+    setDataMode(saveDataMode(mode));
+  }, []);
 
   const chips = useMemo(
     () =>
@@ -237,14 +305,25 @@ export function BiasTool() {
       {analysis || history.length > 0 ? (
         <Disclosure title={DETAILS_COPY.toggle}>
           {() => (
-            <DetailsPanel
-              analysis={analysis}
-              inputs={inputs}
-              onInputsChange={setInputs}
-              history={history}
-              onOpenEntry={openEntry}
-              onClearHistory={clearAllHistory}
-            />
+            <>
+              <div className="mb-5">
+                <DataModeToggle value={dataMode} onChange={onDataModeChange} />
+                {dataMode === "live" && live.unavailable ? (
+                  <p className="mt-2 text-xs text-nb-down">
+                    Live data is temporarily unavailable.
+                  </p>
+                ) : null}
+              </div>
+              <DetailsPanel
+                analysis={analysis}
+                inputs={inputs}
+                onInputsChange={setInputs}
+                history={history}
+                onOpenEntry={openEntry}
+                onClearHistory={clearAllHistory}
+                actualReadOnly={dataMode === "live" && live.actual !== null}
+              />
+            </>
           )}
         </Disclosure>
       ) : null}

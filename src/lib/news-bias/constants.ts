@@ -14,7 +14,7 @@ import type {
 export const APP = {
   title: "News Bias Tool",
   subtitle: "Three taps to a trading bias.",
-  version: "Version 5.0",
+  version: "Version 6.0",
   disclaimer: "Educational reference only. Not financial advice.",
 } as const;
 

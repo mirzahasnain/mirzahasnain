@@ -19,6 +19,8 @@ interface DetailsPanelProps {
   history: HistoryEntry[];
   onOpenEntry: (entry: HistoryEntry) => void;
   onClearHistory: () => void;
+  /** When live mode has pushed an actual, lock the field. */
+  actualReadOnly?: boolean;
 }
 
 /**
@@ -32,6 +34,7 @@ export function DetailsPanel({
   history,
   onOpenEntry,
   onClearHistory,
+  actualReadOnly = false,
 }: DetailsPanelProps) {
   return (
     <>
@@ -41,7 +44,11 @@ export function DetailsPanel({
             title={DETAILS_COPY.values.title}
             hint={DETAILS_COPY.values.hint}
           >
-            <ReleaseInputs values={inputs} onChange={onInputsChange} />
+            <ReleaseInputs
+              values={inputs}
+              onChange={onInputsChange}
+              actualReadOnly={actualReadOnly}
+            />
           </DetailsSection>
 
           <DetailsSection title={DETAILS_COPY.breakdown.title}>

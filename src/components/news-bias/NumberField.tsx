@@ -7,6 +7,7 @@ interface NumberFieldProps {
   placeholder: string;
   value: string;
   onChange: (value: string) => void;
+  readOnly?: boolean;
 }
 
 export function NumberField({
@@ -14,6 +15,7 @@ export function NumberField({
   placeholder,
   value,
   onChange,
+  readOnly = false,
 }: NumberFieldProps) {
   const inputId = useId();
 
@@ -32,8 +34,14 @@ export function NumberField({
         step="any"
         value={value}
         placeholder={placeholder}
+        readOnly={readOnly}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full rounded-xl border border-nb-border bg-nb-input px-4 py-3.5 text-base font-semibold tabular-nums text-nb-text placeholder:font-normal placeholder:text-nb-faint hover:border-nb-border-strong focus:border-nb-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className={[
+          "mt-1.5 w-full rounded-xl border border-nb-border bg-nb-input px-4 py-3.5 text-base font-semibold tabular-nums text-nb-text placeholder:font-normal placeholder:text-nb-faint focus:border-nb-accent/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
+          readOnly
+            ? "cursor-default opacity-80"
+            : "hover:border-nb-border-strong",
+        ].join(" ")}
       />
     </div>
   );
