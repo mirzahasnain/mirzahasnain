@@ -10,30 +10,50 @@ import type {
 
 export const APP = {
   title: "News Bias Tool",
-  subtitle: "Select a News Event, Trading Pair and Result",
-  badge: "Trading Bias",
+  subtitle: "Three taps to a trading bias.",
   version: "Version 3.0",
   disclaimer: "Educational reference only. Not financial advice.",
 } as const;
 
-export const SECTION_COPY = {
-  news: {
-    step: "01",
-    title: "Economic News",
-    placeholder: "Select an economic news event",
-    label: "Economic news event",
+export const STEP_COPY = {
+  news: { step: "01", title: "Economic news" },
+  pair: { step: "02", title: "Trading pair" },
+  outcome: { step: "03", title: "Result" },
+  change: "Change",
+} as const;
+
+export const OUTCOME_OPTIONS: {
+  sign: SurpriseSign;
+  label: string;
+  caption: string;
+}[] = [
+  { sign: "positive", label: "Actual > Forecast", caption: "Beat" },
+  { sign: "negative", label: "Actual < Forecast", caption: "Miss" },
+  { sign: "flat", label: "Actual = Forecast", caption: "In line" },
+];
+
+export const RESULT_COPY = {
+  eyebrow: "Expected bias",
+  confidenceSuffix: "confidence",
+  estimate: "Estimate — add the release numbers for an exact reading",
+  reset: "New analysis",
+} as const;
+
+export const DETAILS_COPY = {
+  toggle: "More details",
+  values: {
+    title: "Release values",
+    hint: "Optional. Real numbers replace the estimate with a measured strength and confidence.",
   },
-  pair: {
-    step: "02",
-    title: "Trading Pair",
-    placeholder: "Select a trading pair",
-    label: "Trading pair",
-  },
-  release: {
-    step: "03",
-    title: "Result",
-    readyHint: "Direction and strength are calculated from these values.",
-    waitingHint: "Select a news event and trading pair first.",
+  breakdown: { title: "Surprise" },
+  analysis: { title: "Full analysis" },
+  assets: { title: "Assets affected" },
+  exports: { title: "Export" },
+  history: {
+    title: "History",
+    hint: "Your last 20 analyses, stored on this device.",
+    clear: "Clear",
+    reopen: "Reopen this analysis",
   },
 } as const;
 
@@ -43,46 +63,18 @@ export const FIELD_COPY = {
   actual: { label: "Actual", placeholder: "55.6" },
 } as const;
 
-export const CARD_COPY = {
-  result: {
-    eyebrow: "Expected Bias",
-    usdPrefix: "USD",
-    reset: "New selection",
-    labels: { news: "News", pair: "Pair", result: "Result" },
-  },
-  surprise: {
-    title: "Surprise",
-    labels: {
-      surprise: "Surprise",
-      reading: "Reading",
-      strength: "Strength",
-      impact: "Expected Market Impact",
-      previous: "vs Previous",
-    },
-  },
-  decision: {
-    title: "Trade Decision",
-    labels: {
-      pair: "Pair",
-      recommendation: "Recommended Bias",
-      confidence: "Confidence",
-      reason: "Reason",
-    },
-  },
-  analysis: { title: "Full Analysis" },
-  assets: { title: "Assets Affected" },
-  history: {
-    title: "History",
-    hint: "Your last 20 analyses, stored on this device.",
-    clear: "Clear",
-    reopen: "Reopen this analysis",
-  },
+export const BREAKDOWN_LABELS = {
+  surprise: "Surprise",
+  reading: "Reading",
+  strength: "Strength",
+  impact: "Expected impact",
+  previous: "vs Previous",
+  pair: "Pair",
+  news: "News",
+  result: "Result",
 } as const;
 
-export const EMPTY_STATE = {
-  waiting: "Your bias will appear here.",
-  missingValues: "Enter a forecast and an actual value to run the analysis.",
-} as const;
+export const EMPTY_VALUE = "—";
 
 export const DIRECTION_LABELS: Record<Direction, string> = {
   bullish: "Bullish",
@@ -186,8 +178,14 @@ export const CONFIDENCE_BY_STRENGTH: Record<SurpriseStrength, number> = {
   extreme: 95,
 };
 
+/**
+ * Strength assumed when a trader taps a beat or miss without typing the
+ * numbers: enough to act on, short of the confidence a measured surprise earns.
+ */
+export const QUICK_STRENGTH: SurpriseStrength = "moderate";
+
 export const HISTORY_LIMIT = 20;
-export const HISTORY_STORAGE_KEY = "news-bias:history:v1";
+export const HISTORY_STORAGE_KEY = "news-bias:history:v2";
 /** Wait for typing to settle before writing an entry. */
 export const HISTORY_SAVE_DELAY_MS = 1500;
 

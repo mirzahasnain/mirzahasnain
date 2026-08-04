@@ -86,14 +86,15 @@ export interface ReleaseValues {
 }
 
 export interface SurpriseReading {
-  /** Actual minus forecast. */
-  value: number;
-  magnitude: number;
+  /** Actual minus forecast, or null when the trader only tapped an outcome. */
+  value: number | null;
   sign: SurpriseSign;
   strength: SurpriseStrength;
   impact: ExpectedImpact;
   /** Confidence in the bias, 0-100. */
   confidence: number;
+  /** True when the strength is assumed rather than measured. */
+  isEstimate: boolean;
 }
 
 export interface AffectedAsset {
@@ -107,7 +108,8 @@ export interface AffectedAsset {
 export interface AnalysisContext {
   event: NewsEvent;
   pair: TradingPair;
-  values: ReleaseValues;
+  /** Present only once the trader has entered the release numbers. */
+  values: ReleaseValues | null;
   surprise: SurpriseReading;
   usdDirection: Direction;
   pairDirection: Direction;
@@ -131,6 +133,8 @@ export interface AnalysisField {
 export interface AnalysisRequest {
   eventId: NewsEventId | null;
   pairId: PairId | null;
+  /** Tapped outcome, used until exact values are entered. */
+  outcome: SurpriseSign | null;
   forecast: number | null;
   previous: number | null;
   actual: number | null;
@@ -139,9 +143,10 @@ export interface AnalysisRequest {
 export interface HistoryValues {
   eventId: NewsEventId;
   pairId: PairId;
-  forecast: number;
+  outcome: SurpriseSign | null;
+  forecast: number | null;
   previous: number | null;
-  actual: number;
+  actual: number | null;
 }
 
 export interface HistoryEntry extends HistoryValues {

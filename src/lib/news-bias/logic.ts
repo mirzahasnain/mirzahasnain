@@ -1,3 +1,4 @@
+import { QUICK_STRENGTH } from "./constants";
 import { findEvent } from "./news";
 import { findPair } from "./pairs";
 import type {
@@ -6,17 +7,12 @@ import type {
   AnalysisRequest,
   ReleaseValues,
   SurpriseReading,
+  SurpriseSign,
 } from "./types/interfaces";
+import { buildAnalysisLines, buildReason } from "./utils/analysisGenerator";
 import { calculateConfidence } from "./utils/calculateConfidence";
 import { calculateStrength, getExpectedImpact } from "./utils/calculateStrength";
-import {
-  calculateSurprise,
-  getSurpriseSign,
-} from "./utils/calculateSurprise";
-import {
-  buildAnalysisLines,
-  buildReason,
-} from "./utils/analysisGenerator";
+import { calculateSurprise, getSurpriseSign } from "./utils/calculateSurprise";
 import {
   getAffectedAssets,
   getPairDirection,
@@ -25,23 +21,22 @@ import {
 } from "./utils/marketLogic";
 
 /**
- * Composition root of the decision engine: turns a news event, a pair and the
- * three release numbers into a complete analysis. Returns null while the
- * selection is incomplete, so the UI has a single truth for "no result yet".
+ * Composition root of the decision engine. A tapped outcome is enough for a
+ * result; entering the release numbers upgrades that estimate to a measured
+ * surprise. Returns null while the selection is incomplete, so the UI has a
+ * single truth for "no result yet".
  */
 export function buildAnalysis(request: AnalysisRequest): Analysis | null {
   const event = findEvent(request.eventId);
   const pair = findPair(request.pairId);
   if (!event || !pair) return null;
-  if (request.forecast === null || request.actual === null) return null;
 
-  const values: ReleaseValues = {
-    forecast: request.forecast,
-    previous: request.previous,
-    actual: request.actual,
-  };
+  const values = readValues(request);
+  const surprise = values
+    ? measureSurprise(values)
+    : estimateSurprise(request.outcome);
+  if (!surprise) return null;
 
-  const surprise = readSurprise(values);
   const usdDirection = getUsdDirection(surprise.sign);
   const pairDirection = getPairDirection(pair, usdDirection);
 
@@ -63,16 +58,41 @@ export function buildAnalysis(request: AnalysisRequest): Analysis | null {
   };
 }
 
-export function readSurprise(values: ReleaseValues): SurpriseReading {
-  const value = calculateSurprise(values.actual, values.forecast);
-  const strength = calculateStrength(value);
+function readValues(request: AnalysisRequest): ReleaseValues | null {
+  if (request.forecast === null || request.actual === null) return null;
 
   return {
+    forecast: request.forecast,
+    previous: request.previous,
+    actual: request.actual,
+  };
+}
+
+export function measureSurprise(values: ReleaseValues): SurpriseReading {
+  const value = calculateSurprise(values.actual, values.forecast);
+  return toReading(value, getSurpriseSign(value), calculateStrength(value), false);
+}
+
+/** Direction is known from the tap; strength is assumed until numbers arrive. */
+export function estimateSurprise(
+  sign: SurpriseSign | null,
+): SurpriseReading | null {
+  if (!sign) return null;
+  return toReading(null, sign, sign === "flat" ? "neutral" : QUICK_STRENGTH, true);
+}
+
+function toReading(
+  value: number | null,
+  sign: SurpriseReading["sign"],
+  strength: SurpriseReading["strength"],
+  isEstimate: boolean,
+): SurpriseReading {
+  return {
     value,
-    magnitude: Math.abs(value),
-    sign: getSurpriseSign(value),
+    sign,
     strength,
     impact: getExpectedImpact(strength),
     confidence: calculateConfidence(strength),
+    isEstimate,
   };
 }

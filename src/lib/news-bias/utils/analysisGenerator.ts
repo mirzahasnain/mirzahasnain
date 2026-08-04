@@ -52,6 +52,9 @@ const SIGNIFICANCE: Record<SurpriseStrength, string> = {
   extreme: "the surprise is exceptionally large",
 };
 
+const ESTIMATED_SIGNIFICANCE =
+  "the size of the surprise has not been entered yet";
+
 const DOLLAR_CLAUSE: Record<Direction, string> = {
   bullish: "strengthening USD",
   bearish: "weakening USD",
@@ -68,11 +71,17 @@ export function buildReason(context: AnalysisContext): string {
   const { event, pair, surprise, usdDirection, pairDirection, action } = context;
 
   if (action === "wait") {
-    return `A surprise of ${formatSurprise(surprise.value)} sits inside the neutral band, so waiting for a clearer signal on ${pair.displayName} is preferred.`;
+    if (surprise.sign === "flat") {
+      return `${event.label} matched the forecast, so there is no edge to trade on ${pair.displayName}.`;
+    }
+    return `A surprise of ${formatSurprise(surprise.value ?? 0)} sits inside the neutral band, so waiting for a clearer signal on ${pair.displayName} is preferred.`;
   }
 
-  const verb =
-    surprise.sign === "positive"
+  const verb = surprise.isEstimate
+    ? surprise.sign === "positive"
+      ? "came in above"
+      : "came in below"
+    : surprise.sign === "positive"
       ? BEAT_VERB[surprise.strength]
       : MISS_VERB[surprise.strength];
 
@@ -80,19 +89,8 @@ export function buildReason(context: AnalysisContext): string {
 }
 
 export function buildAnalysisLines(context: AnalysisContext): string[] {
-  const { event, values, surprise } = context;
-  const lines: string[] = [];
-
-  if (surprise.sign === "flat") {
-    lines.push(`${event.label} came in exactly in line with expectations.`);
-  } else if (surprise.strength === "neutral") {
-    lines.push(`${event.label} came in broadly in line with expectations.`);
-  } else {
-    const side = surprise.sign === "positive" ? "above" : "below";
-    lines.push(
-      `${event.label} came in ${SIZE_QUALIFIER[surprise.strength]}${side} expectations at ${formatNumber(values.actual)} against a forecast of ${formatNumber(values.forecast)}.`,
-    );
-  }
+  const { event, surprise } = context;
+  const lines = [buildHeadline(context)];
 
   lines.push(
     surprise.sign === "flat"
@@ -105,16 +103,39 @@ export function buildAnalysisLines(context: AnalysisContext): string[] {
 
   lines.push(buildCrossMarketLine(context));
 
+  const significance = surprise.isEstimate
+    ? ESTIMATED_SIGNIFICANCE
+    : SIGNIFICANCE[surprise.strength];
   lines.push(
-    `Confidence is ${IMPACT_LABELS[surprise.impact]} at ${formatConfidence(surprise.confidence)} because ${SIGNIFICANCE[surprise.strength]}.`,
+    `Confidence is ${IMPACT_LABELS[surprise.impact]} at ${formatConfidence(surprise.confidence)} because ${significance}.`,
   );
 
   return lines;
 }
 
+function buildHeadline(context: AnalysisContext): string {
+  const { event, values, surprise } = context;
+
+  if (surprise.sign === "flat") {
+    return `${event.label} came in exactly in line with expectations.`;
+  }
+
+  const side = surprise.sign === "positive" ? "above" : "below";
+
+  if (!values) {
+    return `${event.label} came in ${side} expectations.`;
+  }
+
+  if (surprise.strength === "neutral") {
+    return `${event.label} came in broadly in line with expectations at ${formatNumber(values.actual)} against a forecast of ${formatNumber(values.forecast)}.`;
+  }
+
+  return `${event.label} came in ${SIZE_QUALIFIER[surprise.strength]}${side} expectations at ${formatNumber(values.actual)} against a forecast of ${formatNumber(values.forecast)}.`;
+}
+
 function buildPreviousLine(context: AnalysisContext): string | null {
   const { values, event } = context;
-  if (values.previous === null) return null;
+  if (!values || values.previous === null) return null;
 
   const change = values.actual - values.previous;
   const previous = formatNumber(values.previous);
@@ -168,24 +189,32 @@ export function buildAnalysisFields(analysis: Analysis): AnalysisField[] {
     { label: fields.news, value: event.label },
     { label: fields.pair, value: pair.label },
     { label: fields.result, value: OUTCOME_LABELS[surprise.sign] },
-    { label: fields.forecast, value: formatNumber(values.forecast) },
   ];
 
-  if (values.previous !== null) {
-    rows.push({ label: fields.previous, value: formatNumber(values.previous) });
+  if (values) {
+    rows.push({ label: fields.forecast, value: formatNumber(values.forecast) });
+    if (values.previous !== null) {
+      rows.push({
+        label: fields.previous,
+        value: formatNumber(values.previous),
+      });
+    }
+    rows.push({ label: fields.actual, value: formatNumber(values.actual) });
+  }
+
+  if (surprise.value !== null) {
+    rows.push({
+      label: fields.surprise,
+      value: formatSurprise(surprise.value),
+    });
   }
 
   rows.push(
-    { label: fields.actual, value: formatNumber(values.actual) },
-    { label: fields.surprise, value: formatSurprise(surprise.value) },
     { label: fields.strength, value: STRENGTH_LABELS[surprise.strength] },
     { label: fields.impact, value: IMPACT_LABELS[surprise.impact] },
     { label: fields.bias, value: DIRECTION_LABELS[pairDirection] },
     { label: fields.recommendation, value: ACTION_LABELS[action] },
-    {
-      label: fields.confidence,
-      value: formatConfidence(surprise.confidence),
-    },
+    { label: fields.confidence, value: formatConfidence(surprise.confidence) },
     { label: fields.reason, value: analysis.reason },
     { label: fields.analysis, value: analysis.analysisLines.join("\n") },
   );

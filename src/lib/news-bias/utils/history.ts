@@ -42,25 +42,41 @@ function isSameRelease(entry: HistoryEntry, values: HistoryValues): boolean {
   return (
     entry.eventId === values.eventId &&
     entry.pairId === values.pairId &&
+    entry.outcome === values.outcome &&
     entry.forecast === values.forecast &&
     entry.previous === values.previous &&
     entry.actual === values.actual
   );
 }
 
+const OUTCOMES = ["positive", "negative", "flat"];
+
 function isHistoryEntry(value: unknown): value is HistoryEntry {
   if (typeof value !== "object" || value === null) return false;
   const record = value as Record<string, unknown>;
 
-  return (
+  const hasShape =
     typeof record.id === "string" &&
     typeof record.savedAt === "number" &&
     NEWS_EVENTS.some((event) => event.id === record.eventId) &&
     TRADING_PAIRS.some((pair) => pair.id === record.pairId) &&
-    typeof record.forecast === "number" &&
-    typeof record.actual === "number" &&
-    (record.previous === null || typeof record.previous === "number")
+    isNullableNumber(record.forecast) &&
+    isNullableNumber(record.previous) &&
+    isNullableNumber(record.actual) &&
+    (record.outcome === null ||
+      (typeof record.outcome === "string" && OUTCOMES.includes(record.outcome)));
+
+  if (!hasShape) return false;
+
+  // An entry is only reopenable if it still carries enough to rebuild a result.
+  return (
+    record.outcome !== null ||
+    (record.forecast !== null && record.actual !== null)
   );
+}
+
+function isNullableNumber(value: unknown): boolean {
+  return value === null || typeof value === "number";
 }
 
 function createId(): string {
