@@ -49,14 +49,27 @@ A standalone trading utility at [/news-bias](http://localhost:3000/news-bias),
 built mobile-first around one job: get to a decision fast.
 
 **Three taps to a result.** Tap the economic release, tap the pair, tap whether
-the actual beat, missed or matched the forecast. Each step collapses to its
-choice, and one large result card shows the direction, a BUY/SELL/WAIT call and
-a confidence score. Everything else — release values, surprise breakdown, full
-analysis, affected markets, exports and history — sits behind a single
-**More details** disclosure.
+the actual beat, missed or matched the forecast. There is no analyse button: the
+result updates as soon as the three answers exist. Each step collapses into a
+chip, and one large result card shows the call (`SELL XAUUSD`), the direction,
+confidence and expected impact. Everything else — release values, surprise
+breakdown, full analysis, affected markets, exports and history — sits behind a
+single **More details** disclosure, whose code only loads when it is opened.
 
 Typing the real numbers into that panel replaces the assumed strength with a
 measured one, so the confidence and wording sharpen.
+
+Shortcuts for speed:
+
+- **Quick picks** for CPI, NFP, FOMC, Interest Rate and ISM PMI
+- **Favourite pairs** (XAUUSD, XAGUSD, BTCUSD, EURUSD) listed before the rest
+- **Search** that understands names as well as tickers — `gold` finds XAUUSD,
+  `bitcoin` finds BTCUSD
+- **Recent** analyses grouped by day, one tap to reopen
+- **Dark and light themes**, remembered in localStorage and applied before the
+  first paint
+- **Keyboard support**: arrows move through options, Enter selects, Escape backs
+  out
 
 The tool is intentionally offline: no API, database, or auth.
 
