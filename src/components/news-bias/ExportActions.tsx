@@ -46,7 +46,15 @@ export function ExportActions({ analysis }: ExportActionsProps) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const signature = `${analysis.event.id}|${analysis.pair.id}|${analysis.values.forecast}|${analysis.values.previous}|${analysis.values.actual}`;
+  const signature = [
+    analysis.event.id,
+    analysis.pair.id,
+    analysis.surprise.sign,
+    analysis.surprise.value,
+    analysis.values?.forecast,
+    analysis.values?.previous,
+    analysis.values?.actual,
+  ].join("|");
 
   useEffect(() => {
     setFeedback(null);

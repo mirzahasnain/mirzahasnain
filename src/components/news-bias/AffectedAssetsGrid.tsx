@@ -1,5 +1,4 @@
-import { Card } from "@/components/news-bias/Card";
-import { CARD_COPY, DIRECTION_LABELS } from "@/lib/news-bias/constants";
+import { DIRECTION_LABELS } from "@/lib/news-bias/constants";
 import type {
   AffectedAsset,
   Direction,
@@ -17,35 +16,33 @@ const BADGE_CLASS: Record<Direction, string> = {
 
 export function AffectedAssetsGrid({ assets }: AffectedAssetsGridProps) {
   return (
-    <Card title={CARD_COPY.assets.title}>
-      <div className="space-y-4">
-        {groupByDirection(assets).map(([direction, group]) => (
-          <ul key={direction} className="grid gap-2 sm:grid-cols-2">
-            {group.map((asset) => (
-              <li
-                key={asset.id}
-                className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
-                  asset.isSelected
-                    ? "border-sky-400/40 bg-sky-400/[0.06]"
-                    : "border-white/5 bg-white/[0.03]"
+    <div className="space-y-4">
+      {groupByDirection(assets).map(([direction, group]) => (
+        <ul key={direction} className="grid gap-2 sm:grid-cols-2">
+          {group.map((asset) => (
+            <li
+              key={asset.id}
+              className={`flex items-center justify-between gap-3 rounded-xl border px-4 py-3 ${
+                asset.isSelected
+                  ? "border-sky-400/40 bg-sky-400/[0.06]"
+                  : "border-white/5 bg-white/[0.03]"
+              }`}
+            >
+              <span className="truncate text-sm font-semibold text-slate-100">
+                {asset.name}
+              </span>
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wider ring-1 ${
+                  BADGE_CLASS[asset.direction]
                 }`}
               >
-                <span className="truncate text-sm font-semibold text-slate-100">
-                  {asset.name}
-                </span>
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[0.7rem] font-bold uppercase tracking-wider ring-1 ${
-                    BADGE_CLASS[asset.direction]
-                  }`}
-                >
-                  {DIRECTION_LABELS[asset.direction]}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ))}
-      </div>
-    </Card>
+                {DIRECTION_LABELS[asset.direction]}
+              </span>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </div>
   );
 }
 
