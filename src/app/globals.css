@@ -18,7 +18,63 @@
   --glow-purple: 0 0 40px rgba(168, 85, 247, 0.3);
 }
 
+/* News Bias Tool palette. One block per theme keeps the components themeable
+   without repeating colour values across them. */
+:root,
+[data-nb-theme="dark"] {
+  --nb-bg: #070b12;
+  --nb-surface: #0b1119;
+  --nb-elevated: #111823;
+  --nb-input: #0d131d;
+  --nb-border: rgba(255, 255, 255, 0.1);
+  --nb-border-strong: rgba(255, 255, 255, 0.28);
+  --nb-text: #f8fafc;
+  --nb-text-soft: #cbd5e1;
+  --nb-muted: #94a3b8;
+  --nb-faint: #64748b;
+  --nb-accent: #38bdf8;
+  --nb-up: #34d399;
+  --nb-down: #f87171;
+  --nb-wait: #fcd34d;
+  --nb-flat: #cbd5e1;
+  --nb-glow: 0.15;
+}
+
+[data-nb-theme="light"] {
+  --nb-bg: #f4f6fa;
+  --nb-surface: #ffffff;
+  --nb-elevated: #f7f9fc;
+  --nb-input: #ffffff;
+  --nb-border: rgba(15, 23, 42, 0.12);
+  --nb-border-strong: rgba(15, 23, 42, 0.3);
+  --nb-text: #0f172a;
+  --nb-text-soft: #334155;
+  --nb-muted: #64748b;
+  --nb-faint: #94a3b8;
+  --nb-accent: #0284c7;
+  --nb-up: #059669;
+  --nb-down: #dc2626;
+  --nb-wait: #b45309;
+  --nb-flat: #475569;
+  --nb-glow: 0.08;
+}
+
 @theme inline {
+  --color-nb-bg: var(--nb-bg);
+  --color-nb-surface: var(--nb-surface);
+  --color-nb-elevated: var(--nb-elevated);
+  --color-nb-input: var(--nb-input);
+  --color-nb-border: var(--nb-border);
+  --color-nb-border-strong: var(--nb-border-strong);
+  --color-nb-text: var(--nb-text);
+  --color-nb-text-soft: var(--nb-text-soft);
+  --color-nb-muted: var(--nb-muted);
+  --color-nb-faint: var(--nb-faint);
+  --color-nb-accent: var(--nb-accent);
+  --color-nb-up: var(--nb-up);
+  --color-nb-down: var(--nb-down);
+  --color-nb-wait: var(--nb-wait);
+  --color-nb-flat: var(--nb-flat);
   --color-space-950: var(--space-950);
   --color-space-900: var(--space-900);
   --color-space-800: var(--space-800);
@@ -206,6 +262,26 @@ body.cursor-custom [role="button"] {
   body.cursor-custom button,
   body.cursor-custom [role="button"] {
     cursor: auto;
+  }
+}
+
+/* News Bias Tool: fade only, nothing that moves. */
+@keyframes nb-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.nb-fade {
+  animation: nb-fade-in 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-fade {
+    animation: none;
   }
 }
 

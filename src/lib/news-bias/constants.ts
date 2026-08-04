@@ -2,9 +2,12 @@ import type {
   Direction,
   ExpectedImpact,
   ExportAction,
+  NewsEventId,
+  PairId,
   StrengthThreshold,
   SurpriseSign,
   SurpriseStrength,
+  Theme,
   TradeAction,
 } from "./types/interfaces";
 
@@ -34,10 +37,63 @@ export const OUTCOME_OPTIONS: {
 
 export const RESULT_COPY = {
   eyebrow: "Expected bias",
-  confidenceSuffix: "confidence",
+  confidence: "Confidence",
+  impact: "Expected impact",
   estimate: "Estimate — add the release numbers for an exact reading",
   reset: "New analysis",
 } as const;
+
+/** One tap for the releases traders watch most. */
+export const NEWS_PRESET_IDS: NewsEventId[] = [
+  "cpi",
+  "nfp",
+  "fomc-statement",
+  "interest-rate-decision",
+  "ism-manufacturing-pmi",
+];
+
+export const FAVORITE_PAIR_IDS: PairId[] = [
+  "XAUUSD",
+  "XAGUSD",
+  "BTCUSD",
+  "EURUSD",
+];
+
+export const GROUP_LABELS = {
+  presets: "Quick picks",
+  favorites: "Favorites",
+  allPairs: "All pairs",
+} as const;
+
+export const SEARCH_COPY = {
+  label: "Search trading pairs",
+  placeholder: "Search — try gold or bitcoin",
+  clear: "Clear search",
+  empty: "No pairs match that search.",
+} as const;
+
+export const RECENT_COPY = {
+  title: "Recent",
+  today: "Today",
+  yesterday: "Yesterday",
+  reopen: "Reopen this analysis",
+} as const;
+
+export const RECENT_LIMIT = 5;
+
+export const SUMMARY_LABELS = {
+  forecast: "Forecast",
+  actual: "Actual",
+  surprise: "Surprise",
+} as const;
+
+export const THEME_COPY = {
+  toLight: "Switch to light mode",
+  toDark: "Switch to dark mode",
+} as const;
+
+export const THEME_STORAGE_KEY = "news-bias:theme:v1";
+export const DEFAULT_THEME: Theme = "dark";
 
 export const DETAILS_COPY = {
   toggle: "More details",

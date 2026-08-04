@@ -58,9 +58,25 @@ export type ExportAction = "copy" | "txt" | "pdf" | "share";
 
 export type ShareResult = "shared" | "copied" | "dismissed" | "failed";
 
+export type Theme = "dark" | "light";
+
+/** A labelled block of options inside a picker, e.g. favourites then the rest. */
+export interface OptionSection<TValue extends string> {
+  id: string;
+  label?: string;
+  options: DropdownOption<TValue>[];
+}
+
+export interface RecentGroup {
+  label: string;
+  entries: HistoryEntry[];
+}
+
 export interface NewsEvent {
   id: NewsEventId;
   label: string;
+  /** Compact label for the quick-pick row, when the full name is too long. */
+  shortLabel?: string;
   /** Short context line shown under the selection. */
   description: string;
   /** What the print means for the dollar, keyed by the sign of the surprise. */
@@ -76,6 +92,8 @@ export interface TradingPair {
   usdRelation: UsdRelation;
   /** Short context line shown under the selection. */
   description: string;
+  /** Extra search terms, so "gold" finds XAUUSD. */
+  keywords: string[];
 }
 
 /** The three numbers a trader reads off the release. */

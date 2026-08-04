@@ -1,3 +1,4 @@
+import { NEWS_PRESET_IDS } from "./constants";
 import type {
   DropdownOption,
   NewsEvent,
@@ -73,6 +74,7 @@ export const NEWS_EVENTS: NewsEvent[] = [
   },
   {
     id: "interest-rate-decision",
+    shortLabel: "Interest Rate",
     label: "Interest Rate Decision",
     description: "Federal funds rate announcement",
     dollarEffect: {
@@ -84,6 +86,7 @@ export const NEWS_EVENTS: NewsEvent[] = [
   },
   {
     id: "fomc-statement",
+    shortLabel: "FOMC",
     label: "FOMC Statement",
     description: "Policy tone from the Fed committee",
     dollarEffect: {
@@ -95,6 +98,7 @@ export const NEWS_EVENTS: NewsEvent[] = [
   },
   {
     id: "ism-manufacturing-pmi",
+    shortLabel: "ISM PMI",
     label: "ISM Manufacturing PMI",
     description: "Factory sector activity survey",
     dollarEffect: {
@@ -161,3 +165,12 @@ export const newsEventOptions: DropdownOption<NewsEventId>[] = NEWS_EVENTS.map(
     description: event.description,
   }),
 );
+
+/** The handful of releases traders reach for most, labelled compactly. */
+export const newsPresetOptions: DropdownOption<NewsEventId>[] =
+  NEWS_PRESET_IDS.flatMap((id) => {
+    const event = findEvent(id);
+    return event
+      ? [{ value: event.id, label: event.shortLabel ?? event.label }]
+      : [];
+  });
