@@ -45,18 +45,26 @@ public/nibbo-mascot.png
 
 ## News Bias Tool
 
-A standalone trading utility at [/news-bias](http://localhost:3000/news-bias). Pick a
-high-impact USD economic release and a trading pair, type in the release numbers,
-and the decision engine works out the rest: surprise, strength, direction,
-expected market impact, confidence, a BUY/SELL/WAIT call, a written analysis,
-every affected market, and exports.
+A standalone trading utility at [/news-bias](http://localhost:3000/news-bias),
+built mobile-first around one job: get to a decision fast.
+
+**Three taps to a result.** Tap the economic release, tap the pair, tap whether
+the actual beat, missed or matched the forecast. Each step collapses to its
+choice, and one large result card shows the direction, a BUY/SELL/WAIT call and
+a confidence score. Everything else — release values, surprise breakdown, full
+analysis, affected markets, exports and history — sits behind a single
+**More details** disclosure.
+
+Typing the real numbers into that panel replaces the assumed strength with a
+measured one, so the confidence and wording sharpen.
 
 The tool is intentionally offline: no API, database, or auth.
 
 ### Decision engine
 
 ```
-Actual - Forecast          -> surprise
+tapped outcome             -> direction, with an assumed Moderate strength
+Actual - Forecast          -> surprise (replaces the assumption)
 |surprise| vs thresholds   -> Neutral / Weak / Moderate / Strong / Extreme
 strength                   -> expected impact + confidence (0-100%)
 sign of surprise           -> USD Bullish / Bearish / Neutral
@@ -64,8 +72,9 @@ USD direction + pair       -> pair direction (via each pair's usdRelation)
 pair direction + strength  -> BUY / SELL / WAIT
 ```
 
-A surprise inside the neutral band (under 0.20) resolves to **WAIT**: there is a
-direction, but not enough of one to trade.
+A surprise inside the neutral band (under 0.20), or an actual that matches the
+forecast, resolves to **WAIT**: there may be a direction, but not enough of one
+to trade.
 
 ### Layout
 
