@@ -1,0 +1,15 @@
+{
+  "cpi": "cpi.json",
+  "core-cpi": "core-cpi.json",
+  "nfp": "nfp.json",
+  "unemployment-rate": "unemployment-rate.json",
+  "ism-manufacturing-pmi": "pmi.json",
+  "ism-services-pmi": "ism-services-pmi.json",
+  "interest-rate-decision": "interest-rate.json",
+  "fomc-statement": "fomc-statement.json",
+  "gdp": "gdp.json",
+  "retail-sales": "retail-sales.json",
+  "ppi": "ppi.json",
+  "core-ppi": "core-ppi.json",
+  "core-pce": "core-pce.json"
+}

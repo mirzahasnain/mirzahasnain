@@ -1,0 +1,23 @@
+{
+  "phases": [
+    {
+      "id": "before",
+      "title": "Before News",
+      "action": "Avoid entering positions."
+    },
+    {
+      "id": "release",
+      "title": "During Release",
+      "action": "Wait for initial spike."
+    },
+    {
+      "id": "confirmation",
+      "title": "After Confirmation",
+      "actionByDirection": {
+        "buy": "Enter only after confirmation candle to the upside.",
+        "sell": "Enter only after confirmation candle to the downside.",
+        "wait": "Stay flat — wait for a cleaner setup."
+      }
+    }
+  ]
+}

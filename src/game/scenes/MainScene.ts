@@ -67,9 +67,12 @@ export class MainScene extends Phaser.Scene {
       blendMode: "ADD",
     });
 
-    this.input.on("gameobjectdown", (_pointer: Phaser.Input.Pointer, obj: Phaser.GameObjects.GameObject) => {
-      this.catchNibbo(obj as NibboSprite);
-    });
+    this.input.on(
+      "gameobjectdown",
+      (_pointer: Phaser.Input.Pointer, obj: Phaser.GameObjects.GameObject) => {
+        this.catchNibbo(obj as NibboSprite);
+      },
+    );
 
     gameBus.onStart(() => this.beginRound());
     gameBus.onRestart(() => this.beginRound());
@@ -120,7 +123,7 @@ export class MainScene extends Phaser.Scene {
     this.spawnNibbo();
   }
 
-  update(_time: number, delta: number) {
+  override update(_time: number, delta: number) {
     if (!this.playing || this.ended) return;
 
     // Cap delta so backgrounded tabs don't dump seconds of movement at once
@@ -128,10 +131,7 @@ export class MainScene extends Phaser.Scene {
     this.elapsed = performance.now() - this.roundStartedAt;
     this.spawnTimer += dt;
 
-    const nextTime = Math.max(
-      0,
-      GAME.durationSeconds - Math.floor(this.elapsed / 1000)
-    );
+    const nextTime = Math.max(0, GAME.durationSeconds - Math.floor(this.elapsed / 1000));
     if (nextTime !== this.timeLeft) {
       this.timeLeft = nextTime;
       gameBus.emitTime(this.timeLeft);
@@ -155,9 +155,7 @@ export class MainScene extends Phaser.Scene {
       n.x += (n.vx || 0) * (dt / 1000);
       n.y += (n.vy || 0) * (dt / 1000);
       n.wobble = (n.wobble || 0) + dt * 0.008;
-      n.setScale(
-        (n.getData("baseScale") as number) * (1 + Math.sin(n.wobble) * 0.06)
-      );
+      n.setScale((n.getData("baseScale") as number) * (1 + Math.sin(n.wobble) * 0.06));
       n.rotation = Math.sin(n.wobble * 0.7) * 0.12;
 
       const margin = 40;
@@ -172,10 +170,7 @@ export class MainScene extends Phaser.Scene {
     }
 
     if (this.time.now < this.shakeUntil) {
-      this.cameras.main.setScroll(
-        Phaser.Math.Between(-3, 3),
-        Phaser.Math.Between(-3, 3)
-      );
+      this.cameras.main.setScroll(Phaser.Math.Between(-3, 3), Phaser.Math.Between(-3, 3));
     } else {
       this.cameras.main.setScroll(0, 0);
     }
@@ -194,15 +189,21 @@ export class MainScene extends Phaser.Scene {
 
     this.spawnInterval = Math.max(
       DIFFICULTY.minSpawnMs,
-      DIFFICULTY.baseSpawnMs - steps * DIFFICULTY.spawnStepMs
+      DIFFICULTY.baseSpawnMs - steps * DIFFICULTY.spawnStepMs,
     );
     this.moveSpeed = DIFFICULTY.baseMoveSpeed + steps * DIFFICULTY.moveSpeedStep;
   }
 
   private spawnNibbo() {
     const padding = 70;
-    const x = Phaser.Math.Between(padding, Math.max(padding + 1, this.scale.width - padding));
-    const y = Phaser.Math.Between(padding, Math.max(padding + 1, this.scale.height - padding));
+    const x = Phaser.Math.Between(
+      padding,
+      Math.max(padding + 1, this.scale.width - padding),
+    );
+    const y = Phaser.Math.Between(
+      padding,
+      Math.max(padding + 1, this.scale.height - padding),
+    );
     const baseScale = Phaser.Math.FloatBetween(0.42, 0.62);
     const angle = Phaser.Math.FloatBetween(0, Math.PI * 2);
     const speed = this.moveSpeed * Phaser.Math.FloatBetween(0.7, 1.25);
