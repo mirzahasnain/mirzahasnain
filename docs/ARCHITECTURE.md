@@ -30,18 +30,23 @@ Browser (Next.js App Router)
 
 ## Decision engines
 
-Canonical public surface: `src/engine/*`
+Canonical public surface: **`src/engine/**` (TradeImpact Brain)**
 
-| Module              | Role                                   |
-| ------------------- | -------------------------------------- |
-| `decisionEngine`    | Orchestrates surprise → bias → action  |
-| `confidenceEngine`  | Classic confidence inputs              |
-| `scoreEngine`       | TradeImpact Score™ + reliability meter |
-| `correlationEngine` | USD → asset map snapshot               |
-| `riskEngine`        | Risk level + rationale                 |
-| `playbookEngine`    | Plan scaffolding                       |
+| Module              | Role                              |
+| ------------------- | --------------------------------- |
+| `surpriseEngine`    | Actual vs Forecast surprise       |
+| `confidenceEngine`  | Classic confidence blend          |
+| `correlationEngine` | USD → pair bias + affected assets |
+| `historicalEngine`  | Similar-release statistics        |
+| `volatilityEngine`  | Expected volatility band          |
+| `riskEngine`        | Risk level + suggested %          |
+| `scoreEngine`       | TradeImpact Score™ + Reliability  |
+| `scenarioEngine`    | Best / Expected / Worst           |
+| `playbookEngine`    | Before / During / After plan      |
+| `decisionEngine`    | Avoid / Wait / Buy / Sell         |
+| `orchestrator`      | `runTradeImpactBrain` pipeline    |
 
-Implementations remain under `src/lib/news-bias/engine` (pure functions + JSON).
+Pure functions + JSON config. Legacy `src/lib/news-bias/engine` remains until UI integration. See `docs/engine/BRAIN_ARCHITECTURE_REPORT.md`.
 
 ## State management
 

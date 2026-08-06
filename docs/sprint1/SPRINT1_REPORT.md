@@ -49,6 +49,7 @@ Testing Library + jsdom are installed for future component tests. DOM JSX compon
 - husky/_ bootstrap verification on all contributor machines
 - Full `tsc` cleanup of any pre-existing unrelated game/`any` debt if discovered
 - Bundle size CI budgets
+- Vitest JSX transform for Testing Library component tests (`jsx: preserve`)
 
 ---
 
@@ -63,6 +64,7 @@ Testing Library + jsdom are installed for future component tests. DOM JSX compon
 | Domain stores not yet driving all legacy UI             | Medium         | Foundation first                             |
 | PRD Part I vs Part II contradictions                    | High (product) | Docs, not Sprint 1 code                      |
 | Password-oriented DDL sketches in PRD vs hosted auth    | Low (future)   |                                              |
+| Vitest + Testing Library JSX under `jsx: preserve`      | Low            | Lib installed; DOM tests deferred            |
 
 ---
 

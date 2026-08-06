@@ -1,0 +1,36 @@
+{
+  "weights": {
+    "historicalMatch": 0.3,
+    "surpriseStrength": 0.25,
+    "newsImportance": 0.2,
+    "marketCorrelation": 0.15,
+    "volatility": 0.1
+  },
+  "reliabilityBands": [
+    { "id": "very-low", "label": "Very Low", "max": 20 },
+    { "id": "low", "label": "Low", "max": 40 },
+    { "id": "medium", "label": "Medium", "max": 60 },
+    { "id": "high", "label": "High", "max": 80 },
+    { "id": "very-high", "label": "Very High", "max": 100 }
+  ],
+  "strengthScore": {
+    "neutral": 15,
+    "weak": 35,
+    "moderate": 55,
+    "strong": 78,
+    "extreme": 95
+  },
+  "volatilityScore": {
+    "low": 25,
+    "medium": 50,
+    "high": 75,
+    "extreme": 95
+  },
+  "impactVolatility": {
+    "very-low": "low",
+    "low": "low",
+    "medium": "medium",
+    "high": "high",
+    "very-high": "extreme"
+  }
+}
