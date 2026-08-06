@@ -1,0 +1,28 @@
+{
+  "multipliers": {
+    "best": 1.45,
+    "expected": 1,
+    "worst": -0.35
+  },
+  "strengthScale": {
+    "neutral": 0.4,
+    "weak": 0.65,
+    "moderate": 1,
+    "strong": 1.25,
+    "extreme": 1.55
+  },
+  "fallbackAverages": {
+    "XAUUSD": { "value": 28, "unit": "points" },
+    "XAGUSD": { "value": 0.35, "unit": "points" },
+    "BTCUSD": { "value": 1.8, "unit": "%" },
+    "ETHUSD": { "value": 2.2, "unit": "%" },
+    "EURUSD": { "value": 24, "unit": "pips" },
+    "GBPUSD": { "value": 28, "unit": "pips" },
+    "NAS100": { "value": 120, "unit": "points" },
+    "US30": { "value": 180, "unit": "points" },
+    "SPX500": { "value": 22, "unit": "points" },
+    "USDJPY": { "value": 22, "unit": "pips" },
+    "USDCHF": { "value": 18, "unit": "pips" },
+    "USDCAD": { "value": 20, "unit": "pips" }
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "tree": [
+    "news",
+    "surprise",
+    "history",
+    "correlation",
+    "volatility",
+    "confidence",
+    "recommendation"
+  ],
+  "labels": {
+    "news": "News",
+    "surprise": "Surprise",
+    "history": "History",
+    "correlation": "Correlation",
+    "volatility": "Volatility",
+    "confidence": "Confidence",
+    "recommendation": "Recommendation"
+  },
+  "decisions": {
+    "avoid": {
+      "id": "avoid",
+      "label": "Avoid",
+      "action": "wait",
+      "aggression": "none"
+    },
+    "wait": {
+      "id": "wait",
+      "label": "Wait",
+      "action": "wait",
+      "aggression": "none"
+    },
+    "aggressive-buy": {
+      "id": "aggressive-buy",
+      "label": "Aggressive Buy",
+      "action": "buy",
+      "aggression": "aggressive"
+    },
+    "conservative-buy": {
+      "id": "conservative-buy",
+      "label": "Conservative Buy",
+      "action": "buy",
+      "aggression": "conservative"
+    },
+    "aggressive-sell": {
+      "id": "aggressive-sell",
+      "label": "Aggressive Sell",
+      "action": "sell",
+      "aggression": "aggressive"
+    },
+    "conservative-sell": {
+      "id": "conservative-sell",
+      "label": "Conservative Sell",
+      "action": "sell",
+      "aggression": "conservative"
+    }
+  },
+  "rules": {
+    "avoidBelowScore": 35,
+    "waitBelowScore": 50,
+    "aggressiveMinScore": 78,
+    "aggressiveMinStrength": ["strong", "extreme"],
+    "conservativeMinReliability": ["medium", "high", "very-high"]
+  }
+}
