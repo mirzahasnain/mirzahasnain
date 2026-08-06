@@ -1,0 +1,20 @@
+{
+  "placements": [
+    {
+      "id": "liquidity",
+      "label": "Above liquidity",
+      "hint": "Place beyond obvious equal highs/lows taken in the spike."
+    },
+    {
+      "id": "news-spike",
+      "label": "Above news spike",
+      "hint": "Invalidation sits beyond the extreme of the release candle."
+    },
+    {
+      "id": "swing",
+      "label": "Previous swing",
+      "hint": "Use the prior structural swing as a cleaner invalidation."
+    }
+  ],
+  "note": "Stop prices are guides only — do not calculate exact levels yet."
+}

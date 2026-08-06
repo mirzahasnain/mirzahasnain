@@ -1,0 +1,50 @@
+{
+  "usdBullish": {
+    "XAUUSD": "bearish",
+    "XAGUSD": "bearish",
+    "BTCUSD": "bearish",
+    "ETHUSD": "bearish",
+    "EURUSD": "bearish",
+    "GBPUSD": "bearish",
+    "AUDUSD": "bearish",
+    "NZDUSD": "bearish",
+    "USDJPY": "bullish",
+    "USDCHF": "bullish",
+    "USDCAD": "bullish",
+    "NAS100": "bearish",
+    "US30": "bearish",
+    "SPX500": "bearish"
+  },
+  "usdBearish": {
+    "XAUUSD": "bullish",
+    "XAGUSD": "bullish",
+    "BTCUSD": "bullish",
+    "ETHUSD": "bullish",
+    "EURUSD": "bullish",
+    "GBPUSD": "bullish",
+    "AUDUSD": "bullish",
+    "NZDUSD": "bullish",
+    "USDJPY": "bearish",
+    "USDCHF": "bearish",
+    "USDCAD": "bearish",
+    "NAS100": "bullish",
+    "US30": "bullish",
+    "SPX500": "bullish"
+  },
+  "usdNeutral": {
+    "XAUUSD": "neutral",
+    "XAGUSD": "neutral",
+    "BTCUSD": "neutral",
+    "ETHUSD": "neutral",
+    "EURUSD": "neutral",
+    "GBPUSD": "neutral",
+    "AUDUSD": "neutral",
+    "NZDUSD": "neutral",
+    "USDJPY": "neutral",
+    "USDCHF": "neutral",
+    "USDCAD": "neutral",
+    "NAS100": "neutral",
+    "US30": "neutral",
+    "SPX500": "neutral"
+  }
+}

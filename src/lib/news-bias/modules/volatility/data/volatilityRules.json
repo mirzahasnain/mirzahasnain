@@ -1,0 +1,23 @@
+{
+  "bands": [
+    { "id": "low", "label": "Low", "minScore": 0 },
+    { "id": "medium", "label": "Medium", "minScore": 40 },
+    { "id": "high", "label": "High", "minScore": 65 },
+    { "id": "extreme", "label": "Extreme", "minScore": 85 }
+  ],
+  "impactScore": {
+    "very-low": 20,
+    "low": 35,
+    "medium": 55,
+    "high": 75,
+    "very-high": 95
+  },
+  "strengthBoost": {
+    "neutral": 0,
+    "weak": 5,
+    "moderate": 10,
+    "strong": 18,
+    "extreme": 25
+  },
+  "title": "Expected Volatility"
+}
