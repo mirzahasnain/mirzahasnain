@@ -6,6 +6,7 @@ export * as playbook from "./playbook";
 export * as risk from "./risk";
 export * as strategy from "./strategy";
 export * as volatility from "./volatility";
+export * as intelligence from "./intelligence";
 export * as watchlist from "./watchlist";
 export * as alerts from "./alerts";
 export * as analytics from "./analytics";

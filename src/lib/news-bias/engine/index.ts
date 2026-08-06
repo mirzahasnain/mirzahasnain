@@ -12,6 +12,17 @@ export { findSimilarReleases, resolveBand, cohortConfidence } from "./similarity
 export { loadHistoryReleases, listHistoryNewsIds, buildChartSeries } from "./historyEngine";
 export { computeAssetStatistics, formatAverageMove } from "./statisticsEngine";
 export { applyProbabilities, leadingBias } from "./probabilityEngine";
+export { runIntelligenceEngine } from "./intelligenceEngine";
+export {
+  computeTradeImpactScore,
+  computeReliabilityMeter,
+  buildHistoricalMatch,
+  buildCorrelationSnapshot,
+  buildScenarios,
+  assessRisk,
+  resolveTradeDecision,
+} from "./intelligence";
+export type { TradeImpactIntelligence, IntelligenceInput } from "./intelligence";
 export type {
   DecisionInput,
   DecisionResult,

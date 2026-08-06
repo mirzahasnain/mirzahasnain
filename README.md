@@ -130,6 +130,14 @@ TP/SL guides, fake-spike warning, historical behaviour, volatility meter, AI
 notes, plus PDF/TXT/Copy/Share export. Surfaces: analysis details, event
 detail, and workspace.
 
+### TradeImpact Intelligence Engine (Version 13)
+
+Core TIE under `engine/intelligenceEngine.ts` + `engine/intelligence/`.
+Produces TradeImpact Score™ (0–100), reliability meter, historical match,
+correlation map, best/expected/worst scenarios, risk level, AI narrative, and
+Avoid/Wait/Aggressive|Conservative Buy/Sell decisions via a formal decision
+tree. See [`docs/ENGINE.md`](docs/ENGINE.md).
+
 ### Decision engine
 
 ```

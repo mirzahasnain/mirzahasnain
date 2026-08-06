@@ -6,17 +6,19 @@ import {
   type DecisionResult,
 } from "./engine";
 import { buildHistoricalIntelligence } from "./engine/historicalIntelligence";
+import { runIntelligenceEngine } from "./engine/intelligenceEngine";
 import type {
   Analysis,
   AnalysisRequest,
   HistoricalIntelligenceView,
   ReleaseValues,
   SurpriseReading,
+  TradeImpactIntelligenceView,
 } from "./types/interfaces";
 
 /**
  * Composition root for the analysis UI.
- * Delegates to the Smart Decision Engine + Historical Intelligence Engine.
+ * Decision Engine + Historical Intelligence + TradeImpact Intelligence Engine.
  */
 export function buildAnalysis(request: AnalysisRequest): Analysis | null {
   const event = findEvent(request.eventId);
@@ -38,14 +40,28 @@ export function buildAnalysis(request: AnalysisRequest): Analysis | null {
 
   const values = readValues(request);
   const surprise = toSurpriseReading(decision);
-  const historicalIntelligence = toHistoricalView(
-    buildHistoricalIntelligence({
+  const rawHistorical = buildHistoricalIntelligence({
+    newsId: event.id,
+    surprise: surprise.value,
+    surpriseSign: surprise.sign,
+    newsLabel: event.label,
+  });
+  const historicalIntelligence = toHistoricalView(rawHistorical);
+
+  const intelligence = toIntelligenceView(
+    runIntelligenceEngine({
       newsId: event.id,
-      surprise: surprise.value,
-      surpriseSign: surprise.sign,
-      newsLabel: event.label,
+      pairId: pair.id,
+      decision,
+      historicalIntelligence: rawHistorical,
     }),
   );
+
+  const action: "buy" | "sell" | "wait" = intelligence.decisionId.includes("buy")
+    ? "buy"
+    : intelligence.decisionId.includes("sell")
+      ? "sell"
+      : "wait";
 
   return {
     event,
@@ -54,18 +70,67 @@ export function buildAnalysis(request: AnalysisRequest): Analysis | null {
     surprise,
     usdDirection: decision.usdDirection,
     pairDirection: decision.pairDirection,
-    action: decision.action,
+    action,
     affectedAssets: listPairDirections(decision.usdDirection, pair.id),
-    playbook: decision.playbook,
+    playbook: {
+      ...decision.playbook,
+      direction: action,
+      confidence: intelligence.scoreTotal,
+      reason: intelligence.narrative[0] ?? decision.playbook.reason,
+    },
     historical: decision.historical,
     historicalIntelligence,
-    riskWarning: decision.riskWarning,
-    summary: decision.summary,
-    reason: decision.summary.reason,
+    intelligence,
+    riskWarning: `${intelligence.riskLabel}: ${intelligence.riskWhy}`,
+    summary: {
+      recommendation: `${intelligence.decisionLabel} ${pair.displayName}`,
+      confidence: intelligence.scoreTotal,
+      impact: decision.summary.impact,
+      reason: intelligence.narrative[0] ?? decision.summary.reason,
+    },
+    reason: intelligence.narrative.join(" "),
     analysisLines: mergeExplanations(
+      intelligence.narrative,
       decision.explanation,
       historicalIntelligence?.summary ?? [],
     ),
+  };
+}
+
+function toIntelligenceView(
+  intel: ReturnType<typeof runIntelligenceEngine>,
+): TradeImpactIntelligenceView {
+  return {
+    scoreTotal: intel.score.total,
+    scoreBreakdown: { ...intel.score.breakdown },
+    reliabilityLabel: intel.reliability.label,
+    decisionLabel: intel.decision.label,
+    decisionId: intel.decision.id,
+    narrative: intel.narrative,
+    historicalSimilar: `${intel.historicalMatch.similarFound} / ${intel.historicalMatch.similarOf}`,
+    averageMoves: intel.historicalMatch.averageMoves.map((m) => ({
+      label: m.label,
+      display: `${m.averageMove} ${m.unit}`,
+    })),
+    scenarios: intel.scenarios.cases.map((c) => ({
+      label: c.label,
+      display: c.display,
+    })),
+    riskLabel: intel.risk.label,
+    riskWhy: intel.risk.why,
+    correlation: intel.correlation.links.map((l) => ({
+      label: l.label,
+      move: l.move === "up" ? "↑" : l.move === "down" ? "↓" : "→",
+    })),
+    why: intel.why.map((w) => ({ title: w.title, detail: w.detail })),
+    decisionTree: intel.decisionTree.map((s) => ({
+      label: s.label,
+      summary: s.summary,
+      detail: s.detail,
+    })),
+    volatilityLabel:
+      intel.volatilityBand.charAt(0).toUpperCase() +
+      intel.volatilityBand.slice(1),
   };
 }
 
@@ -128,11 +193,20 @@ function toHistoricalView(
   };
 }
 
-/** Prefer decision lines, then append unique historical lines (cap 6). */
-function mergeExplanations(decision: string[], historical: string[]): string[] {
-  const seen = new Set(decision);
-  const extra = historical.filter((line) => !seen.has(line));
-  return [...decision, ...extra].slice(0, 6);
+function mergeExplanations(
+  narrative: string[],
+  decision: string[],
+  historical: string[],
+): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const line of [...narrative, ...decision, ...historical]) {
+    if (seen.has(line)) continue;
+    seen.add(line);
+    out.push(line);
+    if (out.length >= 8) break;
+  }
+  return out;
 }
 
 /** @deprecated Prefer decisionEngine.decide — kept for older call sites / tests. */

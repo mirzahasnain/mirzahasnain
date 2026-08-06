@@ -14,7 +14,7 @@ import type {
 export const APP = {
   title: "News Bias Tool",
   subtitle: "Three taps to a trading bias.",
-  version: "Version 12.0",
+  version: "Version 13.0",
   disclaimer: "Educational reference only. Not financial advice.",
 } as const;
 
@@ -38,7 +38,11 @@ export const OUTCOME_OPTIONS: {
 export const RESULT_COPY = {
   eyebrow: "Recommendation",
   confidence: "Confidence",
+  tradeImpactScore: "TradeImpact Score",
+  reliability: "Reliability",
   impact: "Impact",
+  riskLevel: "Risk Level",
+  why: "Why?",
   estimate: "Estimate — add the release numbers for an exact reading",
   reset: "New analysis",
   risk: "Risk warning",
@@ -104,6 +108,7 @@ export const DETAILS_COPY = {
     hint: "Optional. Real numbers replace the estimate with a measured strength and confidence.",
   },
   breakdown: { title: "Surprise" },
+  intelligence: { title: "TradeImpact Intelligence" },
   playbook: { title: "Trade playbook" },
   historical: { title: "Historical statistics" },
   historicalMatch: { title: "Historical match" },

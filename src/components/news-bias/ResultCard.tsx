@@ -1,8 +1,8 @@
 "use client";
 
-import { Minus, RotateCcw, TrendingDown, TrendingUp } from "lucide-react";
+import { ChevronDown, Minus, RotateCcw, TrendingDown, TrendingUp } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Field } from "@/components/news-bias/Field";
 import {
   DIRECTION_LABELS,
@@ -14,7 +14,6 @@ import type {
   Direction,
   TradeAction,
 } from "@/lib/news-bias/types/interfaces";
-import { formatConfidence } from "@/lib/news-bias/utils/calculateConfidence";
 
 interface ResultCardProps {
   analysis: Analysis;
@@ -66,9 +65,8 @@ const ACTION_TEXT: Record<TradeAction, string> = {
 function ResultCardComponent({ analysis, onReset }: ResultCardProps) {
   const theme = THEME[analysis.pairDirection];
   const Icon = theme.icon;
-  const { summary, playbook } = analysis;
-  const [actionWord, ...rest] = summary.recommendation.split(" ");
-  const assetWord = rest.join(" ");
+  const { summary, playbook, intelligence } = analysis;
+  const [whyOpen, setWhyOpen] = useState(false);
 
   return (
     <section
@@ -91,10 +89,12 @@ function ResultCardComponent({ analysis, onReset }: ResultCardProps) {
           {RESULT_COPY.eyebrow}
         </p>
 
-        <h2 className="mt-2 text-4xl font-black uppercase leading-none tracking-tight sm:text-5xl">
-          <span className={ACTION_TEXT[analysis.action]}>{actionWord}</span>{" "}
-          <span className="text-nb-text">{assetWord || analysis.pair.label}</span>
+        <h2
+          className={`mt-2 text-3xl font-black uppercase leading-tight tracking-tight sm:text-4xl ${ACTION_TEXT[analysis.action]}`}
+        >
+          {intelligence.decisionLabel}
         </h2>
+        <p className="mt-1 text-lg font-bold text-nb-text">{analysis.pair.displayName}</p>
 
         <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-nb-text-soft">
           <span aria-hidden className={`size-2.5 rounded-full ${theme.dot}`} />
@@ -105,13 +105,23 @@ function ResultCardComponent({ analysis, onReset }: ResultCardProps) {
 
         <dl className="mt-6 grid w-full max-w-sm grid-cols-2 gap-3 text-left">
           <Field
-            label={RESULT_COPY.confidence}
-            value={formatConfidence(summary.confidence)}
+            label={RESULT_COPY.tradeImpactScore}
+            value={`${intelligence.scoreTotal} / 100`}
             valueClassName="text-base tabular-nums text-nb-text"
+          />
+          <Field
+            label={RESULT_COPY.reliability}
+            value={intelligence.reliabilityLabel}
+            valueClassName="text-base text-nb-text"
           />
           <Field
             label={RESULT_COPY.impact}
             value={IMPACT_LABELS[summary.impact]}
+            valueClassName="text-base text-nb-text"
+          />
+          <Field
+            label={RESULT_COPY.riskLevel}
+            value={intelligence.riskLabel}
             valueClassName="text-base text-nb-text"
           />
         </dl>
@@ -128,6 +138,34 @@ function ResultCardComponent({ analysis, onReset }: ResultCardProps) {
         <p className="mt-6 max-w-md text-base leading-relaxed text-nb-text-soft">
           {summary.reason}
         </p>
+
+        <button
+          type="button"
+          aria-expanded={whyOpen}
+          onClick={() => setWhyOpen((v) => !v)}
+          className="mt-4 inline-flex min-h-10 items-center gap-1.5 rounded-full border border-nb-border px-4 text-xs font-semibold uppercase tracking-[0.14em] text-nb-muted hover:border-nb-border-strong hover:text-nb-text focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
+        >
+          {RESULT_COPY.why}
+          <ChevronDown
+            aria-hidden
+            className={`size-3.5 transition ${whyOpen ? "rotate-180" : ""}`}
+          />
+        </button>
+
+        {whyOpen ? (
+          <div className="mt-3 w-full max-w-md space-y-2 rounded-2xl border border-nb-border bg-nb-elevated/40 px-4 py-3 text-left">
+            {intelligence.why.map((factor) => (
+              <div key={factor.title}>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-nb-faint">
+                  {factor.title}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-nb-text-soft">
+                  {factor.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         {analysis.surprise.isEstimate ? (
           <p className="mt-3 text-xs text-nb-faint">{RESULT_COPY.estimate}</p>

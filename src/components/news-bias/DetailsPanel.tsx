@@ -9,6 +9,7 @@ import { FullAnalysis } from "@/components/news-bias/FullAnalysis";
 import { HistoricalIntelligencePanel } from "@/components/news-bias/historical/HistoricalIntelligencePanel";
 import { HistoricalStatsPanel } from "@/components/news-bias/HistoricalStatsPanel";
 import { HistoryList } from "@/components/news-bias/HistoryList";
+import { IntelligencePanel } from "@/components/news-bias/IntelligencePanel";
 import { ReleaseInputs } from "@/components/news-bias/ReleaseInputs";
 import type { ReleaseInputValues } from "@/components/news-bias/ReleaseInputs";
 import { SurpriseBreakdown } from "@/components/news-bias/SurpriseBreakdown";
@@ -61,6 +62,10 @@ export function DetailsPanel({
         <>
           <DetailsSection title={DETAILS_COPY.breakdown.title}>
             <SurpriseBreakdown analysis={analysis} />
+          </DetailsSection>
+
+          <DetailsSection title={DETAILS_COPY.intelligence.title}>
+            <IntelligencePanel intelligence={analysis.intelligence} />
           </DetailsSection>
 
           <DetailsSection title={DETAILS_COPY.playbook.title}>

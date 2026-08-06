@@ -229,6 +229,31 @@ export interface HistoricalIntelligenceView {
   };
 }
 
+/** Version 13 TradeImpact Intelligence Engine view for React. */
+export interface TradeImpactIntelligenceView {
+  scoreTotal: number;
+  scoreBreakdown: {
+    historicalMatch: number;
+    surpriseStrength: number;
+    newsImportance: number;
+    marketCorrelation: number;
+    volatility: number;
+  };
+  reliabilityLabel: string;
+  decisionLabel: string;
+  decisionId: string;
+  narrative: string[];
+  historicalSimilar: string;
+  averageMoves: { label: string; display: string }[];
+  scenarios: { label: string; display: string }[];
+  riskLabel: string;
+  riskWhy: string;
+  correlation: { label: string; move: string }[];
+  why: { title: string; detail: string }[];
+  decisionTree: { label: string; summary: string; detail: string }[];
+  volatilityLabel: string;
+}
+
 /** Everything the decision engine derives before any prose is generated. */
 export interface AnalysisContext {
   event: NewsEvent;
@@ -244,6 +269,8 @@ export interface AnalysisContext {
   historical: HistoricalStatsView | null;
   /** Version 8 similar-event intelligence (null when no history file). */
   historicalIntelligence: HistoricalIntelligenceView | null;
+  /** Version 13 TradeImpact Intelligence Engine snapshot. */
+  intelligence: TradeImpactIntelligenceView;
   riskWarning: string;
   summary: DecisionSummaryView;
 }
