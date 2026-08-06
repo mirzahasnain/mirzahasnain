@@ -112,6 +112,15 @@ Provider architecture under `src/lib/news-bias/providers/` — `MockProvider`,
 3× retry, mock fallback, and hooks (`useEconomicCalendar`, etc.). See
 [`docs/API.md`](docs/API.md).
 
+### TradeImpact Workspace (Version 11)
+
+Trader workspace at [`/workspace`](http://localhost:3000/workspace). Feature
+modules: `dashboard`, `watchlist`, `journal`, `settings`, `notifications`,
+`search`. Home desk covers next high-impact news, countdown, today's bias,
+pinned watchlist, one-click analysis, trade checklist, journal, favorites,
+global search, market status, local notifications, settings, and quick-action
+FABs — all localStorage-backed. Existing `/news-bias` style is unchanged.
+
 ### Decision engine
 
 ```

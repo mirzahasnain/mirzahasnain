@@ -46,6 +46,9 @@ export function CalendarShell({
           <p className="mt-2 text-sm text-nb-muted sm:text-base">{subtitle}</p>
         ) : null}
         <nav className="mt-4 flex justify-center gap-4 text-xs font-semibold uppercase tracking-[0.18em]">
+          <Link href="/workspace" className="text-nb-muted hover:text-nb-accent">
+            Workspace
+          </Link>
           <Link href="/terminal" className="text-nb-muted hover:text-nb-accent">
             Terminal
           </Link>

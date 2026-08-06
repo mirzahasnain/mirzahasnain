@@ -32,15 +32,80 @@ export interface WatchAsset {
   category: "metal" | "crypto" | "forex" | "index";
 }
 
+export type WorkspaceLanguage = "en" | "es" | "de" | "fr" | "ja";
+
 export interface UserPreferences {
   favoriteAssets: WatchAssetId[];
   favoriteNews: NewsEventId[];
+  favoriteStrategies: string[];
   theme: Theme;
+  language: WorkspaceLanguage;
+  defaultPair: PairId;
+  defaultNews: NewsEventId;
   notifications: {
     enabled: boolean;
     minutesBefore: number[];
+    upcoming: boolean;
+    released: boolean;
+    analysisReady: boolean;
   };
   watchlist: WatchAssetId[];
+}
+
+export type TradeJournalResult = "win" | "loss" | "breakeven" | "open";
+
+export interface TradeJournalEntry {
+  id: string;
+  createdAt: number;
+  updatedAt: number;
+  pairId: PairId;
+  newsLabel: string | null;
+  entry: number | null;
+  stopLoss: number | null;
+  takeProfit: number | null;
+  result: TradeJournalResult;
+  profitLoss: number | null;
+  notes: string;
+}
+
+export type WorkspaceNotificationKind =
+  | "upcoming"
+  | "released"
+  | "analysis-ready";
+
+export interface WorkspaceNotification {
+  id: string;
+  kind: WorkspaceNotificationKind;
+  title: string;
+  body: string;
+  createdAt: number;
+  read: boolean;
+  eventId?: string;
+}
+
+export type SearchHitKind = "asset" | "news" | "pair" | "strategy";
+
+export interface SearchHit {
+  id: string;
+  kind: SearchHitKind;
+  label: string;
+  subtitle?: string;
+  href: string;
+}
+
+export interface WatchBiasRow {
+  assetId: WatchAssetId;
+  label: string;
+  bias: BiasTone;
+  confidence: number;
+  action: "buy" | "sell" | "wait";
+}
+
+export interface MarketSessionRow {
+  id: SessionId;
+  label: string;
+  active: boolean;
+  open: boolean;
 }
 
 export interface MarketBiasSnapshot {

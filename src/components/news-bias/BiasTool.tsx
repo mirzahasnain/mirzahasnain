@@ -69,16 +69,23 @@ function isNewsEventId(value: string | null): value is NewsEventId {
   return value !== null && NEWS_EVENT_IDS.has(value as NewsEventId);
 }
 
+function isPairId(value: string | null): value is PairId {
+  return value !== null && Boolean(findPair(value as PairId));
+}
+
 function readPrefill(searchParams: URLSearchParams): {
   eventId: NewsEventId | null;
+  pairId: PairId | null;
   inputs: ReleaseInputValues;
   mode: DataMode | null;
   calendarId: string | null;
 } {
   const eventParam = searchParams.get("event");
+  const pairParam = searchParams.get("pair");
   const modeParam = searchParams.get("mode");
   return {
     eventId: isNewsEventId(eventParam) ? eventParam : null,
+    pairId: isPairId(pairParam) ? pairParam : null,
     inputs: {
       forecast: searchParams.get("forecast") ?? "",
       previous: searchParams.get("previous") ?? "",
@@ -92,10 +99,17 @@ function readPrefill(searchParams: URLSearchParams): {
 export function BiasTool() {
   const searchParams = useSearchParams();
   const prefill = readPrefill(searchParams);
-  const autofillApplied = useRef(Boolean(prefill.eventId || prefill.calendarId || prefill.inputs.forecast));
+  const autofillApplied = useRef(
+    Boolean(
+      prefill.eventId ||
+        prefill.pairId ||
+        prefill.calendarId ||
+        prefill.inputs.forecast,
+    ),
+  );
 
   const [eventId, setEventId] = useState<NewsEventId | null>(prefill.eventId);
-  const [pairId, setPairId] = useState<PairId | null>(null);
+  const [pairId, setPairId] = useState<PairId | null>(prefill.pairId);
   const [outcome, setOutcome] = useState<SurpriseSign | null>(null);
   const [inputs, setInputs] = useState<ReleaseInputValues>(prefill.inputs);
   const [editingStep, setEditingStep] = useState<StepKey | null>(null);
@@ -140,6 +154,7 @@ export function BiasTool() {
     const next = readPrefill(searchParams);
     const hasAutofill =
       next.eventId ||
+      next.pairId ||
       next.calendarId ||
       next.inputs.forecast ||
       next.inputs.previous ||
@@ -147,6 +162,7 @@ export function BiasTool() {
     if (!hasAutofill || autofillApplied.current) return;
     autofillApplied.current = true;
     if (next.eventId) setEventId(next.eventId);
+    if (next.pairId) setPairId(next.pairId);
     setInputs(next.inputs);
     if (next.mode) setDataMode(saveDataMode(next.mode));
     if (next.calendarId) setCalendarId(next.calendarId);

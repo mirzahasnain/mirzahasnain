@@ -10,6 +10,11 @@ import type {
   WatchAsset,
 } from "../types";
 
+export { buildOneClickAnalysis } from "./oneClick";
+export { buildTradeChecklist } from "./tradeChecklist";
+export { buildMarketStatus } from "./marketStatus";
+export { WORKSPACE_COPY } from "./workspaceCopy";
+
 function toBias(direction: Direction): BiasTone {
   return direction;
 }
