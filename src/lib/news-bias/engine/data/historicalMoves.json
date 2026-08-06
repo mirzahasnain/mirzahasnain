@@ -1,0 +1,133 @@
+{
+  "cpi": {
+    "sampleSize": 20,
+    "label": "Past 20 CPI Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 34, "unit": "points", "winRate": 78 },
+      "XAGUSD": { "averageMove": 0.28, "unit": "points", "winRate": 72 },
+      "BTCUSD": { "averageMove": 1450, "unit": "points", "winRate": 68 },
+      "EURUSD": { "averageMove": 48, "unit": "pips", "winRate": 74 },
+      "USDJPY": { "averageMove": 42, "unit": "pips", "winRate": 71 },
+      "NAS100": { "averageMove": 185, "unit": "points", "winRate": 66 }
+    }
+  },
+  "core-cpi": {
+    "sampleSize": 20,
+    "label": "Past 20 Core CPI Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 31, "unit": "points", "winRate": 76 },
+      "XAGUSD": { "averageMove": 0.25, "unit": "points", "winRate": 70 },
+      "BTCUSD": { "averageMove": 1320, "unit": "points", "winRate": 65 },
+      "EURUSD": { "averageMove": 44, "unit": "pips", "winRate": 73 },
+      "USDJPY": { "averageMove": 39, "unit": "pips", "winRate": 70 }
+    }
+  },
+  "nfp": {
+    "sampleSize": 20,
+    "label": "Past 20 NFP Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 28, "unit": "points", "winRate": 71 },
+      "XAGUSD": { "averageMove": 0.22, "unit": "points", "winRate": 68 },
+      "BTCUSD": { "averageMove": 1180, "unit": "points", "winRate": 62 },
+      "EURUSD": { "averageMove": 52, "unit": "pips", "winRate": 69 },
+      "USDJPY": { "averageMove": 55, "unit": "pips", "winRate": 72 }
+    }
+  },
+  "unemployment-rate": {
+    "sampleSize": 20,
+    "label": "Past 20 Unemployment Rate Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 18, "unit": "points", "winRate": 67 },
+      "EURUSD": { "averageMove": 28, "unit": "pips", "winRate": 64 },
+      "USDJPY": { "averageMove": 26, "unit": "pips", "winRate": 66 }
+    }
+  },
+  "interest-rate-decision": {
+    "sampleSize": 16,
+    "label": "Past 16 Interest Rate Decisions",
+    "pairs": {
+      "XAUUSD": { "averageMove": 42, "unit": "points", "winRate": 80 },
+      "BTCUSD": { "averageMove": 2100, "unit": "points", "winRate": 70 },
+      "EURUSD": { "averageMove": 65, "unit": "pips", "winRate": 77 },
+      "USDJPY": { "averageMove": 70, "unit": "pips", "winRate": 79 },
+      "NAS100": { "averageMove": 260, "unit": "points", "winRate": 72 }
+    }
+  },
+  "fomc-statement": {
+    "sampleSize": 16,
+    "label": "Past 16 FOMC Statements",
+    "pairs": {
+      "XAUUSD": { "averageMove": 48, "unit": "points", "winRate": 82 },
+      "BTCUSD": { "averageMove": 2400, "unit": "points", "winRate": 73 },
+      "EURUSD": { "averageMove": 72, "unit": "pips", "winRate": 78 },
+      "USDJPY": { "averageMove": 78, "unit": "pips", "winRate": 80 },
+      "NAS100": { "averageMove": 310, "unit": "points", "winRate": 74 }
+    }
+  },
+  "gdp": {
+    "sampleSize": 16,
+    "label": "Past 16 GDP Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 16, "unit": "points", "winRate": 63 },
+      "EURUSD": { "averageMove": 30, "unit": "pips", "winRate": 61 },
+      "USDJPY": { "averageMove": 28, "unit": "pips", "winRate": 62 },
+      "NAS100": { "averageMove": 95, "unit": "points", "winRate": 60 }
+    }
+  },
+  "retail-sales": {
+    "sampleSize": 20,
+    "label": "Past 20 Retail Sales Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 14, "unit": "points", "winRate": 61 },
+      "EURUSD": { "averageMove": 24, "unit": "pips", "winRate": 59 },
+      "USDJPY": { "averageMove": 22, "unit": "pips", "winRate": 60 }
+    }
+  },
+  "ppi": {
+    "sampleSize": 20,
+    "label": "Past 20 PPI Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 12, "unit": "points", "winRate": 58 },
+      "EURUSD": { "averageMove": 20, "unit": "pips", "winRate": 57 },
+      "USDJPY": { "averageMove": 18, "unit": "pips", "winRate": 56 }
+    }
+  },
+  "core-ppi": {
+    "sampleSize": 20,
+    "label": "Past 20 Core PPI Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 11, "unit": "points", "winRate": 57 },
+      "EURUSD": { "averageMove": 18, "unit": "pips", "winRate": 55 }
+    }
+  },
+  "core-pce": {
+    "sampleSize": 20,
+    "label": "Past 20 Core PCE Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 36, "unit": "points", "winRate": 81 },
+      "BTCUSD": { "averageMove": 1600, "unit": "points", "winRate": 69 },
+      "EURUSD": { "averageMove": 50, "unit": "pips", "winRate": 76 },
+      "USDJPY": { "averageMove": 46, "unit": "pips", "winRate": 75 },
+      "NAS100": { "averageMove": 200, "unit": "points", "winRate": 70 }
+    }
+  },
+  "ism-manufacturing-pmi": {
+    "sampleSize": 20,
+    "label": "Past 20 ISM Manufacturing PMI Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 15, "unit": "points", "winRate": 64 },
+      "EURUSD": { "averageMove": 26, "unit": "pips", "winRate": 62 },
+      "USDJPY": { "averageMove": 24, "unit": "pips", "winRate": 63 },
+      "NAS100": { "averageMove": 110, "unit": "points", "winRate": 61 }
+    }
+  },
+  "ism-services-pmi": {
+    "sampleSize": 20,
+    "label": "Past 20 ISM Services PMI Releases",
+    "pairs": {
+      "XAUUSD": { "averageMove": 13, "unit": "points", "winRate": 60 },
+      "EURUSD": { "averageMove": 22, "unit": "pips", "winRate": 58 },
+      "NAS100": { "averageMove": 95, "unit": "points", "winRate": 59 }
+    }
+  }
+}
