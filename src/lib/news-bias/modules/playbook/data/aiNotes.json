@@ -1,0 +1,16 @@
+{
+  "templates": {
+    "aboveForecast": "Today's release is significantly above forecast.",
+    "belowForecast": "Today's release is significantly below forecast.",
+    "inLine": "Today's release is roughly in line with forecast.",
+    "estimate": "Using an estimated outcome until actual numbers are entered.",
+    "usdStrengthen": "Historically this has strengthened USD.",
+    "usdWeaken": "Historically this has weakened USD.",
+    "usdFlat": "Historically USD reaction is mixed in this band.",
+    "goldSpikeDown": "Gold often reacts with an initial spike before trending lower.",
+    "goldSpikeUp": "Gold often reacts with an initial spike before trending higher.",
+    "genericSpike": "Expect a fast initial spike — wait for confirmation before committing.",
+    "confidenceHigh": "Confidence is elevated for this setup.",
+    "confidenceLow": "Confidence is limited — size down or wait."
+  }
+}
