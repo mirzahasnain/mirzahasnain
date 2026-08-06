@@ -6,15 +6,16 @@ import { downloadBlob } from "./download";
 import { createTextPdf, type PdfTextLine } from "./pdf";
 
 const TXT_MIME = "text/plain;charset=utf-8";
+const CSV_MIME = "text/csv;charset=utf-8";
 const TITLE_SIZE = 18;
 const FIELD_GAP = 7;
 
 export async function copyAnalysis(analysis: Analysis): Promise<boolean> {
-  return writeToClipboard(buildExportText(analysis));
+  return writeToClipboard(buildFullExportText(analysis));
 }
 
 export function downloadAnalysisTxt(analysis: Analysis): boolean {
-  const blob = new Blob([buildExportText(analysis)], { type: TXT_MIME });
+  const blob = new Blob([buildFullExportText(analysis)], { type: TXT_MIME });
   return downloadBlob(blob, buildFileName(analysis, "txt"));
 }
 
@@ -25,8 +26,13 @@ export function downloadAnalysisPdf(analysis: Analysis): boolean {
   );
 }
 
+export function downloadAnalysisCsv(analysis: Analysis): boolean {
+  const blob = new Blob([buildHistoricalCsv(analysis)], { type: CSV_MIME });
+  return downloadBlob(blob, buildFileName(analysis, "csv"));
+}
+
 export async function shareAnalysis(analysis: Analysis): Promise<ShareResult> {
-  const text = buildExportText(analysis);
+  const text = buildFullExportText(analysis);
 
   if (typeof navigator.share === "function") {
     try {
@@ -53,7 +59,101 @@ export function buildPdfLines(analysis: Analysis): PdfTextLine[] {
     }
   }
 
+  const hist = analysis.historicalIntelligence;
+  if (hist && hist.summary.length > 0) {
+    lines.push({
+      text: "Historical Summary",
+      bold: true,
+      spaceBefore: FIELD_GAP,
+    });
+    for (const line of hist.summary) {
+      lines.push({ text: line });
+    }
+  }
+
   return lines;
+}
+
+export function buildFullExportText(analysis: Analysis): string {
+  const base = buildExportText(analysis);
+  const hist = analysis.historicalIntelligence;
+  if (!hist || hist.sampleSize === 0) return base;
+
+  const assetLines = hist.assets
+    .map(
+      (a) =>
+        `${a.label}: ↓${a.down} ↑${a.up} | Bearish ${a.bearishProbability}% | Avg ${Math.abs(a.averageMove)} ${a.unit}`,
+    )
+    .join("\n");
+
+  return `${base}\nHistorical Match:\n${hist.sampleSize} similar releases (confidence ${hist.confidenceScore}%)\n\n${hist.summary.join("\n")}\n\nAsset Votes:\n${assetLines}\n`;
+}
+
+export function buildHistoricalCsv(analysis: Analysis): string {
+  const hist = analysis.historicalIntelligence;
+  const header = [
+    "date",
+    "forecast",
+    "actual",
+    "previous",
+    "surprise",
+    "gold_move",
+    "silver_move",
+    "eurusd_move",
+    "gbpusd_move",
+    "btc_move",
+    "eth_move",
+    "nasdaq_move",
+    "us30_move",
+    "direction",
+    "similarity_score",
+  ].join(",");
+
+  const rows = (hist?.matches ?? []).map((m) =>
+    [
+      m.date,
+      m.forecast,
+      m.actual,
+      m.previous,
+      m.surprise,
+      m.gold_move,
+      m.silver_move,
+      m.eurusd_move,
+      m.gbpusd_move,
+      m.btc_move,
+      m.eth_move,
+      m.nasdaq_move,
+      m.us30_move,
+      m.direction,
+      m.score,
+    ].join(","),
+  );
+
+  if (rows.length === 0 && hist) {
+    return [
+      header.replace(",similarity_score", ""),
+      ...hist.timeline.map((m) =>
+        [
+          m.date,
+          m.forecast,
+          m.actual,
+          m.previous,
+          m.surprise,
+          m.gold_move,
+          m.silver_move,
+          m.eurusd_move,
+          m.gbpusd_move,
+          m.btc_move,
+          m.eth_move,
+          m.nasdaq_move,
+          m.us30_move,
+          m.direction,
+        ].join(","),
+      ),
+    ].join("\n");
+  }
+
+  return [header, ...rows].join("\n");
 }
 
 export function buildFileName(analysis: Analysis, extension: string): string {

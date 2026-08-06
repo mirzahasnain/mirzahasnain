@@ -88,6 +88,14 @@ Intelligence lives under `src/lib/news-bias/engine/`. Rules and mappings are JSO
 `historicalMoves.json`) — nothing is hardcoded in React. The UI calls
 `buildAnalysis` → `decisionEngine.decide()`. Unit tests: `npm test`.
 
+### Historical Intelligence (Version 8)
+
+Answers “what usually happened after similar news?” using JSON releases in
+`src/lib/news-bias/data/history/`. Engines: `similarityEngine`, `historyEngine`,
+`statisticsEngine`, `probabilityEngine`. The `history-api` interface is ready
+for a real database later. More details shows match votes, probabilities,
+average moves, a timeline, and a lazy-loaded chart. Export supports CSV.
+
 ### Decision engine
 
 ```
@@ -123,6 +131,15 @@ lib/news-bias/
   utils/history.ts            # Last 20 analyses in localStorage
   utils/clipboard.ts, download.ts
   calendar/                   # Types, config, mock JSON, providers, hooks
+  engine/                     # V7 Smart Decision Engine
+    decisionEngine.ts
+    surpriseEngine.ts
+    confidenceEngine.ts
+    playbookEngine.ts
+    historicalEngine.ts
+    newsRules.ts
+    pairMapping.ts
+    data/*.json
   services/economicCalendar.ts
   services/calendarProvider.ts
   services/liveNews.ts
@@ -137,4 +154,5 @@ component or engine change is needed. Every export format is built from the same
 and the PDF at once.
 
 Switch the calendar provider with `CALENDAR_CONFIG.calendarProvider` in
-`src/lib/news-bias/calendar/config.ts`.
+`src/lib/news-bias/calendar/config.ts`. Retune news bias with the JSON files
+under `src/lib/news-bias/engine/data/`.

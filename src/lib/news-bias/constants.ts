@@ -14,7 +14,7 @@ import type {
 export const APP = {
   title: "News Bias Tool",
   subtitle: "Three taps to a trading bias.",
-  version: "Version 7.0",
+  version: "Version 8.0",
   disclaimer: "Educational reference only. Not financial advice.",
 } as const;
 
@@ -106,6 +106,11 @@ export const DETAILS_COPY = {
   breakdown: { title: "Surprise" },
   playbook: { title: "Trade playbook" },
   historical: { title: "Historical statistics" },
+  historicalMatch: { title: "Historical match" },
+  probability: { title: "Historical probability" },
+  averageMove: { title: "Average move" },
+  timeline: { title: "Previous releases" },
+  chart: { title: "Historical chart" },
   analysis: { title: "AI explanation" },
   risk: { title: "Risk warning" },
   assets: { title: "Assets affected" },
@@ -116,6 +121,22 @@ export const DETAILS_COPY = {
     clear: "Clear",
     reopen: "Reopen this analysis",
   },
+} as const;
+
+export const HISTORICAL_INTEL_COPY = {
+  matchTitle: "Historical Match",
+  similarFound: "Similar Releases Found",
+  empty:
+    "Enter Actual and Forecast to find similar historical releases for this news.",
+  noMatches: "No similar historical releases found in this surprise band.",
+  probability: "Probability",
+  averageMove: "Average Move",
+  timelineHint: "Newest → oldest. Tap a release for details.",
+  closeDetails: "Close",
+  exportCsv: "Download CSV",
+  exportSummary: "Copy Summary",
+  down: "↓",
+  up: "↑",
 } as const;
 
 export const BREAKDOWN_LABELS = {
@@ -196,6 +217,7 @@ export const EXPORT_LABELS: Record<ExportAction, string> = {
   copy: "Copy",
   txt: "Download TXT",
   pdf: "Download PDF",
+  csv: "Download CSV",
   share: "Share",
 };
 
@@ -203,6 +225,7 @@ export const EXPORT_FEEDBACK = {
   copy: "Copied",
   txt: "Saved",
   pdf: "Saved",
+  csv: "Saved",
   share: "Shared",
   failed: "Failed",
 } as const;

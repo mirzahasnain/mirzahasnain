@@ -7,6 +7,11 @@ export { getHistoricalSnapshot, getHistoricalMoves } from "./historicalEngine";
 export { getNewsRule, getNewsRules } from "./newsRules";
 export { getPairBias, getPairMappings, mapPairsForUsd } from "./pairMapping";
 export { defaultEngineDeps } from "./defaults";
+export { buildHistoricalIntelligence } from "./historicalIntelligence";
+export { findSimilarReleases, resolveBand, cohortConfidence } from "./similarityEngine";
+export { loadHistoryReleases, listHistoryNewsIds, buildChartSeries } from "./historyEngine";
+export { computeAssetStatistics, formatAverageMove } from "./statisticsEngine";
+export { applyProbabilities, leadingBias } from "./probabilityEngine";
 export type {
   DecisionInput,
   DecisionResult,
@@ -18,3 +23,9 @@ export type {
   ExpectedMoveResult,
   NewsRule,
 } from "./types";
+export type {
+  HistoricalIntelligence,
+  HistoricalReleaseRecord,
+  SimilarMatch,
+  AssetVoteStats,
+} from "./historyTypes";

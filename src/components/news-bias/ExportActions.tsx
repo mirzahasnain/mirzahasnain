@@ -4,6 +4,7 @@ import {
   Check,
   Copy,
   FileDown,
+  FileSpreadsheet,
   FileText,
   Share2,
   TriangleAlert,
@@ -18,6 +19,7 @@ import {
 import type { Analysis, ExportAction } from "@/lib/news-bias/types/interfaces";
 import {
   copyAnalysis,
+  downloadAnalysisCsv,
   downloadAnalysisPdf,
   downloadAnalysisTxt,
   shareAnalysis,
@@ -37,10 +39,11 @@ const ICONS: Record<ExportAction, LucideIcon> = {
   copy: Copy,
   txt: FileText,
   pdf: FileDown,
+  csv: FileSpreadsheet,
   share: Share2,
 };
 
-const ORDER: ExportAction[] = ["copy", "txt", "pdf", "share"];
+const ORDER: ExportAction[] = ["copy", "csv", "pdf", "txt", "share"];
 
 export function ExportActions({ analysis }: ExportActionsProps) {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
@@ -54,6 +57,7 @@ export function ExportActions({ analysis }: ExportActionsProps) {
     analysis.values?.forecast,
     analysis.values?.previous,
     analysis.values?.actual,
+    analysis.historicalIntelligence?.sampleSize,
   ].join("|");
 
   useEffect(() => {
@@ -122,6 +126,8 @@ async function runExport(
       return toFeedback(downloadAnalysisTxt(analysis), EXPORT_FEEDBACK.txt);
     case "pdf":
       return toFeedback(downloadAnalysisPdf(analysis), EXPORT_FEEDBACK.pdf);
+    case "csv":
+      return toFeedback(downloadAnalysisCsv(analysis), EXPORT_FEEDBACK.csv);
     case "share": {
       const result = await shareAnalysis(analysis);
       if (result === "dismissed") return null;

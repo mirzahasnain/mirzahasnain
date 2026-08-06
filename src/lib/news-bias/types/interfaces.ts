@@ -54,7 +54,7 @@ export type ExpectedImpact = "very-low" | "low" | "medium" | "high" | "very-high
 
 export type TradeAction = "buy" | "sell" | "wait";
 
-export type ExportAction = "copy" | "txt" | "pdf" | "share";
+export type ExportAction = "copy" | "txt" | "pdf" | "csv" | "share";
 
 export type ShareResult = "shared" | "copied" | "dismissed" | "failed";
 
@@ -165,6 +165,70 @@ export interface DecisionSummaryView {
   reason: string;
 }
 
+/** Version 8 historical intelligence snapshot attached to an analysis. */
+export interface HistoricalIntelligenceView {
+  newsId: NewsEventId;
+  newsLabel: string;
+  sampleSize: number;
+  surprise: number | null;
+  surpriseSign: SurpriseSign;
+  band: { min: number; max: number } | null;
+  confidenceScore: number;
+  summary: string[];
+  assets: {
+    key: string;
+    label: string;
+    unit: string;
+    down: number;
+    up: number;
+    flat: number;
+    bearishProbability: number;
+    bullishProbability: number;
+    averageMove: number;
+    averageAbsMove: number;
+  }[];
+  matches: {
+    date: string;
+    forecast: number;
+    actual: number;
+    previous: number;
+    surprise: number;
+    score: number;
+    gold_move: number;
+    silver_move: number;
+    eurusd_move: number;
+    gbpusd_move: number;
+    btc_move: number;
+    eth_move: number;
+    nasdaq_move: number;
+    us30_move: number;
+    direction: string;
+  }[];
+  timeline: {
+    date: string;
+    forecast: number;
+    actual: number;
+    previous: number;
+    surprise: number;
+    gold_move: number;
+    silver_move: number;
+    eurusd_move: number;
+    gbpusd_move: number;
+    btc_move: number;
+    eth_move: number;
+    nasdaq_move: number;
+    us30_move: number;
+    direction: string;
+  }[];
+  chart: {
+    dates: string[];
+    forecast: number[];
+    previous: number[];
+    actual: number[];
+    surprise: number[];
+  };
+}
+
 /** Everything the decision engine derives before any prose is generated. */
 export interface AnalysisContext {
   event: NewsEvent;
@@ -178,6 +242,8 @@ export interface AnalysisContext {
   affectedAssets: AffectedAsset[];
   playbook: TradePlaybookView;
   historical: HistoricalStatsView | null;
+  /** Version 8 similar-event intelligence (null when no history file). */
+  historicalIntelligence: HistoricalIntelligenceView | null;
   riskWarning: string;
   summary: DecisionSummaryView;
 }

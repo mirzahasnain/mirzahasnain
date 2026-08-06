@@ -5,6 +5,7 @@ import { AffectedAssetsGrid } from "@/components/news-bias/AffectedAssetsGrid";
 import { DetailsSection } from "@/components/news-bias/DetailsSection";
 import { ExportActions } from "@/components/news-bias/ExportActions";
 import { FullAnalysis } from "@/components/news-bias/FullAnalysis";
+import { HistoricalIntelligencePanel } from "@/components/news-bias/historical/HistoricalIntelligencePanel";
 import { HistoricalStatsPanel } from "@/components/news-bias/HistoricalStatsPanel";
 import { HistoryList } from "@/components/news-bias/HistoryList";
 import { ReleaseInputs } from "@/components/news-bias/ReleaseInputs";
@@ -66,9 +67,15 @@ export function DetailsPanel({
             <TradePlaybookPanel analysis={analysis} />
           </DetailsSection>
 
-          <DetailsSection title={DETAILS_COPY.historical.title}>
-            <HistoricalStatsPanel analysis={analysis} />
-          </DetailsSection>
+          {analysis.historicalIntelligence ? (
+            <HistoricalIntelligencePanel
+              intel={analysis.historicalIntelligence}
+            />
+          ) : (
+            <DetailsSection title={DETAILS_COPY.historical.title}>
+              <HistoricalStatsPanel analysis={analysis} />
+            </DetailsSection>
+          )}
 
           <DetailsSection title={DETAILS_COPY.analysis.title}>
             <FullAnalysis lines={analysis.analysisLines} />

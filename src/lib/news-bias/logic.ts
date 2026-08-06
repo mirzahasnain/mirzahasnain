@@ -5,16 +5,18 @@ import {
   listPairDirections,
   type DecisionResult,
 } from "./engine";
+import { buildHistoricalIntelligence } from "./engine/historicalIntelligence";
 import type {
   Analysis,
   AnalysisRequest,
+  HistoricalIntelligenceView,
   ReleaseValues,
   SurpriseReading,
 } from "./types/interfaces";
 
 /**
  * Composition root for the analysis UI.
- * Delegates all intelligence to the Version 7 Smart Decision Engine.
+ * Delegates to the Smart Decision Engine + Historical Intelligence Engine.
  */
 export function buildAnalysis(request: AnalysisRequest): Analysis | null {
   const event = findEvent(request.eventId);
@@ -35,22 +37,35 @@ export function buildAnalysis(request: AnalysisRequest): Analysis | null {
   });
 
   const values = readValues(request);
+  const surprise = toSurpriseReading(decision);
+  const historicalIntelligence = toHistoricalView(
+    buildHistoricalIntelligence({
+      newsId: event.id,
+      surprise: surprise.value,
+      surpriseSign: surprise.sign,
+      newsLabel: event.label,
+    }),
+  );
 
   return {
     event,
     pair,
     values,
-    surprise: toSurpriseReading(decision),
+    surprise,
     usdDirection: decision.usdDirection,
     pairDirection: decision.pairDirection,
     action: decision.action,
     affectedAssets: listPairDirections(decision.usdDirection, pair.id),
     playbook: decision.playbook,
     historical: decision.historical,
+    historicalIntelligence,
     riskWarning: decision.riskWarning,
     summary: decision.summary,
     reason: decision.summary.reason,
-    analysisLines: decision.explanation,
+    analysisLines: mergeExplanations(
+      decision.explanation,
+      historicalIntelligence?.summary ?? [],
+    ),
   };
 }
 
@@ -74,6 +89,50 @@ function toSurpriseReading(decision: DecisionResult): SurpriseReading {
     confidence: decision.confidence.score,
     isEstimate: decision.surprise.isEstimate,
   };
+}
+
+function toHistoricalView(
+  intel: ReturnType<typeof buildHistoricalIntelligence>,
+): HistoricalIntelligenceView | null {
+  if (!intel) return null;
+
+  return {
+    newsId: intel.newsId,
+    newsLabel: intel.newsLabel,
+    sampleSize: intel.sampleSize,
+    surprise: intel.surprise,
+    surpriseSign: intel.surpriseSign,
+    band: intel.band,
+    confidenceScore: intel.confidenceScore,
+    summary: intel.summary,
+    assets: intel.assets,
+    matches: intel.matches.map((m) => ({
+      date: m.record.date,
+      forecast: m.record.forecast,
+      actual: m.record.actual,
+      previous: m.record.previous,
+      surprise: m.record.surprise,
+      score: m.score,
+      gold_move: m.record.gold_move,
+      silver_move: m.record.silver_move,
+      eurusd_move: m.record.eurusd_move,
+      gbpusd_move: m.record.gbpusd_move,
+      btc_move: m.record.btc_move,
+      eth_move: m.record.eth_move,
+      nasdaq_move: m.record.nasdaq_move,
+      us30_move: m.record.us30_move,
+      direction: m.record.direction,
+    })),
+    timeline: intel.timeline,
+    chart: intel.chart,
+  };
+}
+
+/** Prefer decision lines, then append unique historical lines (cap 6). */
+function mergeExplanations(decision: string[], historical: string[]): string[] {
+  const seen = new Set(decision);
+  const extra = historical.filter((line) => !seen.has(line));
+  return [...decision, ...extra].slice(0, 6);
 }
 
 /** @deprecated Prefer decisionEngine.decide — kept for older call sites / tests. */
