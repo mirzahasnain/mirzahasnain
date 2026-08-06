@@ -1,41 +1,89 @@
-# NIBBO Landing Page
+# TradeImpact
 
-Premium single-page landing site for **NIBBO** — a Solana meme coin.
+**Know the Impact Before You Trade.**
+
+TradeImpact is an AI-assisted **News Trading Decision Platform**. It converts
+macroeconomic releases into explainable trading decisions (Score, Why?, Risk,
+Playbook) for Forex, metals, crypto, and index traders.
+
+> Educational decision support only — not financial advice.
+
+## Sprint 1 status
+
+Sprint 1 delivers the **production-ready foundation**: architecture surfaces,
+config, typed domain boundaries, provider facades, domain state, system UI
+states, logging, security prep, tooling, and docs.
+
+It does **not** add Live APIs, AI, or new product features.
+
+See `docs/sprint1/SPRINT1_REPORT.md` for the readiness score.
 
 ## Stack
 
-- Next.js 15 (App Router)
-- React 19
-- Tailwind CSS 4
-- Framer Motion
-- Lucide Icons
+- Next.js 15 (App Router) · React 19 · TypeScript (strict)
+- Tailwind CSS 4 · existing `nb-*` design tokens
+- Vitest · Testing Library · ESLint · Prettier · Husky · lint-staged
+- SWR (calendar) · pure TS engines
 
-## Getting Started
+## Getting started
 
 ```bash
+cp .env.local.example .env.local
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open:
+
+- [/workspace](http://localhost:3000/workspace) — TradeImpact workspace
+- [/calendar](http://localhost:3000/calendar) — economic calendar
+- [/news-bias](http://localhost:3000/news-bias) — analysis tool
 
 ## Scripts
 
-- `npm run dev` — start development server
-- `npm run build` — production build
-- `npm run start` — start production server
-- `npm run lint` — run ESLint
+| Script                  | Purpose          |
+| ----------------------- | ---------------- |
+| `npm run dev`           | Dev server       |
+| `npm run build`         | Production build |
+| `npm run lint`          | ESLint           |
+| `npm run format`        | Prettier write   |
+| `npm run typecheck`     | `tsc --noEmit`   |
+| `npm test`              | Vitest           |
+| `npm run test:coverage` | Coverage         |
 
-## Structure
+## Documentation
 
+| Doc                              | Description              |
+| -------------------------------- | ------------------------ |
+| `docs/PRD.md`                    | Product Requirements     |
+| `docs/ENGINE.md`                 | Intelligence Engine      |
+| `docs/API.md`                    | Calendar API / providers |
+| `docs/ARCHITECTURE.md`           | Foundation architecture  |
+| `docs/PROJECT_STRUCTURE.md`      | Folder map               |
+| `CONTRIBUTING.md`                | Contribution guide       |
+| `docs/sprint1/SPRINT1_REPORT.md` | Sprint 1 final review    |
+
+## Environment
+
+Server-only secrets (never `NEXT_PUBLIC_*` for vendor keys):
+
+```bash
+ECONOMIC_PROVIDER=mock
+TRADING_ECONOMICS_KEY=
+TRADING_ECONOMICS_SECRET=
+ECONOMIC_CALENDAR_REFRESH_MS=60000
+ECONOMIC_CALENDAR_MAX_RETRIES=3
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
-src/
-  app/                 # App router entry
-  components/
-    effects/           # Loader, cursor, particles, glow, scroll bar
-    layout/            # Header, Footer
-    sections/          # Hero, About, Why, Token, Roadmap, Community, FAQ
-    ui/                # Shared UI primitives
-  lib/constants.ts     # Site copy & links
-public/nibbo-mascot.png
-```
+
+## Architecture principles
+
+1. **No business logic in UI components** — engines + config own rules.
+2. **Provider-agnostic calendar** — `ProviderFactory` + `MockProvider` fallback.
+3. **Deterministic decisions** — AI (future) narrates; engines compute.
+4. **Preserve `nb-*` design system** — do not invent a parallel visual language.
+5. **Local-first MVP persistence** — cloud sync is post-foundation.
+
+## License
+
+Private / proprietary unless otherwise stated.

@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+build
+coverage
+package-lock.json
+*.tsbuildinfo
+public
+docs/PRD.md
+docs/ARCHITECTURE_DESIGN_REVIEW.md
+docs/PRD_REVIEW.md
