@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { Star } from "lucide-react";
+import { AiTradePlaybookCard } from "@/components/news-bias/AiTradePlaybookCard";
 import { CalendarShell } from "@/components/news-bias/calendar/CalendarShell";
 import { CalendarSkeleton } from "@/components/news-bias/calendar/CalendarSkeleton";
 import { CalendarState } from "@/components/news-bias/calendar/CalendarState";
@@ -10,6 +11,7 @@ import { CountdownBadge } from "@/components/news-bias/calendar/CountdownBadge";
 import { DataModeToggle } from "@/components/news-bias/calendar/DataModeToggle";
 import { HistorySearch } from "@/components/news-bias/calendar/HistorySearch";
 import { ReminderPicker } from "@/components/news-bias/calendar/ReminderPicker";
+import { Footer } from "@/components/news-bias/Footer";
 import {
   CALENDAR_COPY,
   useCalendarEvent,
@@ -32,7 +34,8 @@ import {
   getReminder,
   setReminderOffsets,
 } from "@/lib/news-bias/calendar/utils/reminders";
-import { Footer } from "@/components/news-bias/Footer";
+import { buildAnalysis } from "@/lib/news-bias/logic";
+import type { PairId } from "@/lib/news-bias/types/interfaces";
 
 interface EventDetailPageProps {
   eventId: string;
@@ -79,6 +82,22 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
     params.set("calendarId", event.id);
     return `/news-bias?${params.toString()}`;
   }, [event, detail, displayActual, mode]);
+
+  const playbookAnalysis = useMemo(() => {
+    const newsId = detail?.newsEventId ?? null;
+    if (!newsId || !event) return null;
+    const pairId = (detail?.pairsMostSensitive?.[0] as PairId | undefined) ?? "XAUUSD";
+    const hasNumbers =
+      event.forecast !== null && displayActual !== null;
+    return buildAnalysis({
+      eventId: newsId,
+      pairId,
+      outcome: hasNumbers ? null : "positive",
+      forecast: event.forecast,
+      previous: event.previous,
+      actual: displayActual,
+    });
+  }, [detail, event, displayActual]);
 
   const onModeChange = (next: DataMode) => {
     setMode(saveDataMode(next));
@@ -194,6 +213,17 @@ export function EventDetailPage({ eventId }: EventDetailPageProps) {
                 body={detail.pairsMostSensitive.join(" · ")}
               />
             </div>
+          ) : null}
+
+          {playbookAnalysis ? (
+            <section className="rounded-2xl border border-nb-border bg-nb-surface px-4 py-4">
+              <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-nb-faint">
+                AI Trade Playbook
+              </h2>
+              <div className="mt-3">
+                <AiTradePlaybookCard analysis={playbookAnalysis} />
+              </div>
+            </section>
           ) : null}
 
           <ReminderPicker

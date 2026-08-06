@@ -1,8 +1,10 @@
 import { EXPORT_COPY } from "../constants";
+import { buildAiTradePlaybook } from "../modules/playbook/buildAiPlaybook";
 import type { Analysis, ShareResult } from "../types/interfaces";
 import { buildAnalysisFields, buildExportText } from "./analysisGenerator";
 import { writeToClipboard } from "./clipboard";
 import { downloadBlob } from "./download";
+import { buildPlaybookExportText } from "./exportPlaybook";
 import { createTextPdf, type PdfTextLine } from "./pdf";
 
 const TXT_MIME = "text/plain;charset=utf-8";
@@ -77,16 +79,21 @@ export function buildPdfLines(analysis: Analysis): PdfTextLine[] {
 export function buildFullExportText(analysis: Analysis): string {
   const base = buildExportText(analysis);
   const hist = analysis.historicalIntelligence;
-  if (!hist || hist.sampleSize === 0) return base;
+  let text = base;
 
-  const assetLines = hist.assets
-    .map(
-      (a) =>
-        `${a.label}: ↓${a.down} ↑${a.up} | Bearish ${a.bearishProbability}% | Avg ${Math.abs(a.averageMove)} ${a.unit}`,
-    )
-    .join("\n");
+  if (hist && hist.sampleSize > 0) {
+    const assetLines = hist.assets
+      .map(
+        (a) =>
+          `${a.label}: ↓${a.down} ↑${a.up} | Bearish ${a.bearishProbability}% | Avg ${Math.abs(a.averageMove)} ${a.unit}`,
+      )
+      .join("\n");
 
-  return `${base}\nHistorical Match:\n${hist.sampleSize} similar releases (confidence ${hist.confidenceScore}%)\n\n${hist.summary.join("\n")}\n\nAsset Votes:\n${assetLines}\n`;
+    text = `${base}\nHistorical Match:\n${hist.sampleSize} similar releases (confidence ${hist.confidenceScore}%)\n\n${hist.summary.join("\n")}\n\nAsset Votes:\n${assetLines}\n`;
+  }
+
+  const playbook = buildAiTradePlaybook(analysis);
+  return `${text}\n${buildPlaybookExportText(playbook)}`;
 }
 
 export function buildHistoricalCsv(analysis: Analysis): string {

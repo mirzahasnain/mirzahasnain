@@ -121,6 +121,15 @@ pinned watchlist, one-click analysis, trade checklist, journal, favorites,
 global search, market status, local notifications, settings, and quick-action
 FABs — all localStorage-backed. Existing `/news-bias` style is unchanged.
 
+### AI Trade Playbook (Version 12)
+
+When an economic news analysis is ready, the app builds a full actionable
+playbook from JSON rules (`playbook/`, `risk/`, `strategy/`, `volatility/`).
+Shows trade setup, before/during/after plan, entry strategies, risk sizing,
+TP/SL guides, fake-spike warning, historical behaviour, volatility meter, AI
+notes, plus PDF/TXT/Copy/Share export. Surfaces: analysis details, event
+detail, and workspace.
+
 ### Decision engine
 
 ```

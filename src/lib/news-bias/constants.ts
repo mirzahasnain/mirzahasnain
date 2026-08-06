@@ -14,7 +14,7 @@ import type {
 export const APP = {
   title: "News Bias Tool",
   subtitle: "Three taps to a trading bias.",
-  version: "Version 11.0",
+  version: "Version 12.0",
   disclaimer: "Educational reference only. Not financial advice.",
 } as const;
 
@@ -157,6 +157,17 @@ export const PLAYBOOK_LABELS = {
   bias: "Bias",
   reason: "Reason",
   expectedMove: "Expected reaction",
+  setup: "Trade Setup",
+  asset: "Asset",
+  risk: "Risk",
+  plan: "Trading Plan",
+  entries: "Entry Strategy",
+  riskMgmt: "Risk Management",
+  takeProfit: "Take Profit Strategy",
+  stopLoss: "Stop Loss Guide",
+  volatility: "Expected Volatility",
+  aiNotes: "AI Notes",
+  historical: "Historical Behaviour",
 } as const;
 
 export const HISTORICAL_LABELS = {

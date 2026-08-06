@@ -1,7 +1,7 @@
 export const TERMINAL_COPY = {
   title: "News Trading Terminal",
   subtitle: "Professional desk for high-impact releases.",
-  version: "Version 11.0",
+  version: "Version 12.0",
   offline: "Offline — showing cached terminal data.",
   unavailable: "Live data is temporarily unavailable.",
   retry: "Retry",

@@ -1,7 +1,7 @@
 export const WORKSPACE_COPY = {
   title: "TradeImpact",
   subtitle: "Trader workspace for high-impact releases.",
-  version: "Version 11.0",
+  version: "Version 12.0",
   offline: "Offline — showing cached workspace data.",
   unavailable: "Live data is temporarily unavailable.",
   retry: "Retry",

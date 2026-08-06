@@ -1,12 +1,11 @@
-/**
- * Feature module barrel — trading terminal + TradeImpact workspace.
- * UI imports from here; never reaches into sibling module internals.
- */
 export * as dashboard from "./dashboard";
 export * as calendar from "./calendar";
 export * as decision from "./decision";
 export * as history from "./history";
 export * as playbook from "./playbook";
+export * as risk from "./risk";
+export * as strategy from "./strategy";
+export * as volatility from "./volatility";
 export * as watchlist from "./watchlist";
 export * as alerts from "./alerts";
 export * as analytics from "./analytics";

@@ -9,6 +9,10 @@ import type {
 } from "../../types/interfaces";
 import type { EventTradePlaybook } from "../types";
 
+export { buildAiTradePlaybook, buildTradingPlan } from "./buildAiPlaybook";
+export type { AiTradePlaybook } from "./types";
+export type * from "./types";
+
 interface PhasesConfig {
   default: {
     waitSeconds: number;
@@ -66,12 +70,12 @@ export function buildEventPlaybook(input: {
       },
       {
         id: "release",
-        title: "During News",
+        title: "During Release",
         action: CONFIG.default.release.replace("{wait}", String(wait)),
       },
       {
         id: "confirmation",
-        title: "After News",
+        title: "After Confirmation",
         action: confirmation,
       },
     ],

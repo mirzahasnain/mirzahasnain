@@ -1,5 +1,6 @@
 "use client";
 
+import { AiTradePlaybookCard } from "@/components/news-bias/AiTradePlaybookCard";
 import { CalendarState } from "@/components/news-bias/calendar/CalendarState";
 import { Footer } from "@/components/news-bias/Footer";
 import { FavoritesPanel } from "@/components/news-bias/workspace/FavoritesPanel";
@@ -17,9 +18,47 @@ import { WatchlistSection } from "@/components/news-bias/workspace/WatchlistSect
 import { WorkspaceShell } from "@/components/news-bias/workspace/WorkspaceShell";
 import { WORKSPACE_COPY } from "@/lib/news-bias/modules/dashboard/workspaceCopy";
 import { useWorkspaceDashboard } from "@/lib/news-bias/modules/dashboard/useWorkspaceDashboard";
+import { buildAnalysis } from "@/lib/news-bias/logic";
+import { pairIdForWatchAsset } from "@/lib/news-bias/modules/preferences";
+import type { NewsEventId, PairId } from "@/lib/news-bias/types/interfaces";
+import { useMemo } from "react";
 
 export function WorkspaceDashboard() {
   const desk = useWorkspaceDashboard();
+
+  const playbookAnalysis = useMemo(() => {
+    const focus = desk.focusEvent;
+    if (!focus) return null;
+    const newsId = focus.eventKey as NewsEventId;
+    const pairId: PairId =
+      desk.prefs?.defaultPair ??
+      (desk.pinned[0] ? pairIdForWatchAsset(desk.pinned[0].id) : "XAUUSD");
+    const known = [
+      "cpi",
+      "core-cpi",
+      "ppi",
+      "core-ppi",
+      "nfp",
+      "unemployment-rate",
+      "interest-rate-decision",
+      "fomc-statement",
+      "ism-manufacturing-pmi",
+      "ism-services-pmi",
+      "gdp",
+      "retail-sales",
+      "core-pce",
+    ].includes(newsId);
+    if (!known) return null;
+    const hasNumbers = focus.forecast !== null && focus.actual !== null;
+    return buildAnalysis({
+      eventId: newsId,
+      pairId,
+      outcome: hasNumbers ? null : "positive",
+      forecast: focus.forecast,
+      previous: focus.previous,
+      actual: focus.actual,
+    });
+  }, [desk.focusEvent, desk.prefs?.defaultPair, desk.pinned]);
 
   return (
     <>
@@ -78,6 +117,15 @@ export function WorkspaceDashboard() {
           confidence={desk.oneClick.confidence}
           rows={desk.oneClick.rows}
         />
+
+        {playbookAnalysis ? (
+          <section className="rounded-2xl border border-nb-border bg-nb-surface px-4 py-4">
+            <h2 className="text-sm font-semibold text-nb-text">AI Trade Playbook</h2>
+            <div className="mt-3">
+              <AiTradePlaybookCard analysis={playbookAnalysis} />
+            </div>
+          </section>
+        ) : null}
 
         <RecentAnalysisSection entries={desk.recentAnalysis} />
 

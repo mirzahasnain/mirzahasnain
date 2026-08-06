@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { AiTradePlaybookCard } from "@/components/news-bias/AiTradePlaybookCard";
 import { AffectedAssetsGrid } from "@/components/news-bias/AffectedAssetsGrid";
 import { DetailsSection } from "@/components/news-bias/DetailsSection";
 import { ExportActions } from "@/components/news-bias/ExportActions";
@@ -11,7 +12,6 @@ import { HistoryList } from "@/components/news-bias/HistoryList";
 import { ReleaseInputs } from "@/components/news-bias/ReleaseInputs";
 import type { ReleaseInputValues } from "@/components/news-bias/ReleaseInputs";
 import { SurpriseBreakdown } from "@/components/news-bias/SurpriseBreakdown";
-import { TradePlaybookPanel } from "@/components/news-bias/TradePlaybookPanel";
 import { DETAILS_COPY } from "@/lib/news-bias/constants";
 import type { Analysis, HistoryEntry } from "@/lib/news-bias/types/interfaces";
 
@@ -64,7 +64,7 @@ export function DetailsPanel({
           </DetailsSection>
 
           <DetailsSection title={DETAILS_COPY.playbook.title}>
-            <TradePlaybookPanel analysis={analysis} />
+            <AiTradePlaybookCard analysis={analysis} />
           </DetailsSection>
 
           {analysis.historicalIntelligence ? (

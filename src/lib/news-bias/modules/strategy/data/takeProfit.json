@@ -1,0 +1,23 @@
+{
+  "levels": [
+    {
+      "id": "tp1",
+      "label": "TP1",
+      "placeholder": "First scale — near the average similar-event move"
+    },
+    {
+      "id": "tp2",
+      "label": "TP2",
+      "placeholder": "Second scale — extension of the historical average"
+    },
+    {
+      "id": "tp3",
+      "label": "TP3",
+      "placeholder": "Runner target — leave a trail if momentum holds"
+    }
+  ],
+  "trailStop": {
+    "label": "Trail Stop Suggestion",
+    "placeholder": "Trail behind the most recent higher-low / lower-high after TP1"
+  }
+}
