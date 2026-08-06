@@ -96,6 +96,13 @@ Answers “what usually happened after similar news?” using JSON releases in
 for a real database later. More details shows match votes, probabilities,
 average moves, a timeline, and a lazy-loaded chart. Export supports CSV.
 
+### News Trading Terminal (Version 9)
+
+Professional desk at [`/terminal`](http://localhost:3000/terminal). Modular
+domains under `src/lib/news-bias/modules/` (dashboard, calendar, decision,
+history, playbook, watchlist, alerts, analytics, preferences). The existing
+`/news-bias` analysis UI is unchanged.
+
 ### Decision engine
 
 ```
@@ -131,15 +138,21 @@ lib/news-bias/
   utils/history.ts            # Last 20 analyses in localStorage
   utils/clipboard.ts, download.ts
   calendar/                   # Types, config, mock JSON, providers, hooks
-  engine/                     # V7 Smart Decision Engine
+  engine/                     # V7–V8 decision + historical intelligence
     decisionEngine.ts
     surpriseEngine.ts
     confidenceEngine.ts
     playbookEngine.ts
     historicalEngine.ts
+    similarityEngine.ts
+    historyEngine.ts
+    statisticsEngine.ts
+    probabilityEngine.ts
     newsRules.ts
     pairMapping.ts
     data/*.json
+  data/history/               # Per-news historical release JSON
+  services/history-api/       # Pluggable history data source
   services/economicCalendar.ts
   services/calendarProvider.ts
   services/liveNews.ts
@@ -155,4 +168,5 @@ and the PDF at once.
 
 Switch the calendar provider with `CALENDAR_CONFIG.calendarProvider` in
 `src/lib/news-bias/calendar/config.ts`. Retune news bias with the JSON files
-under `src/lib/news-bias/engine/data/`.
+under `src/lib/news-bias/engine/data/`. Historical prints live in
+`src/lib/news-bias/data/history/`.
