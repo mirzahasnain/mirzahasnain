@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { AppProviders } from "@/components/system";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/news-bias/utils/theme";
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
     <>
       <script dangerouslySetInnerHTML={{ __html: THEME_BOOTSTRAP_SCRIPT }} />
       <div className="min-h-[100dvh] bg-nb-bg text-nb-text-soft selection:bg-nb-accent/30">
-        {children}
+        <AppProviders>{children}</AppProviders>
       </div>
     </>
   );

@@ -1,3 +1,7 @@
+/**
+ * @deprecated Prefer `@/providers` (V10 ProviderFactory).
+ * Kept for backward-compatible V6 calendar stubs.
+ */
 import { CALENDAR_CONFIG } from "../config";
 import type { CalendarProvider, LiveNewsProvider, ProviderId } from "../types";
 import { financialModelingPrepProvider } from "./financialModelingPrep";
