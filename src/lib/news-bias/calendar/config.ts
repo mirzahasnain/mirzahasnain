@@ -1,16 +1,22 @@
+/**
+ * Switch calendar / live-news providers.
+ * Prefer ECONOMIC_PROVIDER env (see .env.local); this object remains for
+ * refresh intervals and live-news stubs used by the UI.
+ */
+import { getEconomicProviderId, getCalendarRefreshMs } from "../utils/env";
 import type { ProviderId } from "./types";
 
-/**
- * Switch calendar / live-news providers by changing these ids.
- * UI and hooks never import a concrete provider directly.
- */
+const envProvider = getEconomicProviderId();
+
 export const CALENDAR_CONFIG = {
-  /** Active economic calendar provider. */
-  calendarProvider: "mock" as ProviderId,
+  /** Active economic calendar provider (env-driven). */
+  calendarProvider: (envProvider === "trading-economics"
+    ? "trading-economics"
+    : "mock") as ProviderId,
   /** Active live actuals provider. */
   liveNewsProvider: "mock" as ProviderId,
   /** How often SWR revalidates calendar data (ms). */
-  refreshIntervalMs: 60_000,
+  refreshIntervalMs: getCalendarRefreshMs(),
   /** How often live mode polls for actuals (ms). */
   livePollIntervalMs: 15_000,
 } as const;

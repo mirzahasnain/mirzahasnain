@@ -103,6 +103,15 @@ domains under `src/lib/news-bias/modules/` (dashboard, calendar, decision,
 history, playbook, watchlist, alerts, analytics, preferences). The existing
 `/news-bias` analysis UI is unchanged.
 
+### Real Economic Calendar API (Version 10)
+
+Provider architecture under `src/lib/news-bias/providers/` — `MockProvider`,
+`TradingEconomicsProvider`, and `ProviderFactory` all implement
+`IEconomicCalendarProvider`. Switch with `ECONOMIC_PROVIDER` in `.env.local`
+(keys never hardcoded). Standard `EconomicEvent` model + mappers, 60s cache,
+3× retry, mock fallback, and hooks (`useEconomicCalendar`, etc.). See
+[`docs/API.md`](docs/API.md).
+
 ### Decision engine
 
 ```
