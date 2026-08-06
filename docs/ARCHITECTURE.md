@@ -28,6 +28,16 @@ Browser (Next.js App Router)
                 └─ TradingEconomicsProvider (env-gated)
 ```
 
+## Rules Engine (IP layer)
+
+Canonical intelligence database: **`src/rules/**`**
+
+- JSON event/profile rules by category (`macro`, `forex`, `commodities`, `crypto`, `indices`, `central-banks`)
+- Loader · Validator · Registry · Resolver · Priority / conflict resolution
+- Docs: `docs/rules/RULE_ENGINE.md`, `docs/rules/RULE_COVERAGE_REPORT.md`
+
+The Brain (`src/engine`) computes decisions; the Rules Engine stores the firm’s configurable market intelligence.
+
 ## Decision engines
 
 Canonical public surface: **`src/engine/**` (TradeImpact Brain)**
