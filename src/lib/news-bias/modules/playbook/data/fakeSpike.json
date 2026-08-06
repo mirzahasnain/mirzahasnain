@@ -1,0 +1,7 @@
+{
+  "thresholdProbability": 55,
+  "minSampleSize": 5,
+  "title": "High Fake Spike Probability",
+  "message": "Wait for confirmation before entering.",
+  "hint": "Similar releases often printed a two-sided spike before the real move."
+}
