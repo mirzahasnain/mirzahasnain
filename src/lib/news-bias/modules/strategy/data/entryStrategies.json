@@ -1,0 +1,24 @@
+{
+  "strategies": [
+    {
+      "id": "aggressive",
+      "label": "Aggressive Entry",
+      "explanation": "Enter closer to the spike once the first reclaim or rejection prints. Higher reward, higher fake-out risk."
+    },
+    {
+      "id": "conservative",
+      "label": "Conservative Entry",
+      "explanation": "Wait for a full confirmation candle and a clear structure break before committing size."
+    },
+    {
+      "id": "breakout",
+      "label": "Breakout Entry",
+      "explanation": "Enter on a break and hold beyond the news range high/low after the initial volatility settles."
+    },
+    {
+      "id": "pullback",
+      "label": "Pullback Entry",
+      "explanation": "Let the first move run, then enter on a controlled pullback into the direction of the bias."
+    }
+  ]
+}

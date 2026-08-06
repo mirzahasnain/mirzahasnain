@@ -1,0 +1,146 @@
+{
+  "id": "durable-goods",
+  "type": "event",
+  "category": "macro",
+  "priority": "Medium",
+  "version": "1.0.0",
+  "newsDescription": "Durable Goods Orders \u2014 capital goods demand.",
+  "importance": 70,
+  "affectedCurrency": "USD",
+  "primaryBias": "higher_is_usd_bullish",
+  "inverseLogic": false,
+  "typicalVolatility": "medium",
+  "historicalReliability": 66,
+  "fakeSpikeProbability": 0.4,
+  "typicalDelaySeconds": 20,
+  "marketsAffected": [
+    "XAUUSD",
+    "XAGUSD",
+    "BTCUSD",
+    "ETHUSD",
+    "EURUSD",
+    "GBPUSD",
+    "AUDUSD",
+    "NZDUSD",
+    "USDJPY",
+    "USDCHF",
+    "USDCAD",
+    "US30",
+    "NAS100",
+    "SPX500"
+  ],
+  "assetPriority": [
+    "XAUUSD",
+    "EURUSD",
+    "NAS100",
+    "GBPUSD",
+    "BTCUSD",
+    "USDJPY",
+    "XAGUSD",
+    "SPX500",
+    "US30",
+    "ETHUSD",
+    "AUDUSD",
+    "USDCAD",
+    "USDCHF",
+    "NZDUSD"
+  ],
+  "correlationWeight": 0.58,
+  "confidenceModifier": 0.99,
+  "tradeImpactScoreModifier": 0.98,
+  "riskModifier": 1.04,
+  "playbook": {
+    "before": ["Focus on core capex"],
+    "during": ["Expect limited follow-through"],
+    "after": ["Prefer trend confirmation"]
+  },
+  "historicalNotes": "Core capital goods ex-aircraft is the cleaner signal.",
+  "inheritsFrom": "usd-majors-profile",
+  "overrides": {},
+  "marketLogic": {
+    "XAUUSD": {
+      "displayName": "Gold",
+      "bullish": "USD weakness / dovish surprise historically supports metals.",
+      "bearish": "USD strength / hotter inflation surprise historically pressures metals.",
+      "neutral": "Limited surprise \u2014 metals may chop; prefer confirmation."
+    },
+    "XAGUSD": {
+      "displayName": "Silver",
+      "bullish": "USD weakness / dovish surprise historically supports metals.",
+      "bearish": "USD strength / hotter inflation surprise historically pressures metals.",
+      "neutral": "Limited surprise \u2014 metals may chop; prefer confirmation."
+    },
+    "BTCUSD": {
+      "displayName": "BTC",
+      "bullish": "Dovish / risk-on USD impulse can support crypto beta.",
+      "bearish": "Hawkish USD / tighter financial conditions often pressure crypto.",
+      "neutral": "Macro impulse unclear \u2014 crypto may follow risk sentiment instead."
+    },
+    "ETHUSD": {
+      "displayName": "ETH",
+      "bullish": "Dovish / risk-on USD impulse can support crypto beta.",
+      "bearish": "Hawkish USD / tighter financial conditions often pressure crypto.",
+      "neutral": "Macro impulse unclear \u2014 crypto may follow risk sentiment instead."
+    },
+    "EURUSD": {
+      "displayName": "EURUSD",
+      "bullish": "USD weakness typically lifts this pair (USD is quote).",
+      "bearish": "USD strength typically weighs on this pair.",
+      "neutral": "Inline print \u2014 range trade risk high until direction confirms."
+    },
+    "GBPUSD": {
+      "displayName": "GBPUSD",
+      "bullish": "USD weakness typically lifts this pair (USD is quote).",
+      "bearish": "USD strength typically weighs on this pair.",
+      "neutral": "Inline print \u2014 range trade risk high until direction confirms."
+    },
+    "AUDUSD": {
+      "displayName": "AUDUSD",
+      "bullish": "USD weakness typically lifts this pair (USD is quote).",
+      "bearish": "USD strength typically weighs on this pair.",
+      "neutral": "Inline print \u2014 range trade risk high until direction confirms."
+    },
+    "NZDUSD": {
+      "displayName": "NZDUSD",
+      "bullish": "USD weakness typically lifts this pair (USD is quote).",
+      "bearish": "USD strength typically weighs on this pair.",
+      "neutral": "Inline print \u2014 range trade risk high until direction confirms."
+    },
+    "USDJPY": {
+      "displayName": "USDJPY",
+      "bullish": "USD strength typically lifts this pair (USD is base).",
+      "bearish": "USD weakness typically weighs on this pair.",
+      "neutral": "Inline print \u2014 wait for secondary confirmation before sizing."
+    },
+    "USDCHF": {
+      "displayName": "USDCHF",
+      "bullish": "USD strength typically lifts this pair (USD is base).",
+      "bearish": "USD weakness typically weighs on this pair.",
+      "neutral": "Inline print \u2014 wait for secondary confirmation before sizing."
+    },
+    "USDCAD": {
+      "displayName": "USDCAD",
+      "bullish": "USD strength typically lifts this pair (USD is base).",
+      "bearish": "USD weakness typically weighs on this pair.",
+      "neutral": "Inline print \u2014 wait for secondary confirmation before sizing."
+    },
+    "US30": {
+      "displayName": "US30",
+      "bullish": "Dovish surprise / softer inflation can support equity risk.",
+      "bearish": "Hotter inflation / hawkish surprise can pressure rate-sensitive equities.",
+      "neutral": "Inline data \u2014 indices may fade the first move; wait for breadth."
+    },
+    "NAS100": {
+      "displayName": "NAS100",
+      "bullish": "Dovish surprise / softer inflation can support equity risk.",
+      "bearish": "Hotter inflation / hawkish surprise can pressure rate-sensitive equities.",
+      "neutral": "Inline data \u2014 indices may fade the first move; wait for breadth."
+    },
+    "SPX500": {
+      "displayName": "SPX500",
+      "bullish": "Dovish surprise / softer inflation can support equity risk.",
+      "bearish": "Hotter inflation / hawkish surprise can pressure rate-sensitive equities.",
+      "neutral": "Inline data \u2014 indices may fade the first move; wait for breadth."
+    }
+  }
+}

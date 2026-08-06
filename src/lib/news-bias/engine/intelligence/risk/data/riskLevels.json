@@ -1,0 +1,22 @@
+{
+  "levels": [
+    { "id": "low", "label": "Low", "maxScore": 40 },
+    { "id": "medium", "label": "Medium", "maxScore": 60 },
+    { "id": "high", "label": "High", "maxScore": 80 },
+    { "id": "very-high", "label": "Very High", "maxScore": 100 }
+  ],
+  "reasons": {
+    "low": "Liquidity and historical consistency support a controlled risk profile.",
+    "medium": "Typical news volatility — size for a standard two-sided spike.",
+    "high": "Elevated surprise and impact raise slippage and fake-out risk.",
+    "very-high": "Extreme surprise / thin confirmation — prefer wait or micro size."
+  },
+  "boosts": {
+    "extremeStrength": 25,
+    "strongStrength": 15,
+    "highImpact": 12,
+    "veryHighImpact": 20,
+    "lowReliability": 15,
+    "estimate": 8
+  }
+}

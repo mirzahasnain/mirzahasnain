@@ -1,0 +1,15 @@
+{
+  "templates": {
+    "exceeded": "Today's {news} significantly exceeded market expectations.",
+    "missed": "Today's {news} significantly missed market expectations.",
+    "inline": "Today's {news} came in roughly in line with expectations.",
+    "estimate": "Using an estimated outcome for {news} until actual numbers are confirmed.",
+    "usdStrong": "Historically this type of surprise has strengthened USD.",
+    "usdWeak": "Historically this type of surprise has weakened USD.",
+    "usdFlat": "Historically USD reaction is mixed for this profile.",
+    "histAsset": "{asset} has moved {direction} in {pct}% of similar releases.",
+    "confidenceHigh": "Confidence remains high.",
+    "confidenceMedium": "Confidence is moderate — wait for confirmation if unsure.",
+    "confidenceLow": "Confidence is limited — prefer Wait or Avoid."
+  }
+}
