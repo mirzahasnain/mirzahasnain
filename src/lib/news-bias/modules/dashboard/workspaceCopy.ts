@@ -22,15 +22,15 @@ export const WORKSPACE_COPY = {
   },
   watchlist: {
     hint: "Pin assets — only pinned names appear on the dashboard.",
-    empty: "Pin Gold, Silver, BTC, or EURUSD to populate the desk.",
+    empty: "Your watchlist is empty. Pin Gold, Silver, BTC, or EURUSD to start.",
   },
   oneClick: {
     hint: "Tap today's event — biases for your watchlist appear instantly.",
-    empty: "No focus event yet.",
+    empty: "No focus event yet. Open Calendar when the next release is listed.",
     confidence: "Confidence",
   },
   journal: {
-    empty: "No journal entries yet.",
+    empty: "No journal entries yet. Log a trade after your next analysis.",
     add: "Add entry",
     entry: "Entry",
     sl: "SL",
@@ -48,14 +48,15 @@ export const WORKSPACE_COPY = {
   },
   search: {
     placeholder: "Search Gold, CPI, NFP, BTC, EURUSD…",
-    empty: "No matches.",
+    empty: "No matches. Try a pair (EURUSD) or release (CPI, NFP).",
+    hint: "Search news, pairs, and workspace shortcuts.",
   },
   market: {
     open: "Market Open",
     closed: "Market Closed",
   },
   notifications: {
-    empty: "No notifications yet.",
+    empty: "No notifications yet. Enable prefs in Settings to stay ready.",
     markAll: "Mark all read",
     upcoming: "Upcoming News",
     released: "Released",
@@ -67,7 +68,15 @@ export const WORKSPACE_COPY = {
     defaultPair: "Default Pair",
     defaultNews: "Default News",
     notificationPrefs: "Notification Preferences",
+    hint: "Defaults apply to one-click analysis and the Analyze flow.",
   },
+  onboarding: {
+    title: "Get started",
+    body: "Pin a watchlist asset, then open Analyze or tap today’s release for a bias.",
+    ctaAnalyze: "Open Analyze",
+    ctaCalendar: "Open Calendar",
+  },
+  recentEmpty: "No recent analysis yet. Run Analyze to populate this list.",
   quick: {
     analyze: "Analyze",
     calendar: "Calendar",

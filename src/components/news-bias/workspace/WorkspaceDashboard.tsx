@@ -21,6 +21,7 @@ import { useWorkspaceDashboard } from "@/lib/news-bias/modules/dashboard/useWork
 import { buildAnalysis } from "@/lib/news-bias/logic";
 import { pairIdForWatchAsset } from "@/lib/news-bias/modules/preferences";
 import type { NewsEventId, PairId } from "@/lib/news-bias/types/interfaces";
+import Link from "next/link";
 import { useMemo } from "react";
 
 export function WorkspaceDashboard() {
@@ -65,7 +66,7 @@ export function WorkspaceDashboard() {
       <WorkspaceShell offline={desk.offline}>
         {desk.error ? (
           <CalendarState
-            title="Unavailable"
+            title="Workspace unavailable"
             message={WORKSPACE_COPY.unavailable}
             actionLabel={WORKSPACE_COPY.retry}
             onAction={() => void desk.refresh()}
@@ -73,14 +74,49 @@ export function WorkspaceDashboard() {
         ) : null}
 
         {desk.isLoading && desk.events.length === 0 ? (
-          <div className="space-y-3" aria-busy>
+          <div
+            className="space-y-3"
+            role="status"
+            aria-busy="true"
+            aria-label="Loading workspace"
+          >
             {Array.from({ length: 4 }, (_, i) => (
               <div
                 key={i}
                 className="h-24 animate-pulse rounded-2xl bg-nb-elevated"
+                aria-hidden
               />
             ))}
+            <span className="sr-only">Loading workspace…</span>
           </div>
+        ) : null}
+
+        {!desk.isLoading &&
+        desk.pinned.length === 0 &&
+        desk.recentAnalysis.length === 0 ? (
+          <section
+            aria-label={WORKSPACE_COPY.onboarding.title}
+            className="rounded-2xl border border-dashed border-nb-border bg-nb-surface/60 px-4 py-5"
+          >
+            <h2 className="text-sm font-semibold text-nb-text">
+              {WORKSPACE_COPY.onboarding.title}
+            </h2>
+            <p className="mt-1 text-sm text-nb-muted">{WORKSPACE_COPY.onboarding.body}</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Link
+                href="/news-bias"
+                className="inline-flex min-h-11 items-center rounded-full border border-nb-accent/50 bg-nb-accent/10 px-4 text-sm font-semibold text-nb-text focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
+              >
+                {WORKSPACE_COPY.onboarding.ctaAnalyze}
+              </Link>
+              <Link
+                href="/calendar"
+                className="inline-flex min-h-11 items-center rounded-full border border-nb-border px-4 text-sm font-semibold text-nb-muted hover:text-nb-text focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
+              >
+                {WORKSPACE_COPY.onboarding.ctaCalendar}
+              </Link>
+            </div>
+          </section>
         ) : null}
 
         <GlobalSearch

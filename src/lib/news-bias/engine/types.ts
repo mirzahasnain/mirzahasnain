@@ -10,8 +10,7 @@ import type {
 
 /** How a numeric surprise maps onto USD bias. */
 export type NewsInterpretation =
-  | "higher_is_usd_bullish"
-  | "higher_is_usd_bearish";
+  "higher_is_usd_bullish" | "higher_is_usd_bearish" | "hawkish_is_usd_bullish";
 
 export type ToneMode = "numeric" | "hawkish_dovish";
 

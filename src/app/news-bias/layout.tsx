@@ -4,12 +4,12 @@ import { AppProviders } from "@/components/system";
 import { THEME_BOOTSTRAP_SCRIPT } from "@/lib/news-bias/utils/theme";
 
 export const metadata: Metadata = {
-  title: "News Bias Tool",
+  title: "Analyze",
   description:
     "Three taps to a trading bias: pick a high-impact economic release, a trading pair and how the actual landed against the forecast.",
   openGraph: {
-    title: "News Bias Tool",
-    description: "Three taps to a trading bias.",
+    title: "TradeImpact Analyze",
+    description: "Know the Impact Before You Trade.",
   },
   robots: { index: true, follow: true },
 };

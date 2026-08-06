@@ -31,6 +31,7 @@ import type {
   TradeImpactIntelligence,
   WhyFactor,
 } from "./intelligence/types";
+import { applyScoreModifier, lookupRulesEngine } from "@/engine/shared/rulesBridge";
 
 export interface IntelligenceInput {
   newsId: NewsEventId;
@@ -39,9 +40,7 @@ export interface IntelligenceInput {
   historicalIntelligence: HistoricalIntelligence | null;
 }
 
-export function runIntelligenceEngine(
-  input: IntelligenceInput,
-): TradeImpactIntelligence {
+export function runIntelligenceEngine(input: IntelligenceInput): TradeImpactIntelligence {
   const rule = getNewsRule(input.newsId);
   const decision = input.decision;
   const intel = input.historicalIntelligence;
@@ -49,23 +48,25 @@ export function runIntelligenceEngine(
   const assetLabel = pair?.displayName ?? input.pairId;
 
   const historicalMatch = buildHistoricalMatch(intel, input.pairId);
-  const histScore = historicalMatchScore(
-    historicalMatch,
-    intel?.confidenceScore ?? null,
-  );
+  const histScore = historicalMatchScore(historicalMatch, intel?.confidenceScore ?? null);
 
-  const correlation = buildCorrelationSnapshot(
-    decision.usdDirection,
-    input.pairId,
-  );
+  const correlation = buildCorrelationSnapshot(decision.usdDirection, input.pairId);
 
-  const score = computeTradeImpactScore({
+  const scoreBase = computeTradeImpactScore({
     historicalMatch: histScore,
     surpriseStrength: decision.surprise.strength,
     newsImportance: rule.importance,
     marketCorrelation: correlation.alignmentScore,
     impact: decision.surprise.impact,
   });
+  const rulesBridge = lookupRulesEngine(input.newsId);
+  const score = {
+    ...scoreBase,
+    total: applyScoreModifier(
+      scoreBase.total,
+      rulesBridge?.modifiers.tradeImpactScoreModifier ?? 1,
+    ),
+  };
 
   const reliability = computeReliabilityMeter(
     rule.historicalReliability,
@@ -83,17 +84,18 @@ export function runIntelligenceEngine(
   });
 
   const selectedAsset =
-    intel?.assets.find((a) =>
-      a.key ===
-      (input.pairId === "XAUUSD"
-        ? "gold"
-        : input.pairId === "EURUSD"
-          ? "eurusd"
-          : input.pairId === "XAGUSD"
-            ? "silver"
-            : input.pairId === "BTCUSD"
-              ? "btc"
-              : "gold"),
+    intel?.assets.find(
+      (a) =>
+        a.key ===
+        (input.pairId === "XAUUSD"
+          ? "gold"
+          : input.pairId === "EURUSD"
+            ? "eurusd"
+            : input.pairId === "XAGUSD"
+              ? "silver"
+              : input.pairId === "BTCUSD"
+                ? "btc"
+                : "gold"),
     ) ?? intel?.assets[0];
 
   const scenarios = buildScenarios({

@@ -30,4 +30,40 @@ describe("runTradeImpactBrain", () => {
     expect(typeof result.historical).toBe("object");
     expect(typeof result.decision).toBe("object");
   });
+
+  it("wires Rules Engine provenance and modifiers for CPI", () => {
+    const result = runTradeImpactBrain(mockHotCpiGoldBrainInput);
+    expect(result.meta.rules?.ruleId).toBe("cpi");
+    expect(result.meta.modifiers.tradeImpactScoreModifier).toBeGreaterThan(1);
+    expect(result.meta.modifiers.confidenceModifier).toBeGreaterThan(1);
+  });
+
+  it("resolves Rules Engine alias ids (fomc → fomc-statement)", () => {
+    const result = runTradeImpactBrain({
+      newsId: "fomc",
+      forecast: null,
+      previous: null,
+      actual: null,
+      outcome: "beat",
+      pairId: "EURUSD",
+      mode: "post_release",
+    });
+    expect(result.newsRule.id).toBe("fomc-statement");
+    expect(result.newsRule.interpretation).toBe("hawkish_is_usd_bullish");
+    expect(result.usdBias).toBe("bullish");
+    expect(result.meta.rules?.ruleId).toBe("fomc");
+  });
+
+  it("maps AUDUSD correctly through the full Brain", () => {
+    const result = runTradeImpactBrain({
+      newsId: "cpi",
+      forecast: 3.0,
+      previous: 2.9,
+      actual: 3.4,
+      pairId: "AUDUSD",
+      mode: "post_release",
+    });
+    expect(result.usdBias).toBe("bullish");
+    expect(result.correlation.pairDirection).toBe("bearish");
+  });
 });

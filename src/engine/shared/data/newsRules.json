@@ -81,11 +81,33 @@
     "label": "FOMC",
     "importance": 99,
     "historicalReliability": 85,
-    "interpretation": "higher_is_usd_bullish",
+    "interpretation": "hawkish_is_usd_bullish",
     "toneMode": "hawkish_dovish",
     "higherLabel": "Hawkish",
     "lowerLabel": "Dovish",
     "riskWarning": "FOMC reactions can reverse on the press conference. Scale in only after the initial spike settles."
+  },
+  "adp": {
+    "id": "adp",
+    "label": "ADP",
+    "importance": 68,
+    "historicalReliability": 62,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "ADP often diverges from NFP. Treat as a secondary labor signal and avoid oversized entries."
+  },
+  "jolts": {
+    "id": "jolts",
+    "label": "JOLTS",
+    "importance": 82,
+    "historicalReliability": 76,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "JOLTS can move USD but often fades into NFP week. Prefer confirmation from other labor prints."
   },
   "ism-manufacturing-pmi": {
     "id": "ism-manufacturing-pmi",

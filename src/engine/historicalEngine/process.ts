@@ -1,4 +1,5 @@
 import historicalJson from "./data/historicalMoves.json";
+import { toBrainEventId } from "../shared/eventIdAliases";
 import { clamp } from "../shared/math";
 import type { HistoricalInput, HistoricalResult } from "./types";
 
@@ -17,7 +18,8 @@ interface NewsStats {
 const DATA = historicalJson as Record<string, NewsStats>;
 
 export function processHistorical(input: HistoricalInput): HistoricalResult {
-  const news = DATA[input.newsId];
+  const newsId = toBrainEventId(input.newsId);
+  const news = DATA[newsId] ?? DATA[input.newsId];
   if (!news) {
     return {
       newsId: input.newsId,

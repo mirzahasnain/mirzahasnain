@@ -20,15 +20,7 @@ export function buildExplanation(input: {
   forecast: number | null;
   actual: number | null;
 }): string[] {
-  const {
-    rule,
-    surprise,
-    usdDirection,
-    playbook,
-    confidence,
-    forecast,
-    actual,
-  } = input;
+  const { rule, surprise, usdDirection, playbook, confidence, forecast, actual } = input;
   const lines: string[] = [];
 
   lines.push(buildLead(rule, surprise, forecast, actual));
@@ -59,15 +51,11 @@ function buildLead(
   }
 
   if (rule.toneMode === "hawkish_dovish") {
-    const tone =
-      surprise.sign === "positive" ? "hawkish" : "dovish";
+    const tone = surprise.sign === "positive" ? "hawkish" : "dovish";
     return `Today's ${rule.label} was interpreted as ${tone} relative to expectations.`;
   }
 
-  const verb =
-    surprise.sign === "positive"
-      ? "exceeded"
-      : "fell short of";
+  const verb = surprise.sign === "positive" ? "exceeded" : "fell short of";
 
   if (forecast !== null && actual !== null) {
     return `Today's ${rule.label} ${verb} market expectations (${formatNumber(actual)} vs ${formatNumber(forecast)}${surprise.difference !== null ? `, surprise ${formatSurprise(surprise.difference)}` : ""}).`;
@@ -102,10 +90,7 @@ function buildPolicyLine(
     : "The softer print strengthens expectations of easier monetary policy, which is generally negative for the US Dollar.";
 }
 
-function buildPairLine(
-  playbook: TradePlaybook,
-  usdDirection: Direction,
-): string {
+function buildPairLine(playbook: TradePlaybook, usdDirection: Direction): string {
   if (playbook.direction === "wait") {
     return `${playbook.displayName} has no actionable edge from this release.`;
   }
@@ -133,8 +118,7 @@ export function buildSummaryReason(input: {
 }): string {
   if (input.playbook.direction === "wait") return input.playbook.reason;
 
-  const usd =
-    input.usdDirection === "bullish" ? "Strong USD" : "Soft USD";
+  const usd = input.usdDirection === "bullish" ? "Strong USD" : "Soft USD";
   const tone =
     input.surprise.sign === "positive"
       ? input.rule.higherLabel.toLowerCase()
@@ -144,8 +128,7 @@ export function buildSummaryReason(input: {
     return `${usd} after ${tone} ${input.rule.label}.`;
   }
 
-  const surpriseWord =
-    input.surprise.sign === "positive" ? "positive" : "negative";
+  const surpriseWord = input.surprise.sign === "positive" ? "positive" : "negative";
   return `${usd} after ${surpriseWord} ${input.rule.label} surprise.`;
 }
 
@@ -165,13 +148,14 @@ export function describeHistorical(
 }
 
 /** Maps a raw surprise sign through the news rule into USD direction. */
-export function usdDirectionFromRule(
-  rule: NewsRule,
-  sign: SurpriseSign,
-): Direction {
+export function usdDirectionFromRule(rule: NewsRule, sign: SurpriseSign): Direction {
   if (sign === "flat") return "neutral";
 
-  if (rule.interpretation === "higher_is_usd_bullish") {
+  const bullishOnPositive =
+    rule.interpretation === "higher_is_usd_bullish" ||
+    rule.interpretation === "hawkish_is_usd_bullish";
+
+  if (bullishOnPositive) {
     return sign === "positive" ? "bullish" : "bearish";
   }
 

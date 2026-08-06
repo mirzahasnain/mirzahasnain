@@ -18,15 +18,18 @@ export default function GlobalErrorPage({
   }, [error]);
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center">
-      <p className="text-sm uppercase tracking-widest text-slate-500">Error</p>
-      <h1 className="text-2xl font-semibold text-slate-100">Something went wrong</h1>
-      <p className="text-sm text-slate-400">{error.message}</p>
-      <p className="text-xs text-slate-500">{application.disclaimer}</p>
+    <main className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center gap-4 px-4 text-center text-nb-text">
+      <p className="text-sm uppercase tracking-widest text-nb-faint">Error</p>
+      <h1 className="text-2xl font-semibold text-nb-text">Something went wrong</h1>
+      <p className="text-sm text-nb-muted">
+        {error.message ||
+          "We could not load this screen. Your data on this device is unchanged."}
+      </p>
+      <p className="text-xs text-nb-faint">{application.disclaimer}</p>
       <button
         type="button"
         onClick={reset}
-        className="rounded-md bg-sky-500 px-4 py-2 text-sm font-medium text-slate-950"
+        className="min-h-11 rounded-full bg-nb-accent px-5 text-sm font-semibold text-nb-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
       >
         Try again
       </button>

@@ -1,5 +1,14 @@
 import type { BrainNewsInput } from "../shared/types";
 import { getNewsRule } from "../shared/newsRules";
+import {
+  applyConfidenceModifier,
+  applyRiskScoreModifier,
+  applyScoreModifier,
+  identityModifiers,
+  lookupRulesEngine,
+  type RulesModifiers,
+  type RulesProvenance,
+} from "../shared/rulesBridge";
 import { processSurprise } from "../surpriseEngine";
 import type { SurpriseResult } from "../surpriseEngine";
 import { processConfidence } from "../confidenceEngine";
@@ -20,7 +29,8 @@ import { processDecision } from "../decisionEngine";
 import type { DecisionResult } from "../decisionEngine";
 import { processPlaybook } from "../playbookEngine";
 import type { PlaybookResult } from "../playbookEngine";
-import type { NewsRule } from "../shared/types";
+import type { NewsRule, RiskLevel } from "../shared/types";
+import riskJson from "../riskEngine/data/riskLevels.json";
 
 /**
  * Full TradeImpact Brain output — every field is a structured object.
@@ -42,6 +52,8 @@ export interface BrainResult {
     executionOrder: string[];
     modelVersion: string;
     mode: "pre_release" | "post_release";
+    rules: RulesProvenance | null;
+    modifiers: RulesModifiers;
   };
 }
 
@@ -49,6 +61,7 @@ export type BrainInput = BrainNewsInput;
 
 const EXECUTION_ORDER = [
   "newsRule",
+  "rulesBridge",
   "surprise",
   "usdBias",
   "correlation",
@@ -62,6 +75,33 @@ const EXECUTION_ORDER = [
   "playbook",
 ] as const;
 
+interface RiskBandConfig {
+  levels: { id: RiskLevel; label: string; maxScore: number }[];
+  reasons: Record<RiskLevel, string>;
+}
+
+const RISK_BANDS = riskJson as RiskBandConfig;
+
+const SUGGESTED: Record<RiskLevel, number> = {
+  low: 1.5,
+  medium: 1.0,
+  high: 0.75,
+  "very-high": 0,
+};
+
+function rebandRisk(score: number, baseWhy: string): RiskResult {
+  const level =
+    RISK_BANDS.levels.find((l) => score <= l.maxScore) ??
+    RISK_BANDS.levels[RISK_BANDS.levels.length - 1];
+  return {
+    level: level.id,
+    label: level.label,
+    why: RISK_BANDS.reasons[level.id] ?? baseWhy,
+    score,
+    suggestedRiskPct: SUGGESTED[level.id],
+  };
+}
+
 /**
  * TradeImpact Brain orchestrator.
  * Pure function — no React, no network, no UI.
@@ -70,6 +110,8 @@ const EXECUTION_ORDER = [
  * News → Rule → Forecast/Actual → Surprise → USD Bias → Correlation →
  * Affected Assets → Historical Match → Confidence → Volatility →
  * Risk → Score → Decision → Playbook
+ *
+ * Rules Engine modifiers are applied after core scoring (MVP wiring).
  */
 export function runTradeImpactBrain(input: BrainInput): BrainResult {
   const mode: "pre_release" | "post_release" =
@@ -79,6 +121,8 @@ export function runTradeImpactBrain(input: BrainInput): BrainResult {
       : "post_release");
 
   const newsRule = getNewsRule(input.newsId);
+  const rulesBridge = lookupRulesEngine(input.newsId);
+  const modifiers = rulesBridge?.modifiers ?? identityModifiers();
 
   const surprise = processSurprise({
     forecast: input.forecast,
@@ -99,18 +143,22 @@ export function runTradeImpactBrain(input: BrainInput): BrainResult {
     surpriseSign: surprise.sign,
   });
 
-  const confidence = processConfidence({
+  let confidence = processConfidence({
     rule: newsRule,
     strength: surprise.strength,
     isEstimate: surprise.isEstimate,
   });
+  confidence = {
+    ...confidence,
+    score: applyConfidenceModifier(confidence.score, modifiers.confidenceModifier),
+  };
 
   const volatility = processVolatility({
     impact: surprise.impact,
     strength: surprise.strength,
   });
 
-  const score = processScore({
+  let score = processScore({
     historicalMatch: historical.historicalMatchScore,
     surpriseStrength: surprise.strength,
     newsImportance: newsRule.importance,
@@ -119,14 +167,19 @@ export function runTradeImpactBrain(input: BrainInput): BrainResult {
     ruleHistoricalReliability: newsRule.historicalReliability,
     cohortConfidence: historical.cohortConfidence,
   });
+  score = {
+    ...score,
+    total: applyScoreModifier(score.total, modifiers.tradeImpactScoreModifier),
+  };
 
-  const risk = processRisk({
+  let risk = processRisk({
     impact: surprise.impact,
     strength: surprise.strength,
     reliability: score.reliability.level,
     isEstimate: surprise.isEstimate,
     volatilityBand: volatility.band,
   });
+  risk = rebandRisk(applyRiskScoreModifier(risk.score, modifiers.riskModifier), risk.why);
 
   const scenario = processScenario({
     pairId: input.pairId,
@@ -157,7 +210,8 @@ export function runTradeImpactBrain(input: BrainInput): BrainResult {
       surprise.impact === "high" ||
       surprise.impact === "very-high" ||
       volatility.band === "high" ||
-      volatility.band === "extreme",
+      volatility.band === "extreme" ||
+      modifiers.fakeSpikeProbability >= 0.55,
   });
 
   return {
@@ -177,6 +231,8 @@ export function runTradeImpactBrain(input: BrainInput): BrainResult {
       executionOrder: [...EXECUTION_ORDER],
       modelVersion: score.modelVersion,
       mode,
+      rules: rulesBridge?.provenance ?? null,
+      modifiers,
     },
   };
 }

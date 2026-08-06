@@ -14,7 +14,10 @@ export function CalendarState({
   onAction,
 }: CalendarStateProps) {
   return (
-    <div className="nb-fade rounded-xl border border-dashed border-nb-border px-5 py-10 text-center">
+    <div
+      role="status"
+      className="nb-fade rounded-xl border border-dashed border-nb-border px-5 py-10 text-center"
+    >
       <p className="text-sm font-semibold text-nb-text">{title}</p>
       <p className="mt-2 text-sm text-nb-muted">{message}</p>
       {actionLabel && onAction ? (

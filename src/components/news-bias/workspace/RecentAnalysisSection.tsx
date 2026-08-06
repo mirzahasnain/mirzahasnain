@@ -17,13 +17,14 @@ export function RecentAnalysisSection({ entries }: RecentAnalysisSectionProps) {
         {WORKSPACE_COPY.sections.recent}
       </h2>
       {entries.length === 0 ? (
-        <p className="mt-3 text-sm text-nb-muted">No recent analysis yet.</p>
+        <p role="status" className="mt-3 text-sm text-nb-muted">
+          {WORKSPACE_COPY.recentEmpty}
+        </p>
       ) : (
         <ul className="mt-3 space-y-2">
           {entries.map((entry) => {
             const news =
-              NEWS_EVENTS.find((n) => n.id === entry.eventId)?.label ??
-              entry.eventId;
+              NEWS_EVENTS.find((n) => n.id === entry.eventId)?.label ?? entry.eventId;
             const pair =
               TRADING_PAIRS.find((p) => p.id === entry.pairId)?.displayName ??
               entry.pairId;

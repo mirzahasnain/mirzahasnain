@@ -5,7 +5,7 @@ implementations under `src/lib/news-bias` and presentational UI under
 `src/components/news-bias` (no UI redesign).
 
 ```text
-docs/                         # PRD, ENGINE, API, architecture, sprint reports
+docs/                         # PRD, ENGINE, API, architecture, sprint + MVP reports
 src/
   app/                        # Next.js App Router (routes + API)
     api/economic-calendar/    # Calendar BFF (secrets server-side)
@@ -18,8 +18,8 @@ src/
     ui/ti/                    # TradeImpact primitives on nb-* tokens
   config/                     # application, environment, constants, routes,
                               # newsRules, pairMappings
-  engine/                     # Decision / confidence / correlation / risk /
-                              # playbook / score facades
+  engine/                     # TradeImpact Brain (orchestrator + modules)
+  rules/                      # Rules Engine IP (JSON + registry/resolver)
   features/                   # Feature barrels (calendar, analysis, …)
   hooks/                      # Shared hooks + domain hooks
   providers/                  # BaseProvider, MockProvider, ProviderFactory
@@ -40,7 +40,8 @@ src/
 | Need                 | Import from           |
 | -------------------- | --------------------- |
 | Product config       | `@/config`            |
-| Engines (new code)   | `@/engine`            |
+| Brain (new code)     | `@/engine`            |
+| Rules Engine         | `@/rules`             |
 | Providers (new code) | `@/providers`         |
 | Domain state         | `@/state`             |
 | Shared types         | `@/types`             |
@@ -50,6 +51,7 @@ src/
 ## Rules
 
 1. **No business logic in UI components.**
-2. Prefer facades (`@/engine`, `@/providers`) for new modules.
+2. Prefer facades (`@/engine`, `@/providers`, `@/rules`) for new modules.
 3. Do not fork a new design system — extend `nb-*`.
 4. Legacy V6 calendar provider stubs are deprecated for new callers.
+5. Event ids must resolve through `eventIdAliases` (Brain ↔ Rules).

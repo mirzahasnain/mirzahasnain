@@ -38,6 +38,10 @@ Canonical intelligence database: **`src/rules/**`**
 
 The Brain (`src/engine`) computes decisions; the Rules Engine stores the firm’s configurable market intelligence.
 
+**MVP wiring:** `runTradeImpactBrain` resolves event ids via aliases, looks up
+`src/rules` through `rulesBridge`, applies confidence / score / risk modifiers,
+and records rule provenance on `meta.rules`.
+
 ## Decision engines
 
 Canonical public surface: **`src/engine/**` (TradeImpact Brain)**

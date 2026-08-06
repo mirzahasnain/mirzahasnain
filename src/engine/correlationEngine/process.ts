@@ -59,13 +59,19 @@ export function processCorrelation(input: CorrelationInput): CorrelationResult {
   };
 }
 
-/** USD bias from news rule + surprise sign. */
+/** USD bias from news rule + surprise sign (incl. FOMC hawkish/dovish). */
 export function resolveUsdBias(
-  interpretation: "higher_is_usd_bullish" | "higher_is_usd_bearish",
+  interpretation:
+    "higher_is_usd_bullish" | "higher_is_usd_bearish" | "hawkish_is_usd_bullish",
   surpriseSign: "positive" | "negative" | "flat",
 ): BiasDirection {
   if (surpriseSign === "flat") return "neutral";
-  const higherBullish = interpretation === "higher_is_usd_bullish";
-  if (surpriseSign === "positive") return higherBullish ? "bullish" : "bearish";
-  return higherBullish ? "bearish" : "bullish";
+  // Hawkish surprise ≈ USD bullish (same polarity as higher_is_usd_bullish).
+  const bullishOnPositive =
+    interpretation === "higher_is_usd_bullish" ||
+    interpretation === "hawkish_is_usd_bullish";
+  if (surpriseSign === "positive") {
+    return bullishOnPositive ? "bullish" : "bearish";
+  }
+  return bullishOnPositive ? "bearish" : "bullish";
 }

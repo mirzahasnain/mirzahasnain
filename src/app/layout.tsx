@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Orbitron } from "next/font/google";
+import { application } from "@/config/application";
 import "./globals.css";
 
 const inter = Inter({
@@ -15,18 +16,15 @@ const orbitron = Orbitron({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://nibbo.fun"),
-  title: "NIBBO | Born Weird. Built to Meme.",
-  description:
-    "NIBBO is a mysterious little creature from another galaxy that landed on Solana to spread memes, fun, and community.",
-  openGraph: {
-    title: "NIBBO | Born Weird. Built to Meme.",
-    description:
-      "A Solana meme coin powered by weirdness, community, and cosmic vibes.",
-    images: ["/nibbo-mascot.png"],
+  metadataBase: new URL("https://tradeimpact.app"),
+  title: {
+    default: `${application.name} | ${application.tagline}`,
+    template: `%s | ${application.name}`,
   },
-  icons: {
-    icon: "/nibbo-mascot.png",
+  description: application.disclaimer,
+  openGraph: {
+    title: application.name,
+    description: application.tagline,
   },
 };
 

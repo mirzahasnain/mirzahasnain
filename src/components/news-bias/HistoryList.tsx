@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  DETAILS_COPY,
-  DIRECTION_LABELS,
-  EMPTY_VALUE,
-} from "@/lib/news-bias/constants";
+import { DETAILS_COPY, DIRECTION_LABELS, EMPTY_VALUE } from "@/lib/news-bias/constants";
 import { buildAnalysis } from "@/lib/news-bias/logic";
-import type {
-  Direction,
-  HistoryEntry,
-} from "@/lib/news-bias/types/interfaces";
+import type { Direction, HistoryEntry } from "@/lib/news-bias/types/interfaces";
 import { formatSurprise } from "@/lib/news-bias/utils/calculateSurprise";
 
 interface HistoryListProps {
@@ -31,6 +24,14 @@ const TIME_FORMAT: Intl.DateTimeFormatOptions = {
 };
 
 export function HistoryList({ entries, onOpen }: HistoryListProps) {
+  if (entries.length === 0) {
+    return (
+      <p role="status" className="text-sm text-nb-muted">
+        {DETAILS_COPY.history.empty}
+      </p>
+    );
+  }
+
   return (
     <ul className="space-y-2">
       {entries.map((entry) => {
@@ -45,18 +46,15 @@ export function HistoryList({ entries, onOpen }: HistoryListProps) {
               type="button"
               onClick={() => onOpen(entry)}
               aria-label={`${DETAILS_COPY.history.reopen}: ${analysis.event.label}, ${analysis.pair.label}`}
-              className="flex w-full items-center justify-between gap-3 rounded-xl border border-nb-border bg-nb-elevated px-4 py-3 text-left hover:border-nb-border-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
+              className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-nb-border bg-nb-elevated px-4 py-3 text-left hover:border-nb-border-strong focus:outline-none focus-visible:ring-2 focus-visible:ring-nb-accent/70"
             >
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold text-nb-text">
                   {analysis.event.label}
                 </span>
-                <span className="block truncate text-xs text-nb-text0">
+                <span className="block truncate text-xs text-nb-muted">
                   {analysis.pair.label} ·{" "}
-                  {new Date(entry.savedAt).toLocaleString(
-                    undefined,
-                    TIME_FORMAT,
-                  )}
+                  {new Date(entry.savedAt).toLocaleString(undefined, TIME_FORMAT)}
                 </span>
               </span>
               <span className="shrink-0 text-right">

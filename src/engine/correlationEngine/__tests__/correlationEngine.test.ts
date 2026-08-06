@@ -12,4 +12,24 @@ describe("correlationEngine", () => {
   it("resolves inverted unemployment logic", () => {
     expect(resolveUsdBias("higher_is_usd_bearish", "positive")).toBe("bearish");
   });
+
+  it("resolves hawkish FOMC as USD bullish", () => {
+    expect(resolveUsdBias("hawkish_is_usd_bullish", "positive")).toBe("bullish");
+    expect(resolveUsdBias("hawkish_is_usd_bullish", "negative")).toBe("bearish");
+  });
+
+  it("maps AUDUSD and NZDUSD when USD rises", () => {
+    const aud = processCorrelation({
+      usdDirection: "bullish",
+      selectedPairId: "AUDUSD",
+    });
+    const nzd = processCorrelation({
+      usdDirection: "bullish",
+      selectedPairId: "NZDUSD",
+    });
+    expect(aud.pairDirection).toBe("bearish");
+    expect(nzd.pairDirection).toBe("bearish");
+    expect(aud.alignmentScore).toBeGreaterThan(50);
+    expect(nzd.alignmentScore).toBeGreaterThan(50);
+  });
 });

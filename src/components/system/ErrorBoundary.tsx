@@ -49,7 +49,10 @@ export class ErrorBoundary extends Component<Props, State> {
         <h1 className="text-xl font-semibold">
           {this.props.fallbackTitle ?? "Something went wrong"}
         </h1>
-        <p className="text-sm text-[var(--nb-muted)]">{this.state.message}</p>
+        <p className="text-sm text-[var(--nb-muted)]">
+          {this.state.message ||
+            "An unexpected error stopped this panel. Try again — your on-device history is unchanged."}
+        </p>
         <p className="text-xs text-[var(--nb-faint)]">{application.disclaimer}</p>
         <TiButton variant="primary" onClick={this.retry}>
           Try again

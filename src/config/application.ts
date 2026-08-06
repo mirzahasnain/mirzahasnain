@@ -5,7 +5,7 @@
 export const application = {
   name: "TradeImpact",
   tagline: "Know the Impact Before You Trade.",
-  version: "1.0.0-sprint1",
+  version: "1.0.0-mvp",
   marketingVersion: "13.0",
   scoreTrademark: "TradeImpact Score™",
   disclaimer:

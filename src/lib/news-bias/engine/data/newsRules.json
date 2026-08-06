@@ -81,7 +81,7 @@
     "label": "FOMC",
     "importance": 99,
     "historicalReliability": 85,
-    "interpretation": "higher_is_usd_bullish",
+    "interpretation": "hawkish_is_usd_bullish",
     "toneMode": "hawkish_dovish",
     "higherLabel": "Hawkish",
     "lowerLabel": "Dovish",

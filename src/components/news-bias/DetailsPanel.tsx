@@ -46,10 +46,7 @@ export function DetailsPanel({
   return (
     <>
       {analysis || hasInputs ? (
-        <DetailsSection
-          title={DETAILS_COPY.values.title}
-          hint={DETAILS_COPY.values.hint}
-        >
+        <DetailsSection title={DETAILS_COPY.values.title} hint={DETAILS_COPY.values.hint}>
           <ReleaseInputs
             values={inputs}
             onChange={onInputsChange}
@@ -73,9 +70,7 @@ export function DetailsPanel({
           </DetailsSection>
 
           {analysis.historicalIntelligence ? (
-            <HistoricalIntelligencePanel
-              intel={analysis.historicalIntelligence}
-            />
+            <HistoricalIntelligencePanel intel={analysis.historicalIntelligence} />
           ) : (
             <DetailsSection title={DETAILS_COPY.historical.title}>
               <HistoricalStatsPanel analysis={analysis} />
@@ -102,11 +97,11 @@ export function DetailsPanel({
         </>
       ) : null}
 
-      {history.length > 0 ? (
-        <DetailsSection
-          title={DETAILS_COPY.history.title}
-          hint={DETAILS_COPY.history.hint}
-          action={
+      <DetailsSection
+        title={DETAILS_COPY.history.title}
+        hint={DETAILS_COPY.history.hint}
+        action={
+          history.length > 0 ? (
             <button
               type="button"
               onClick={onClearHistory}
@@ -115,11 +110,11 @@ export function DetailsPanel({
               <Trash2 aria-hidden className="size-3.5" />
               {DETAILS_COPY.history.clear}
             </button>
-          }
-        >
-          <HistoryList entries={history} onOpen={onOpenEntry} />
-        </DetailsSection>
-      ) : null}
+          ) : undefined
+        }
+      >
+        <HistoryList entries={history} onOpen={onOpenEntry} />
+      </DetailsSection>
     </>
   );
 }

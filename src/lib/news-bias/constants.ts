@@ -12,8 +12,8 @@ import type {
 } from "./types/interfaces";
 
 export const APP = {
-  title: "News Bias Tool",
-  subtitle: "Three taps to a trading bias.",
+  title: "TradeImpact",
+  subtitle: "Know the Impact Before You Trade.",
   version: "Version 13.0",
   disclaimer: "Educational reference only. Not financial advice.",
 } as const;
@@ -58,12 +58,7 @@ export const NEWS_PRESET_IDS: NewsEventId[] = [
   "ism-manufacturing-pmi",
 ];
 
-export const FAVORITE_PAIR_IDS: PairId[] = [
-  "XAUUSD",
-  "XAGUSD",
-  "BTCUSD",
-  "EURUSD",
-];
+export const FAVORITE_PAIR_IDS: PairId[] = ["XAUUSD", "XAGUSD", "BTCUSD", "EURUSD"];
 
 export const GROUP_LABELS = {
   presets: "Quick picks",
@@ -125,14 +120,14 @@ export const DETAILS_COPY = {
     hint: "Your last 20 analyses, stored on this device.",
     clear: "Clear",
     reopen: "Reopen this analysis",
+    empty: "No saved analyses yet. Run an analysis to build your history.",
   },
 } as const;
 
 export const HISTORICAL_INTEL_COPY = {
   matchTitle: "Historical Match",
   similarFound: "Similar Releases Found",
-  empty:
-    "Enter Actual and Forecast to find similar historical releases for this news.",
+  empty: "Enter Actual and Forecast to find similar historical releases for this news.",
   noMatches: "No similar historical releases found in this surprise band.",
   probability: "Probability",
   averageMove: "Average Move",

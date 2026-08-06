@@ -27,7 +27,8 @@ export type TradeDecisionId =
 
 export type TradeAction = "buy" | "sell" | "wait";
 
-export type NewsInterpretation = "higher_is_usd_bullish" | "higher_is_usd_bearish";
+export type NewsInterpretation =
+  "higher_is_usd_bullish" | "higher_is_usd_bearish" | "hawkish_is_usd_bullish";
 
 export type OutcomeTap = "beat" | "miss" | "in-line";
 

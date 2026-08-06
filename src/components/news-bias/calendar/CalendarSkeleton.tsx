@@ -20,10 +20,11 @@ export function EventCardSkeleton() {
 
 export function CalendarSkeleton({ count = 4 }: { count?: number }) {
   return (
-    <div role="status" aria-label="Loading calendar">
+    <div role="status" aria-busy="true" aria-label="Loading calendar">
       {Array.from({ length: count }, (_, i) => (
         <EventCardSkeleton key={i} />
       ))}
+      <span className="sr-only">Loading calendar…</span>
     </div>
   );
 }
