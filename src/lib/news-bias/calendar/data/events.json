@@ -1,0 +1,192 @@
+[
+  {
+    "eventKey": "cpi",
+    "name": "CPI m/m",
+    "description": "The Consumer Price Index measures the change in the price of goods and services purchased by consumers from one month to the next. It is the Federal Reserve’s primary inflation gauge for policy messaging.",
+    "historicalImportance": "CPI surprises have driven some of the largest single-session moves in USD, gold, and equity indices since 2021. A 0.1–0.2pp miss or beat routinely resets rate-cut pricing.",
+    "marketsAffected": ["US Dollar", "Gold", "US Indices", "Treasury yields", "Major FX pairs"],
+    "typicalMarketReaction": "Hotter-than-expected CPI usually strengthens the USD and weighs on gold and risk assets. Cooler CPI does the opposite as markets price earlier or deeper Fed easing.",
+    "pairsMostSensitive": ["XAUUSD", "EURUSD", "USDJPY", "BTCUSD", "NAS100"],
+    "newsEventId": "cpi"
+  },
+  {
+    "eventKey": "core-cpi",
+    "name": "Core CPI m/m",
+    "description": "Core CPI excludes food and energy to show underlying inflation pressure. Policymakers treat it as a cleaner read on sticky price growth.",
+    "historicalImportance": "Core CPI often matters more than headline when energy swings dominate. Persistent core beats have repeatedly delayed Fed cut expectations.",
+    "marketsAffected": ["US Dollar", "Gold", "US Treasuries", "Equity indices"],
+    "typicalMarketReaction": "A firm Core CPI print supports the dollar and yields; a soft print usually lifts gold and risk appetite.",
+    "pairsMostSensitive": ["XAUUSD", "EURUSD", "GBPUSD", "NAS100"],
+    "newsEventId": "core-cpi"
+  },
+  {
+    "eventKey": "nfp",
+    "name": "Non-Farm Payrolls",
+    "description": "NFP counts jobs added or lost in the US economy excluding farm workers, private household employees, and non-profit organisation employees.",
+    "historicalImportance": "The first Friday NFP remains the most watched labour release globally. Large surprises can move USD pairs by a full figure within minutes.",
+    "marketsAffected": ["US Dollar", "Gold", "US Indices", "Bond yields"],
+    "typicalMarketReaction": "A strong beat usually lifts the USD and yields. A large miss typically weakens the dollar and supports gold as cut odds rise.",
+    "pairsMostSensitive": ["XAUUSD", "EURUSD", "GBPUSD", "USDJPY", "BTCUSD"],
+    "newsEventId": "nfp"
+  },
+  {
+    "eventKey": "unemployment-rate",
+    "name": "Unemployment Rate",
+    "description": "The share of the labour force that is jobless and actively seeking work. Released alongside NFP.",
+    "historicalImportance": "Rising unemployment has historically accelerated Fed easing cycles. The Sahm Rule uses this series as an early recession signal.",
+    "marketsAffected": ["US Dollar", "Gold", "Equities"],
+    "typicalMarketReaction": "Higher-than-expected unemployment is usually USD-negative; lower unemployment is USD-positive.",
+    "pairsMostSensitive": ["XAUUSD", "EURUSD", "USDJPY"],
+    "newsEventId": "unemployment-rate"
+  },
+  {
+    "eventKey": "fomc-statement",
+    "name": "FOMC Statement",
+    "description": "The Federal Open Market Committee’s policy statement outlining the rate decision, balance-sheet guidance, and the economic assessment.",
+    "historicalImportance": "FOMC days produce some of the highest realised volatility of the year across FX, rates, and metals.",
+    "marketsAffected": ["US Dollar", "Gold", "US Indices", "Treasury curve", "Crypto"],
+    "typicalMarketReaction": "Hawkish language or a higher dots path strengthens USD; dovish pivots weaken USD and lift gold and risk assets.",
+    "pairsMostSensitive": ["XAUUSD", "EURUSD", "USDJPY", "BTCUSD", "NAS100"],
+    "newsEventId": "fomc-statement"
+  },
+  {
+    "eventKey": "interest-rate-decision",
+    "name": "Fed Interest Rate Decision",
+    "description": "The target range for the federal funds rate set by the FOMC.",
+    "historicalImportance": "Rate decisions redefine the cost of USD liquidity worldwide and reset carry trades across majors.",
+    "marketsAffected": ["US Dollar", "Gold", "All major FX", "Equities"],
+    "typicalMarketReaction": "Hikes or hawkish holds support USD; cuts or dovish holds typically weaken USD.",
+    "pairsMostSensitive": ["XAUUSD", "EURUSD", "USDJPY", "USDCHF"],
+    "newsEventId": "interest-rate-decision"
+  },
+  {
+    "eventKey": "ism-manufacturing-pmi",
+    "name": "ISM Manufacturing PMI",
+    "description": "A diffusion index of US manufacturing activity. Readings above 50 signal expansion; below 50 signal contraction.",
+    "historicalImportance": "ISM is a leading growth indicator. Crosses of the 50 line often coincide with USD and equity trend shifts.",
+    "marketsAffected": ["US Dollar", "US Indices", "Copper-linked FX"],
+    "typicalMarketReaction": "A beat above 50 usually supports USD and equities; a miss below 50 can weigh on both.",
+    "pairsMostSensitive": ["EURUSD", "AUDUSD", "XAUUSD", "NAS100"],
+    "newsEventId": "ism-manufacturing-pmi"
+  },
+  {
+    "eventKey": "retail-sales",
+    "name": "Retail Sales m/m",
+    "description": "Measures the change in the total value of sales at the retail level, a direct read on consumer demand.",
+    "historicalImportance": "Retail Sales surprises often move short-term growth forecasts and USD sentiment between CPI prints.",
+    "marketsAffected": ["US Dollar", "US Indices", "Consumer stocks"],
+    "typicalMarketReaction": "Strong sales support the USD and equities; weak sales do the opposite.",
+    "pairsMostSensitive": ["EURUSD", "GBPUSD", "XAUUSD"],
+    "newsEventId": "retail-sales"
+  },
+  {
+    "eventKey": "eur-cpi",
+    "name": "Eurozone CPI Flash Estimate y/y",
+    "description": "Preliminary euro-area consumer inflation. Markets use it to price ECB policy path.",
+    "historicalImportance": "Eurozone inflation prints have driven EURUSD swings of 50–100 pips on surprises since the 2022 hiking cycle.",
+    "marketsAffected": ["Euro", "EUR pairs", "European equities"],
+    "typicalMarketReaction": "Hotter CPI usually lifts EUR; cooler CPI weakens EUR vs USD and GBP.",
+    "pairsMostSensitive": ["EURUSD", "EURGBP", "USDCHF"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "eur-rate",
+    "name": "ECB Interest Rate Decision",
+    "description": "The European Central Bank’s main refinancing / deposit facility rate decision.",
+    "historicalImportance": "ECB meetings reset EUR carry and often reverse short-term EURUSD trends.",
+    "marketsAffected": ["Euro", "European bonds", "EUR crosses"],
+    "typicalMarketReaction": "Hawkish ECB supports EUR; dovish decisions weaken it.",
+    "pairsMostSensitive": ["EURUSD", "EURGBP", "EURJPY"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "eur-gdp",
+    "name": "Eurozone GDP q/q",
+    "description": "Quarterly growth for the euro area. Confirms whether the bloc is expanding or stalling.",
+    "historicalImportance": "GDP misses during fragile growth periods have triggered sharp EUR selloffs.",
+    "marketsAffected": ["Euro", "European equities"],
+    "typicalMarketReaction": "Strong GDP supports EUR; weak GDP weighs on it.",
+    "pairsMostSensitive": ["EURUSD", "EURGBP"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "gbp-cpi",
+    "name": "UK CPI y/y",
+    "description": "UK consumer inflation. A primary input into Bank of England rate pricing.",
+    "historicalImportance": "Sticky UK CPI kept GBP volatile through 2023–2025 as markets debated BoE cuts.",
+    "marketsAffected": ["Pound", "Gilts", "GBP crosses"],
+    "typicalMarketReaction": "Hot CPI supports GBP; cool CPI weakens GBP.",
+    "pairsMostSensitive": ["GBPUSD", "EURGBP", "GBPJPY"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "gbp-rate",
+    "name": "BoE Interest Rate Decision",
+    "description": "Bank of England Monetary Policy Committee Bank Rate decision.",
+    "historicalImportance": "BoE meetings regularly produce the day’s largest GBP moves.",
+    "marketsAffected": ["Pound", "Gilts", "UK equities"],
+    "typicalMarketReaction": "Hawkish holds or hikes lift GBP; cuts or dovish guidance weaken it.",
+    "pairsMostSensitive": ["GBPUSD", "EURGBP", "GBPJPY"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "jpy-cpi",
+    "name": "Japan National CPI y/y",
+    "description": "Nationwide Japanese consumer inflation, watched for BoJ normalisation clues.",
+    "historicalImportance": "JPY CPI surprises have repeatedly forced USDJPY reversals when BoJ hike odds shift.",
+    "marketsAffected": ["Yen", "USDJPY", "Japanese equities"],
+    "typicalMarketReaction": "Hotter CPI can strengthen JPY via hike pricing; cooler CPI often weakens JPY.",
+    "pairsMostSensitive": ["USDJPY", "EURJPY", "GBPJPY"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "aud-employment",
+    "name": "Australia Employment Change",
+    "description": "Net change in employed persons. A key RBA labour-market signal.",
+    "historicalImportance": "Employment surprises frequently move AUDUSD 30–60 pips within the London/Asia overlap.",
+    "marketsAffected": ["Australian Dollar", "AUD crosses", "ASX"],
+    "typicalMarketReaction": "Strong jobs support AUD; weak jobs weigh on AUD.",
+    "pairsMostSensitive": ["AUDUSD", "AUDJPY", "EURAUD"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "cad-cpi",
+    "name": "Canada CPI m/m",
+    "description": "Canadian consumer inflation. Guides Bank of Canada policy expectations.",
+    "historicalImportance": "CAD CPI prints often move USDCAD sharply around North American open.",
+    "marketsAffected": ["Canadian Dollar", "Oil-linked FX"],
+    "typicalMarketReaction": "Hot CPI supports CAD (USDCAD down); cool CPI weakens CAD.",
+    "pairsMostSensitive": ["USDCAD", "CADJPY"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "chf-rate",
+    "name": "SNB Policy Rate",
+    "description": "Swiss National Bank policy rate decision.",
+    "historicalImportance": "SNB surprises, including intervention language, can spike USDCHF within seconds.",
+    "marketsAffected": ["Swiss Franc", "EURCHF", "USDCHF"],
+    "typicalMarketReaction": "Hawkish SNB strengthens CHF; dovish decisions weaken CHF.",
+    "pairsMostSensitive": ["USDCHF", "EURCHF"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "nzd-gdp",
+    "name": "New Zealand GDP q/q",
+    "description": "Quarterly growth for New Zealand. Informs RBNZ policy outlook.",
+    "historicalImportance": "NZD GDP surprises often set the tone for the Asia session in AUD/NZD crosses.",
+    "marketsAffected": ["New Zealand Dollar", "NZD crosses"],
+    "typicalMarketReaction": "Strong GDP lifts NZD; weak GDP weighs on NZD.",
+    "pairsMostSensitive": ["NZDUSD", "AUDNZD", "NZDJPY"],
+    "newsEventId": null
+  },
+  {
+    "eventKey": "btc-etf-flows",
+    "name": "US Spot BTC ETF Net Flows",
+    "description": "Daily net creations/redemptions across US spot Bitcoin ETFs — a proxy for institutional demand.",
+    "historicalImportance": "Large inflow/outflow days have coincided with multi-percent BTC moves since ETF launch.",
+    "marketsAffected": ["Bitcoin", "ETH", "Crypto-linked equities"],
+    "typicalMarketReaction": "Heavy net inflows usually support BTCUSD; sustained outflows pressure crypto risk.",
+    "pairsMostSensitive": ["BTCUSD", "ETHUSD", "NAS100"],
+    "newsEventId": null
+  }
+]

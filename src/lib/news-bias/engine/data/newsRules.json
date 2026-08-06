@@ -1,0 +1,145 @@
+{
+  "cpi": {
+    "id": "cpi",
+    "label": "CPI",
+    "importance": 95,
+    "historicalReliability": 84,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Market may initially spike in both directions before choosing a trend. Avoid entering during the first seconds after release."
+  },
+  "core-cpi": {
+    "id": "core-cpi",
+    "label": "Core CPI",
+    "importance": 94,
+    "historicalReliability": 83,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Core CPI can reverse the initial headline reaction. Wait for the first minute of price discovery before committing size."
+  },
+  "ppi": {
+    "id": "ppi",
+    "label": "PPI",
+    "importance": 78,
+    "historicalReliability": 74,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "PPI often moves markets briefly before CPI weeks. Liquidity can be thinner — size positions carefully."
+  },
+  "core-ppi": {
+    "id": "core-ppi",
+    "label": "Core PPI",
+    "importance": 76,
+    "historicalReliability": 72,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Core PPI surprises can fade quickly if CPI expectations are already priced. Avoid chasing the first tick."
+  },
+  "nfp": {
+    "id": "nfp",
+    "label": "NFP",
+    "importance": 96,
+    "historicalReliability": 80,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "NFP frequently whipsaws in the first 30–60 seconds. Unemployment and wage components can contradict the headline."
+  },
+  "unemployment-rate": {
+    "id": "unemployment-rate",
+    "label": "Unemployment Rate",
+    "importance": 88,
+    "historicalReliability": 79,
+    "interpretation": "higher_is_usd_bearish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Unemployment is inverse to typical growth prints. Confirm you are trading the correct direction before entry."
+  },
+  "interest-rate-decision": {
+    "id": "interest-rate-decision",
+    "label": "Interest Rate Decision",
+    "importance": 98,
+    "historicalReliability": 86,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "The statement and press conference often matter more than the rate itself. Expect volatility through the full event window."
+  },
+  "fomc-statement": {
+    "id": "fomc-statement",
+    "label": "FOMC",
+    "importance": 99,
+    "historicalReliability": 85,
+    "interpretation": "hawkish_is_usd_bullish",
+    "toneMode": "hawkish_dovish",
+    "higherLabel": "Hawkish",
+    "lowerLabel": "Dovish",
+    "riskWarning": "FOMC reactions can reverse on the press conference. Scale in only after the initial spike settles."
+  },
+  "ism-manufacturing-pmi": {
+    "id": "ism-manufacturing-pmi",
+    "label": "ISM Manufacturing PMI",
+    "importance": 82,
+    "historicalReliability": 77,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "ISM can gap through the 50 line and reverse if prices or employment sub-indexes disagree with the headline."
+  },
+  "ism-services-pmi": {
+    "id": "ism-services-pmi",
+    "label": "ISM Services PMI",
+    "importance": 80,
+    "historicalReliability": 75,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Services PMI moves can be short-lived around other major data. Avoid oversized entries at the print."
+  },
+  "gdp": {
+    "id": "gdp",
+    "label": "GDP",
+    "importance": 90,
+    "historicalReliability": 81,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Advance GDP is often revised. The initial reaction may not hold into the final estimate."
+  },
+  "retail-sales": {
+    "id": "retail-sales",
+    "label": "Retail Sales",
+    "importance": 84,
+    "historicalReliability": 76,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Retail Sales ex-auto can diverge from the headline. Watch for a second leg after the control group is digested."
+  },
+  "core-pce": {
+    "id": "core-pce",
+    "label": "Core PCE",
+    "importance": 97,
+    "historicalReliability": 87,
+    "interpretation": "higher_is_usd_bullish",
+    "toneMode": "numeric",
+    "higherLabel": "Higher than Forecast",
+    "lowerLabel": "Lower than Forecast",
+    "riskWarning": "Core PCE is the Fed’s preferred gauge — reactions can persist. Still avoid the first seconds of the spike."
+  }
+}

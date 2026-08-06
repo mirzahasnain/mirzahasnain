@@ -1,0 +1,20 @@
+{
+  "options": [
+    { "id": "half", "label": "0.5%", "value": 0.5, "recommended": true },
+    { "id": "one", "label": "1%", "value": 1, "recommended": true },
+    { "id": "max", "label": "Maximum 2%", "value": 2, "recommended": false }
+  ],
+  "byImpact": {
+    "very-low": "half",
+    "low": "half",
+    "medium": "one",
+    "high": "one",
+    "very-high": "half"
+  },
+  "byRisk": {
+    "Low": "one",
+    "Medium": "one",
+    "High": "half"
+  },
+  "positionSizingReminder": "Risk only a fixed fraction of equity per idea. Size from stop distance — never from conviction alone."
+}

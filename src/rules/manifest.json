@@ -1,0 +1,91 @@
+{
+  "version": "1.0.0",
+  "schemaVersion": "tradeimpact.rules.v1",
+  "categories": ["macro", "forex", "commodities", "crypto", "indices", "central-banks"],
+  "priorityLevels": ["Critical", "High", "Medium", "Low"],
+  "markets": [
+    {
+      "id": "XAUUSD",
+      "name": "Gold"
+    },
+    {
+      "id": "XAGUSD",
+      "name": "Silver"
+    },
+    {
+      "id": "BTCUSD",
+      "name": "BTC"
+    },
+    {
+      "id": "ETHUSD",
+      "name": "ETH"
+    },
+    {
+      "id": "EURUSD",
+      "name": "EURUSD"
+    },
+    {
+      "id": "GBPUSD",
+      "name": "GBPUSD"
+    },
+    {
+      "id": "AUDUSD",
+      "name": "AUDUSD"
+    },
+    {
+      "id": "NZDUSD",
+      "name": "NZDUSD"
+    },
+    {
+      "id": "USDJPY",
+      "name": "USDJPY"
+    },
+    {
+      "id": "USDCHF",
+      "name": "USDCHF"
+    },
+    {
+      "id": "USDCAD",
+      "name": "USDCAD"
+    },
+    {
+      "id": "US30",
+      "name": "US30"
+    },
+    {
+      "id": "NAS100",
+      "name": "NAS100"
+    },
+    {
+      "id": "SPX500",
+      "name": "SPX500"
+    }
+  ],
+  "events": [
+    "adp",
+    "consumer-confidence",
+    "core-cpi",
+    "core-pce",
+    "cpi",
+    "crude-inventories",
+    "crypto-etf-flows",
+    "crypto-risk-profile",
+    "durable-goods",
+    "fomc",
+    "gdp",
+    "interest-rate",
+    "ism-manufacturing",
+    "ism-services",
+    "jolts",
+    "metals-profile",
+    "michigan-sentiment",
+    "nfp",
+    "pmi",
+    "ppi",
+    "retail-sales",
+    "trade-balance",
+    "unemployment-rate",
+    "us-indices-profile",
+    "usd-majors-profile"
+  ]
+}

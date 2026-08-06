@@ -1,0 +1,27 @@
+{
+  "default": {
+    "waitSeconds": 15,
+    "before": "No Trade",
+    "release": "Wait {wait} Seconds",
+    "confirmationBuy": "Buy on reclaim / hold above spike",
+    "confirmationSell": "Sell on rejection",
+    "confirmationWait": "Stay flat — no clean edge",
+    "riskByImpact": {
+      "very-low": "Low",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "Medium",
+      "very-high": "High"
+    }
+  },
+  "assets": {
+    "XAUUSD": { "label": "Gold", "targetUnit": "Points" },
+    "XAGUSD": { "label": "Silver", "targetUnit": "Points" },
+    "BTCUSD": { "label": "BTC", "targetUnit": "%" },
+    "ETHUSD": { "label": "ETH", "targetUnit": "%" },
+    "EURUSD": { "label": "EURUSD", "targetUnit": "Pips" },
+    "GBPUSD": { "label": "GBPUSD", "targetUnit": "Pips" },
+    "NAS100": { "label": "NAS100", "targetUnit": "Points" },
+    "US30": { "label": "US30", "targetUnit": "Points" }
+  }
+}
